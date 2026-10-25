@@ -45,10 +45,10 @@ export function Products() {
         <SectionHeading
           tone="light"
           eyebrow="Our products & platforms"
-          intro="Beyond the work we do for clients, we build and run our own apps, plugins, and POS systems, including the payment rails behind them."
+          intro="We build and run our own products alongside client work. Apps, plugins, and point-of-sale systems, with the payment rails already in them."
         />
 
-        {/* Products — clean bordered grid, hairline dividers. The cards are not
+        {/* Products: clean bordered grid, hairline dividers. The cards are not
             links, so hover stays a warming of the surface rather than a lift:
             the hairline gaps are drawn by the grid background and any transform
             would tear them open. */}
@@ -69,7 +69,7 @@ export function Products() {
           ))}
         </div>
 
-        {/* Payments — minimal strip */}
+        {/* Payments: minimal strip */}
         <Reveal delay={0.08}>
           <div className="mt-6 overflow-hidden border border-white/10">
             {/* Two real columns rather than a floating overlay: the photo can

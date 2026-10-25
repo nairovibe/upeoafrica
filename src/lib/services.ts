@@ -48,7 +48,7 @@ export type Service = {
   imageAlt: string;
   detail: {
     /**
-     * The page's hero paragraph AND its meta description — they are the same
+     * The page's hero paragraph AND its meta description: they are the same
      * string by design, see `generateMetadata` in the service route.
      *
      * So it is never written for looks. Every lead must carry: the stake or
@@ -79,16 +79,16 @@ export const services: Service[] = [
     icon: Code2,
     short: "Scalable, secure platforms that run your operations.",
     description:
-      "Spreadsheets and off-the-shelf tools stop fitting once your business grows. We build web platforms around the way you actually work, so your team stops fighting software and gets on with the job.",
+      "Spreadsheets and off-the-shelf tools stop fitting once the work outgrows them. Our developers build the web platform around the way your team actually works, so people stop keeping a second system on the side.",
     features: ["Enterprise dashboards", "Workflow automation", "Role-based access", "Real-time data"],
     image: "/services/web-applications.jpg",
-    imageAlt: "Developer building a custom web application on a large monitor",
+    imageAlt: "Two developers at Upeo Africa Technologies writing application code at their workstations",
     detail: {
       lead:
-        "Off-the-shelf software stops fitting the moment your business grows. Upeo Africa Technologies builds custom web applications in Mombasa, Kenya that automate your workflows, replace the spreadsheets holding your operations together, and scale with you, from internal business systems to customer portals and reporting dashboards.",
+        "Off-the-shelf software stops fitting the moment the work outgrows it. The developers at Upeo Africa Technologies build custom web applications for businesses in Kenya and across Africa: internal systems, customer portals, and reporting dashboards shaped around your approvals, your reports, and the way your team already works.",
       body: [
-        "We start by sitting with the people who will use the system every day and mapping how the work really flows, not how a process document says it should. That is usually where the expensive surprises hide, and finding them in week one costs a conversation instead of a rebuild.",
-        "Then we build the platform around it: your rules, your approvals, your reports. It runs on infrastructure we manage, it is secured from the first commit, and it is built so that doubling your team does not mean starting again.",
+        "Our team sits with the people who will use the system every day and maps how the work really flows, not how a process document says it should. That is usually where the expensive surprises hide, and finding them in week one costs a conversation instead of a rebuild.",
+        "Our developers then build the platform around that map: your rules, your approvals, your reports. It runs on infrastructure our team manages, it is secured from the first commit, and it is built so that doubling your staff does not mean starting again.",
       ],
       outcomes: [
         "A platform shaped around your workflow, not a template you bend to fit",
@@ -153,7 +153,7 @@ export const services: Service[] = [
       },
       {
         q: "Do we own the code you write for us?",
-        a: "Yes. On final payment we assign you the intellectual property in everything built for you, in writing, along with the repositories and documentation. We keep clients because the work is good, not because leaving is difficult.",
+        a: "Yes. On final payment the intellectual property in everything built for you is assigned to you in writing, with the repositories and the documentation. Our developers keep clients because the work is good, not because leaving is difficult.",
       },
       {
         q: "Can you work with the systems we already have?",
@@ -167,16 +167,16 @@ export const services: Service[] = [
     icon: Smartphone,
     short: "Native-grade Android and iOS apps people love to use.",
     description:
-      "Your customers are on their phones, on patchy connections, paying with mobile money. We build Android and iOS apps that work in those conditions, so nothing stands between you and a sale.",
+      "Your customers buy on a phone, often on a weak connection, and they pay with mobile money. Our developers build Android and iOS apps for those conditions, then take them live on both stores.",
     features: ["iOS & Android", "Offline-first", "Push & M-Pesa", "App Store launch"],
     image: "/services/mobile-apps.jpg",
-    imageAlt: "Mobile app being tested on a smartphone during development",
+    imageAlt: "A developer writing application code on a laptop while testing the build on a connected phone",
     detail: {
       lead:
-        "Your customers are on their phones, on patchy networks, paying with mobile money. Upeo Africa Technologies delivers mobile app development for businesses in Kenya and across Africa, building offline-first Android and iOS apps with M-Pesa and Airtel Money integrated, designed, launched on both stores, and maintained by one team.",
+        "Your customers buy on a phone, often on a weak connection, and they pay with mobile money. The developers at Upeo Africa Technologies build offline-first Android and iOS apps for businesses in Kenya and across Africa, with M-Pesa and Airtel Money integrated, then submit them to both stores and keep them updated.",
       body: [
-        "We build for the conditions your users are actually in: intermittent data, older Android handsets, and mobile money as the default way to pay. Offline-first is a decision we make in week one, not a patch we bolt on after the complaints start.",
-        "One team covers design, build, store submission, and the updates afterwards. We handle review policy and release notes so you are not learning App Store rules against a launch deadline.",
+        "Our developers build for the conditions your users are actually in: intermittent data, older Android handsets, and mobile money as the default way to pay. Offline-first is a decision our team makes in week one, not a patch added after the complaints start.",
+        "Design, build, store submission, and the updates afterwards stay with one team. Our developers handle review policy and release notes, so you are not learning App Store rules against a launch deadline.",
       ],
       outcomes: [
         "One codebase serving both Android and iOS users",
@@ -255,16 +255,16 @@ export const services: Service[] = [
     icon: Globe,
     short: "Fast, responsive sites that build trust and convert.",
     description:
-      "A slow or dated website quietly costs you the customers who never call. We build fast, search-ready sites that load in seconds and give visitors a reason to trust you enough to get in touch.",
-    features: ["SEO-ready", "CMS integration", "Blazing performance", "Analytics"],
+      "A slow website loses the visitor who never calls. Our developers and designers build search-ready sites that load on mobile data and give your own team a way to update them.",
+    features: ["SEO-ready", "CMS integration", "Fast on mobile data", "Analytics"],
     image: "/services/websites-portals.jpg",
-    imageAlt: "Designer reviewing a responsive website layout across devices",
+    imageAlt: "A website open on a desktop monitor and on a phone held in front of it",
     detail: {
       lead:
-        "A slow, dated website quietly loses the customers who never call. Upeo Africa Technologies designs and builds fast, search-ready websites, e-commerce stores, and customer portals in Mombasa, Kenya, engineered to load in seconds on mobile data, rank on Google, and turn visitors into enquiries.",
+        "A slow website loses the visitor who never calls. The developers and designers at Upeo Africa Technologies build websites, online stores, and customer portals for businesses in Kenya and across Africa that load quickly on mobile data, are structured for Google, and can be updated by your own team.",
       body: [
-        "We build sites that are quick on a mid-range phone over mobile data, because that is how most of your visitors will actually see you. Performance is a requirement we test against on every build, not a nice-to-have we mention in the proposal.",
-        "Everything is structured for search from the first page, and you get a content system your own team can run without opening a ticket with us for every price change.",
+        "Our developers build each site to stay quick on a mid-range phone over mobile data, because that is how most of your visitors will see it. Performance is a requirement our team tests on every build, not a line we put in the proposal and forget.",
+        "Every page is structured for search from the first layout, and the content system is one your own team can run. A price change should not need a ticket with our developers.",
       ],
       outcomes: [
         "Loads fast on mobile data, not just on office fibre",
@@ -343,16 +343,16 @@ export const services: Service[] = [
     icon: PenTool,
     short: "Intuitive interfaces focused on real engagement.",
     description:
-      "If people cannot work out your product in the first minute, they leave and rarely come back. We design interfaces your users understand instantly, so more of them finish what they came to do.",
+      "If a person cannot finish the task in the first minute, they leave. Our designers test the interface with real users before our developers write the build, so more people complete what they came to do.",
     features: ["Product design", "Design systems", "Prototyping", "Usability testing"],
     image: "/services/product-design.jpg",
-    imageAlt: "Product designer sketching user interface wireframes",
+    imageAlt: "A designer reviewing interface sketches and wireframes pinned across a studio wall",
     detail: {
       lead:
-        "If people cannot work out your product within a minute, they leave and rarely come back. Upeo Africa Technologies delivers UI/UX and product design for businesses in Kenya and across Africa: user research, wireframes, design systems, and clickable prototypes tested with real users before a line of code is written.",
+        "If a person cannot finish the task in the first minute, they leave. The designers at Upeo Africa Technologies carry out UI and UX work for businesses in Kenya and across Africa: research, wireframes, a design system, and a prototype tested with real users before our developers write the build.",
       body: [
-        "We research before we draw. Who is using this, what are they trying to finish, and where do they currently give up? Those answers shape the interface far more than any trend does.",
-        "You get clickable prototypes to react to before anything is built, which is the cheapest possible moment to change your mind. Then we test with real users and fix whatever trips them up.",
+        "Our designers research before they draw. Who is using this, what are they trying to finish, and where do they currently give up? Those answers shape the interface far more than any trend does.",
+        "You get a clickable prototype to react to before anything is built, which is the cheapest moment to change direction. Our designers then test it with real users and fix whatever trips them up.",
       ],
       outcomes: [
         "Prototypes you can click through before a line of code is written",
@@ -431,16 +431,16 @@ export const services: Service[] = [
     icon: Palette,
     short: "Brand identities people remember and trust.",
     description:
-      "Buyers judge your business by how it looks long before they ever speak to you. We build an identity that makes you look as capable as you are, and keep it consistent everywhere you show up.",
+      "A buyer decides whether you look capable before anyone picks up the phone. Our designers build the identity, then write the rules that keep it consistent once your team and suppliers start using it.",
     features: ["Logo & identity", "Brand guidelines", "Graphics & assets", "Pitch decks"],
     image: "/services/branding-creative.jpg",
-    imageAlt: "Brand identity design materials laid out on a studio desk",
+    imageAlt: "Colour swatches on a studio desk while a brand identity is being specified",
     detail: {
       lead:
-        "Buyers judge your business by how it looks long before they ever speak to you. Upeo Africa Technologies builds brand identities in Mombasa, Kenya, covering logo design, colour, typography, and written brand guidelines, so you look as capable as you are across every touchpoint a customer sees.",
+        "A buyer decides whether you look capable before anyone picks up the phone. The designers at Upeo Africa Technologies build brand identities for businesses in Kenya and across Africa: logo, colour, typography, and written guidelines your team and suppliers can follow.",
       body: [
-        "We work out what your business should stand for in the eyes of the people you want to sell to, then build an identity that carries it: logo, colour, type, and the rules that hold the whole thing together.",
-        "You get guidelines and source files, so the next person who makes a poster or a pitch deck does not quietly undo the work you paid for.",
+        "Our designers work out what the business should stand for in the eyes of the people you want to sell to, then build the identity that carries it: logo, colour, type, and the rules that hold the whole thing together.",
+        "You receive the guidelines and the source files, so the next person who makes a poster or a pitch deck does not quietly undo the work.",
       ],
       outcomes: [
         "A logo and identity that works at any size, in any medium",
@@ -519,16 +519,16 @@ export const services: Service[] = [
     icon: Megaphone,
     short: "Campaigns that reach the right people and convert.",
     description:
-      "Running ads without a plan burns budget and teaches you nothing. We run campaigns against clear targets, show you what every shilling returned, and cut whatever is not working.",
+      "Ad spend without a target is just spend. Our marketing experts run the campaigns against a number you agree first, then show you what each shilling returned.",
     features: ["Social media", "Paid ads", "Email & content", "Campaign analytics"],
     image: "/services/digital-marketing.jpg",
-    imageAlt: "Marketing team reviewing campaign performance analytics",
+    imageAlt: "Marketing experts reviewing campaign charts and reports around a working table",
     detail: {
       lead:
-        "Advertising without measurement is just spending. Upeo Africa Technologies runs digital marketing for businesses in Kenya and across Africa, covering Google Ads, Meta and paid social, email, and content, all tracked against real leads and sales so you know exactly what every shilling returned.",
+        "Ad spend without a target is just spend. The marketing experts at Upeo Africa Technologies run Google Ads, Meta, email, and content for businesses in Kenya and across Africa, tracked against leads and sales so you can see what each shilling returned.",
       body: [
-        "We agree what a result is worth to you before we spend anything, then build campaigns against that number. Reach and impressions are diagnostics along the way, not the thing we are trying to buy.",
-        "You get a plain-language report each month: what we spent, what it returned, what we are changing next, and why. No dashboard you have to interpret on your own.",
+        "Our marketing experts agree what a lead or a sale is worth before any budget is spent, then build the campaigns against that number. Reach and impressions stay as diagnostics, not as the result we are trying to buy.",
+        "Each month you get a report in plain language: what our team spent, what it returned, what we are changing next, and why. There is no dashboard left for you to interpret on your own.",
       ],
       outcomes: [
         "Campaigns measured against sales and leads, not vanity metrics",
@@ -597,7 +597,7 @@ export const services: Service[] = [
       },
       {
         q: "Do you handle the content and creative too?",
-        a: "Yes. Copy, graphics, and video for the feed are part of the work, produced in your brand and built for the platform. Campaigns that rely on a client sending assets tend to stall.",
+        a: "Yes. Our marketing experts write the copy, and our designers produce the graphics and video, in your brand and for the platform. Campaigns that wait on a client to send assets tend to stall.",
       },
     ],
   },
@@ -607,16 +607,16 @@ export const services: Service[] = [
     icon: Search,
     short: "Get found by the customers already searching.",
     description:
-      "Your customers are already searching for what you sell, and right now they are finding someone else. We get you onto the first page for the terms that convert, so you earn traffic instead of renting it.",
+      "The people looking for what you sell are already searching. Our SEO specialists fix the technical problems first, then write for the searches that turn into enquiries.",
     features: ["Technical SEO", "Keyword strategy", "Content writing", "Local SEO"],
     image: "/services/seo-content.jpg",
     imageAlt: "Search engine optimisation performance data on screen",
     detail: {
       lead:
-        "In Kenya's fast-growing digital economy, ranking on Google is no longer optional. Upeo Africa Technologies delivers results-driven SEO services that help businesses in Mombasa and across Africa attract more customers, outrank competitors, and win the searches that actually convert. Technical SEO, on-page, local, and e-commerce, all white-hat.",
+        "A page that Google cannot read will not be found, no matter how good the offer is. The SEO specialists at Upeo Africa Technologies handle technical SEO, on-page work, local search, and content for businesses in Kenya and across Africa, aimed at the searches that turn into enquiries.",
       body: [
-        "Ranking on Google is not optional for a business here any more, it is how you get found at all. We start with the technical foundation, because no amount of content rescues a site that search engines struggle to crawl, then target the search terms that bring buyers rather than browsers.",
-        "Everything we do is white-hat and built to hold. No bought links, no keyword stuffing, nothing that wins for a quarter and then costs you a penalty. For businesses serving a specific area, local SEO usually pays back fastest.",
+        "Our SEO specialists start with the technical foundation, because no amount of writing rescues a site that search engines struggle to crawl. After that, our team targets the search terms buyers use, not the terms that only look large in a report.",
+        "The work is white-hat and built to hold. No bought links, no keyword stuffing, and nothing that ranks for a quarter and then costs you a penalty. For a business that serves a specific place, local SEO is usually the part that pays back first.",
       ],
       outcomes: [
         "Technical issues fixed so your pages can rank at all",
@@ -709,16 +709,16 @@ export const services: Service[] = [
     icon: Plug,
     short: "Connect your tools, services, and payment rails.",
     description:
-      "Getting paid should not be the hardest part of your product. We wire M-Pesa, Airtel Money, bank, and card payments into your systems, properly reconciled and secure.",
+      "A payment that fails or cannot be reconciled becomes a support problem. Our developers wire M-Pesa, Airtel Money, bank, and card payments into the product, and connect the systems around them.",
     features: ["REST & GraphQL", "M-Pesa & Airtel", "Bank & card", "Webhooks"],
-    image: "/logos/payments/card-payments.jpg",
-    imageAlt: "Contactless mobile payment being made on a card terminal",
+    image: "/services/api-payments.jpg",
+    imageAlt: "Online checkout open on a laptop beside a payment card and a phone",
     detail: {
       lead:
-        "Getting paid should not be the hardest part of your product. Upeo Africa Technologies handles M-Pesa, Airtel Money, bank, and card payment integration in Kenya, along with the APIs connecting your accounting, CRM, and inventory systems, built to reconcile cleanly and survive real transaction volume.",
+        "A payment that fails, duplicates, or cannot be reconciled becomes a support problem. The developers at Upeo Africa Technologies integrate M-Pesa, Airtel Money, bank, and card payments, and the APIs between accounting, CRM, and inventory, for businesses in Kenya and across Africa.",
       body: [
-        "We have put M-Pesa, Airtel Money, bank transfer, and card payments into live products, and we know where they bite: callback retries, timeouts, duplicate confirmations, and reconciliation that has to survive an audit rather than just look right on screen.",
-        "The same applies to the rest of your stack. We connect accounting, CRM, inventory, and messaging tools so the same data stops being retyped between three systems by three different people.",
+        "Our developers have put M-Pesa, Airtel Money, bank transfer, and card payments into live products, and the failures are familiar: callback retries, timeouts, duplicate confirmations, and a reconciliation that has to survive an audit rather than only look right on screen.",
+        "The same team connects accounting, CRM, inventory, and messaging, so the same record stops being retyped between three systems by three different people.",
       ],
       outcomes: [
         "M-Pesa and Airtel Money integrated and tested against real edge cases",
@@ -779,7 +779,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "Can you integrate M-Pesa with our existing system?",
-        a: "In most cases yes, whether it is a website, a mobile app, or an internal system. We work with the Daraja API and handle registration, callback URLs, and the go-live process, which is where most in-house attempts stall.",
+        a: "In most cases yes, whether it is a website, a mobile app, or an internal system. Our developers work with the Daraja API and handle registration, callback URLs, and the go-live process, which is where most in-house attempts stall.",
       },
       {
         q: "How do you handle failed or duplicate payments?",
@@ -797,16 +797,16 @@ export const services: Service[] = [
     icon: Cloud,
     short: "24/7 hosting, monitoring, and optimisation.",
     description:
-      "Downtime costs you sales and trust in the same afternoon. We host, monitor, and patch your systems around the clock, so you hear about a problem from us before you hear it from a customer.",
-    features: ["CI/CD pipelines", "Monitoring & alerts", "Security hardening", "24/7 uptime"],
+      "When a system goes down, the sale and the trust go with it. Our team hosts, monitors, and patches it, and you hear about a problem from us before you hear it from a customer.",
+    features: ["CI/CD pipelines", "Monitoring & alerts", "Security hardening", "Tested backups"],
     image: "/services/cloud-devops.jpg",
-    imageAlt: "Server infrastructure in a data centre rack",
+    imageAlt: "Server racks in a managed data centre aisle",
     detail: {
       lead:
-        "Downtime costs you sales and customer trust in the same afternoon. Upeo Africa Technologies provides managed cloud hosting and server management for businesses in Kenya and across Africa, with round-the-clock monitoring, tested backups, security hardening, and a one-hour response target on critical incidents.",
+        "When a system goes down, the sale and the trust go with it. The team at Upeo Africa Technologies hosts and manages servers for businesses in Kenya and across Africa, with monitoring that pages a person, backups that have been restored and checked, and a one-hour response on critical incidents.",
       body: [
-        "We run your infrastructure properly: automated deployments, monitoring that pages a human, backups that are tested by actually restoring them, and security patches applied on a schedule rather than after an incident.",
-        "Our service level agreement sets a one-hour response target on critical incidents, and we keep you informed while we work rather than going quiet until it is fixed.",
+        "Our team runs the infrastructure: automated deployments, monitoring that pages a person, backups tested by restoring them, and security patches applied on a schedule rather than after an incident.",
+        "The service level agreement sets a one-hour response on critical incidents. We keep you informed while the work is underway, rather than going quiet until it is fixed.",
       ],
       outcomes: [
         "Monitoring that alerts us before your customers notice",
@@ -867,7 +867,7 @@ export const services: Service[] = [
     faqs: [
       {
         q: "What happens if our site goes down at night?",
-        a: "Monitoring alerts us directly rather than waiting for a customer to report it. Our SLA sets a one-hour response target on critical incidents, and we keep you updated while we work rather than going silent.",
+        a: "Monitoring alerts our team directly rather than waiting for a customer to report it. The service level agreement sets a one-hour response on critical incidents, and we keep you updated while the work is underway.",
       },
       {
         q: "Can you take over hosting we already have elsewhere?",

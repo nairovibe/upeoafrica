@@ -48,13 +48,21 @@ export const company = {
   googleReviewUrl:
     "https://www.google.com/maps/search/?api=1&query=Upeo+Africa+Technologies+Ltd+Mombasa",
   domain: "https://upeoafricatechnologies.co.ke",
+  social: {
+    facebook: "https://www.facebook.com/upeoafrica",
+    x: "https://x.com/upeoafrica",
+    linkedin: "https://www.linkedin.com/company/upeoafrica",
+    instagram: "https://www.instagram.com/upeoafrica",
+  },
 };
 
 export const nav = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Our Work", href: "/work" },
+  { label: "Our Process", href: "/process" },
+  { label: "Blogs", href: "/blogs" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 export const legalNav = [
@@ -130,33 +138,33 @@ export type Capability = {
 
 export const capabilities: Capability[] = [
   {
-    eyebrow: "Build",
-    title: "Software and products, engineered to last",
+    eyebrow: "Design",
+    title: "Brand identity and product UI that earn trust",
     description:
-      "Our engineers design and build web platforms, mobile apps, and integrations that are fast, secure, and ready to scale as you grow.",
-    bullets: ["Web & mobile apps", "APIs & payment integrations", "Cloud & DevOps"],
+      "Our designers shape logos, visual identity, websites, and app interfaces that look credible and convert, from first wireframe to a reusable design system your team can build on.",
+    bullets: ["Brand identity & creative", "UI/UX & product design", "Design systems"],
+    image: images.strategy,
+    imageAlt: "Upeo Africa Technologies designers working on brand and product UI",
+    cta: { label: "See design work", href: "/work" },
+  },
+  {
+    eyebrow: "Build",
+    title: "Custom web and mobile apps, engineered to last",
+    description:
+      "Our software engineers develop custom web platforms, Android and iOS apps, and the APIs behind them, with M-Pesa and Airtel Money payments, secure cloud hosting, and DevOps built to scale as your business grows.",
+    bullets: ["Web & mobile apps", "M-Pesa & Airtel Money APIs", "Cloud & DevOps"],
     image: images.software,
-    imageAlt: "Software engineer building an application",
+    imageAlt: "Upeo Africa Technologies engineer building a web and mobile application",
     cta: { label: "Explore development", href: "/services" },
   },
   {
-    eyebrow: "Design",
-    title: "Brands and interfaces people remember",
+    eyebrow: "Scale",
+    title: "SEO and marketing that bring customers in",
     description:
-      "From brand identity to product UI, our design team crafts experiences that look the part and feel effortless to use.",
-    bullets: ["Brand identity & creative", "UI/UX & product design", "Design systems"],
-    image: images.strategy,
-    imageAlt: "Design and strategy team collaborating",
-    cta: { label: "See design work", href: "/services" },
-  },
-  {
-    eyebrow: "Grow",
-    title: "Marketing that reaches and converts",
-    description:
-      "Our marketing team turns attention into customers with SEO, social, paid campaigns, and content built around real results.",
+      "Our marketers get you found and chosen with technical SEO, content, social, and paid campaigns, all tracked against real leads and sales so every shilling of marketing spend is accountable.",
     bullets: ["SEO & content", "Social & paid ads", "Analytics & reporting"],
     image: images.marketing,
-    imageAlt: "Marketing professional driving growth",
+    imageAlt: "Upeo Africa Technologies marketing team driving SEO and growth",
     cta: { label: "Grow with us", href: "/contact" },
   },
 ];

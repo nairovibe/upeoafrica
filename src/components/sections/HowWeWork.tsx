@@ -62,7 +62,7 @@ export function HowWeWork() {
       const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.4 });
       tl.set(pulseRef.current, { left: "10%", opacity: 1 });
       tl.set(progressRef.current, { width: 0 });
-      nodes.forEach((n) => n && gsap.set(n, INACTIVE));
+      nodes.forEach((n) => n && gsap.set(n, { ...INACTIVE }));
 
       POS.forEach((p, i) => {
         const dur = i === 0 ? 0.001 : 0.7;
@@ -104,7 +104,7 @@ export function HowWeWork() {
           align="center"
           tone="light"
           eyebrow="How we work"
-          intro="When you get in touch about any of the services we offer, this is how we work with you, from the first conversation through to launch and everything after."
+          intro="Five stages, from the first conversation through launch and support. You see what is in progress, and what comes next."
         />
 
         {/* Desktop looping node flow */}
@@ -137,7 +137,7 @@ export function HowWeWork() {
                       nodeRefs.current[i] = el;
                     }}
                     className="flex h-16 w-16 items-center justify-center rounded-full border"
-                    style={INACTIVE}
+                    style={{ ...INACTIVE }}
                   >
                     <step.icon className="h-7 w-7" />
                   </div>

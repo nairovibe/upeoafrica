@@ -13,7 +13,7 @@ export function Industries() {
           <div className="lg:sticky lg:top-28 lg:self-start">
             <SectionHeading
               eyebrow="Industries we serve"
-              intro="Whatever sector you work in, we have shipped software for it before, so you spend less time explaining how your business runs."
+              intro="We have already shipped software in these sectors. The first conversation starts from how your business runs."
             />
             <p className="mt-8 font-display text-5xl font-bold text-ink-900 sm:text-6xl">
               {industries.length}

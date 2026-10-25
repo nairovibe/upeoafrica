@@ -77,12 +77,12 @@ export function Capabilities() {
   const cap = capabilities[active];
 
   return (
-    <section className="bg-white py-24 lg:py-32">
+    <section className="bg-[#edf3f8] pt-28 pb-24 lg:pt-36 lg:pb-32">
       <Container>
         <SectionHeading
           align="center"
-          eyebrow="What we do"
-          intro="Upeo Africa Technologies is a software, design, and marketing agency in Mombasa. Whether you need a product built, a brand designed, or customers reached, you work with one team across Africa."
+          title="What we do"
+          intro="We design, build, and scale as one practice. The interface, the product, and the customers who have to find it stay with the same designers, software engineers, and marketers."
         />
 
         <div ref={rootRef} className="mt-14">

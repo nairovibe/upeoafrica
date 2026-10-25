@@ -14,8 +14,8 @@ export function Services({ limit }: { limit?: number }) {
       <Container>
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <SectionHeading
-            eyebrow="Our services"
-            intro="Whatever you come to us for, from a web or mobile app to branding, digital marketing, or payment integrations, one team takes it from first scope through to launch and ongoing support."
+            title="Our services"
+            intro="Built for businesses across Africa that need the work held by one team. Every service we deliver is scoped with you and carried through launch and support."
           />
           <Reveal>
             <Button href="/services" variant="outline" withArrow className="shrink-0">
@@ -24,13 +24,13 @@ export function Services({ limit }: { limit?: number }) {
           </Reveal>
         </div>
 
-        {/* Sharp bordered matrix */}
-        <div className="mt-14 grid border-l border-t border-ink-900/12 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Sharp bordered cards with breathing room */}
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((s, i) => (
             <Reveal key={s.slug} delay={stagger(i, 3)} className="flex">
               <Link
                 href={`/services/${s.slug}`}
-                className="group relative flex h-full w-full flex-col border-b border-r border-ink-900/12 p-8 transition-colors duration-300 ease-out-expo hover:bg-ink-950"
+                className="group relative flex h-full w-full flex-col border border-ink-900/12 p-8 transition-colors duration-300 ease-out-expo hover:bg-ink-950"
               >
                 <span className="pointer-events-none absolute right-6 top-6 font-display text-5xl font-light leading-none text-ink-900/[0.06] transition-colors duration-300 ease-out-expo group-hover:text-white/15">
                   {String(i + 1).padStart(2, "0")}

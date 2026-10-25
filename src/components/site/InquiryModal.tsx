@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, ArrowRight, ArrowLeft, Check, Sparkles, PartyPopper } from "lucide-react";
 import { company } from "@/lib/content";
+import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { TurnstileField } from "@/components/security/TurnstileField";
 
 export const OPEN_INQUIRY_EVENT = "open-inquiry";
 
@@ -35,8 +37,8 @@ const SERVICES = [
 const STAGES = [
   "Just an idea", "I have a brief or designs", "Improving an existing product", "A rebrand or refresh",
 ];
-const TIMELINES = ["As soon as possible", "1–3 months", "3–6 months", "Flexible / exploring"];
-const BUDGETS = ["Under KES 150K", "KES 150K–500K", "KES 500K–2M", "KES 2M+", "Let's discuss"];
+const TIMELINES = ["As soon as possible", "1-3 months", "3-6 months", "Flexible / exploring"];
+const BUDGETS = [...BUDGET_BANDS, "Let's discuss"];
 
 const STEP_LABELS = ["Warming up", "Getting specific", "Timing", "Investment", "Final stretch"];
 const TOTAL = 5;
@@ -48,6 +50,8 @@ export function InquiryModal() {
   const [dir, setDir] = useState(1);
   const [a, setA] = useState<Answers>(empty);
   const [err, setErr] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,6 +60,8 @@ export function InquiryModal() {
       setStep(0);
       setErr(null);
       setOpen(true);
+      setCaptcha("");
+      setCaptchaReset((n) => n + 1);
     };
     window.addEventListener(OPEN_INQUIRY_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_INQUIRY_EVENT, onOpen);
@@ -93,27 +99,45 @@ export function InquiryModal() {
         : [...p.services, s],
     }));
 
-  const submit = () => {
+  const submit = async () => {
     if (!a.name.trim()) return setErr("Please add your name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email)) return setErr("Add a valid email.");
-    const body = encodeURIComponent(
-      `New project enquiry\n\n` +
-        `Services: ${a.services.join(", ") || "-"}\n` +
-        `Stage: ${a.stage || "-"}\n` +
-        `Timeline: ${a.timeline || "-"}\n` +
-        `Budget: ${a.budget || "-"}\n\n` +
-        `Name: ${a.name}\nEmail: ${a.email}\nCompany: ${a.companyName || "-"}`,
-    );
-    window.location.href = `mailto:${company.email}?subject=${encodeURIComponent(
-      "New project enquiry",
-    )}&body=${body}`;
+    if (!captcha) return setErr("Complete the verification check before sending.");
+    setErr(null);
+    const res = await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "inquiry",
+        name: a.name,
+        email: a.email,
+        company: a.companyName,
+        services: a.services,
+        stage: a.stage,
+        timeline: a.timeline,
+        budget: a.budget,
+        turnstileToken: captcha,
+      }),
+    });
+    if (!res.ok) {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      setCaptcha("");
+      setCaptchaReset((n) => n + 1);
+      return setErr(json.error || "Could not send. Try again, or email us.");
+    }
     setDir(1);
     setStep(TOTAL);
   };
 
   const progress = Math.round((Math.min(step, TOTAL) / TOTAL) * 100);
   const canNext =
-    step === 0 ? a.services.length > 0 : step === 3 ? true : true;
+    step === 0
+      ? a.services.length > 0
+      : step === 1
+        ? Boolean(a.stage)
+        : step === 2
+          ? Boolean(a.timeline)
+          : true;
 
   const slideVariants = {
     enter: (d: number) => ({ opacity: 0, x: reduce ? 0 : d * 40 }),
@@ -194,7 +218,7 @@ export function InquiryModal() {
                   {step === 0 && (
                     <Step
                       title="What can we help you with?"
-                      hint="Pick all that apply — this shapes who from our team joins the call."
+                      hint="Pick all that apply. This shapes who from our team joins the call."
                     >
                       <div className="flex flex-wrap gap-2.5">
                         {SERVICES.map((s) => {
@@ -219,7 +243,7 @@ export function InquiryModal() {
                       </div>
                       {a.services.length > 0 && (
                         <p className="mt-5 text-sm font-medium text-brand-600">
-                          Great fit — we do all of this in-house.
+                          Great fit. We do all of this in-house.
                         </p>
                       )}
                     </Step>
@@ -248,7 +272,7 @@ export function InquiryModal() {
                   {step === 3 && (
                     <Step
                       title="A rough budget range?"
-                      hint="Optional — it helps us tailor the right proposal. You can skip this."
+                      hint="Optional. It helps us tailor the right proposal. You can skip this."
                     >
                       <Options
                         options={BUDGETS}
@@ -259,7 +283,7 @@ export function InquiryModal() {
                   )}
 
                   {step === 4 && (
-                    <Step title="Last step — where do we send the plan?">
+                    <Step title="Last step. Where do we send the plan?">
                       <div className="flex flex-col gap-4">
                         <Field label="Full name" required>
                           <input
@@ -288,6 +312,12 @@ export function InquiryModal() {
                             placeholder="Your organisation"
                           />
                         </Field>
+                        <TurnstileField
+                          action="inquiry"
+                          theme="light"
+                          onToken={setCaptcha}
+                          resetSignal={captchaReset}
+                        />
                         {err && (
                           <p className="text-sm font-medium text-red-500" role="alert">
                             {err}
@@ -306,9 +336,8 @@ export function InquiryModal() {
                         You&apos;re all set, {a.name.split(" ")[0] || "friend"}!
                       </h3>
                       <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-body">
-                        Your details are ready to send in an email draft. We&apos;ll review them
-                        and reply within one business day to book your call. You can also
-                        reach us directly at{" "}
+                        We have your brief. Someone on the team will write back within one business day.
+                        You can also reach us directly at{" "}
                         <a
                           href={`mailto:${company.email}`}
                           className="font-medium text-brand-600 underline decoration-transparent underline-offset-4 transition-[text-decoration-color] duration-300 ease-out-expo hover:decoration-brand-500"

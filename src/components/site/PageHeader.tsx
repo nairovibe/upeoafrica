@@ -35,7 +35,7 @@ export function PageHeader({
   breadcrumb?: { label: string; href?: string }[];
 }) {
   return (
-    <section className="relative overflow-hidden bg-ink-950 pt-36 pb-20 text-white lg:pt-44 lg:pb-24">
+    <section className="relative overflow-hidden bg-ink-950 pt-36 pb-20 text-white md:pt-48 lg:pb-24">
       {image ? (
         <>
           <Image
@@ -100,13 +100,13 @@ export function PageHeader({
             </Reveal>
           )}
           <Reveal>
-            <h1 className="text-4xl font-bold leading-[1.08] text-white sm:text-5xl lg:text-[3.25rem]">
+            <h1 className="text-3xl font-bold leading-[1.08] text-white sm:text-4xl md:text-[2.75rem]">
               {title}
             </h1>
           </Reveal>
           {intro && (
             <Reveal delay={0.06}>
-              <p className="mt-6 max-w-3xl font-display text-lg leading-[1.55] text-white/85 sm:text-xl">
+              <p className="mt-6 max-w-3xl text-lg leading-relaxed text-white/85">
                 {intro}
               </p>
             </Reveal>

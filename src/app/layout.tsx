@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit } from "next/font/google";
+import { DM_Sans, Sora } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/site/Navbar";
-import { Footer } from "@/components/site/Footer";
-import { InquiryModal } from "@/components/site/InquiryModal";
-import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { company } from "@/lib/content";
 
-// Outfit is the single typeface for the whole site — it reads well as both
-// display and body, so both --font-display and --font-sans resolve to it.
-const outfit = Outfit({
+/** Display face for headings and UI. Body copy uses DM Sans. Wired in globals.css. */
+const sora = Sora({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-sora",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm",
   display: "swap",
 });
 
@@ -23,11 +24,8 @@ export const metadata: Metadata = {
     default: `${company.name} · Software, Design & Marketing Agency in Mombasa`,
     template: `%s · ${company.name}`,
   },
-  /* Matches the hero paragraph in Hero.tsx word for word. The hero copy IS
-     the meta description on every page of this site: see the note on
-     `detail.lead` in src/lib/services.ts. */
   description:
-    "Upeo Africa Technologies is a software company in Mombasa, Kenya. We design and build custom web and mobile apps, M-Pesa and Airtel Money payment integrations, branding, and digital marketing that help businesses across Africa launch, rank, and grow.",
+    "Upeo Africa Technologies designs and builds custom web and mobile apps, M-Pesa and Airtel Money payments, branding, and digital marketing from Mombasa, Kenya, for businesses across Africa.",
   keywords: [
     "software company Mombasa",
     "app development Kenya",
@@ -54,15 +52,20 @@ export const metadata: Metadata = {
     siteName: company.name,
     title: `${company.name} · Software, Design & Marketing`,
     description:
-      "Upeo Africa Technologies is a software company in Mombasa, Kenya. We design and build custom web and mobile apps, M-Pesa and Airtel Money payment integrations, branding, and digital marketing that help businesses across Africa launch, rank, and grow.",
+      "Upeo Africa Technologies designs and builds custom web and mobile apps, M-Pesa and Airtel Money payments, branding, and digital marketing from Mombasa, Kenya, for businesses across Africa.",
   },
   twitter: {
     card: "summary_large_image",
     title: `${company.name} · Software, Design & Marketing`,
     description:
-      "Upeo Africa Technologies is a software company in Mombasa, Kenya. We design and build custom web and mobile apps, M-Pesa and Airtel Money payment integrations, branding, and digital marketing that help businesses across Africa launch, rank, and grow.",
+      "Upeo Africa Technologies designs and builds custom web and mobile apps, M-Pesa and Airtel Money payments, branding, and digital marketing from Mombasa, Kenya, for businesses across Africa.",
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -75,51 +78,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={outfit.variable}>
-      <body className="min-h-screen antialiased">
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "ProfessionalService",
-              name: company.legalName,
-              description:
-                "Full-service digital agency in Mombasa: custom software, web & mobile apps, UI/UX and branding, digital marketing, WordPress and POS plugins, and payment integrations (M-Pesa, Airtel Money, bank, card).",
-              url: siteUrl,
-              email: company.email,
-              telephone: company.phone,
-              areaServed: "KE",
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: "Yunis Building, Moi Avenue",
-                postOfficeBoxNumber: "88225-80100",
-                addressLocality: "Mombasa",
-                postalCode: "80100",
-                addressCountry: "KE",
-              },
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: company.googleRating,
-                reviewCount: 1,
-                bestRating: 5,
-              },
-            }),
-          }}
-        />
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink-900 focus:px-5 focus:py-2.5 focus:text-sm focus:font-medium focus:text-white"
-        >
-          Skip to content
-        </a>
-        <Navbar />
-        <main id="main">{children}</main>
-        <Footer />
-        <InquiryModal />
-        <WhatsAppButton />
-      </body>
+    <html lang="en" className={`${sora.variable} ${dmSans.variable}`}>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }

@@ -2,12 +2,18 @@ import Link from "next/link";
 import Image from "next/image";
 import logoFull from "@/assets/upeo-logo.png";
 import logoMarkImg from "@/assets/upeo-mark.png";
+import { cn } from "@/lib/utils";
 
-/** The orange network mark on its own (from the official favicon asset). */
+/**
+ * Official orange network mark. The source file is square; we always render it
+ * in a square box so Next/Image cannot stretch the circles into ovals.
+ */
 export function LogoMark({
+  size = 40,
   className = "",
   priority = false,
 }: {
+  size?: number;
   className?: string;
   priority?: boolean;
 }) {
@@ -15,7 +21,10 @@ export function LogoMark({
     <Image
       src={logoMarkImg}
       alt="Upeo Africa Technologies"
-      className={className}
+      width={size}
+      height={size}
+      className={cn("shrink-0 object-contain", className)}
+      style={{ width: size, height: size }}
       priority={priority}
     />
   );
@@ -48,7 +57,10 @@ export function Logo({
         <Image
           src={logoMarkImg}
           alt=""
-          className="h-9 w-auto shrink-0 transition-transform duration-300 group-hover:scale-105"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 object-contain transition-transform duration-300 group-hover:scale-105"
+          style={{ width: 36, height: 36 }}
           priority={priority}
         />
         <span className="flex flex-col leading-none">
@@ -72,7 +84,7 @@ export function Logo({
       <Image
         src={logoFull}
         alt="Upeo Africa Technologies"
-        className="h-9 w-auto transition-transform duration-300 group-hover:scale-[1.03] sm:h-10"
+        className="h-10 w-auto transition-transform duration-300 group-hover:scale-[1.03] sm:h-11"
         priority={priority}
       />
     </Link>

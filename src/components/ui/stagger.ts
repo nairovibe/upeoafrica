@@ -6,7 +6,7 @@
  * already on screen. Staggering across a row and then restarting keeps the
  * cascade readable at the top of a grid without ever feeling laggy lower down.
  *
- * Pass the widest column count the grid reaches — `1` for a stacked list, where
+ * Pass the widest column count the grid reaches (`1` for a stacked list, where
  * every item should reveal the moment it arrives.
  *
  * Deliberately kept out of `Reveal.tsx`: that module is `"use client"`, and a

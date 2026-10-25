@@ -8,10 +8,10 @@ import { differentiators } from "@/lib/content";
 
 export function WhyUs() {
   return (
-    <section className="bg-surface-2 py-24 lg:py-32">
+    <section className="bg-[#edf3f8] py-24 lg:py-32">
       <Container>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:items-stretch lg:gap-16">
-          {/* Portrait panel — the emotional half of the argument */}
+          {/* Portrait panel: the emotional half of the argument */}
           <Reveal className="lg:h-full">
             <figure className="group relative h-full overflow-hidden rounded-2xl">
               <div className="relative aspect-[4/5] w-full lg:h-full lg:aspect-auto">
@@ -50,10 +50,9 @@ export function WhyUs() {
             </Reveal>
             <Reveal delay={0.05}>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-body">
-                At Upeo Africa Technologies we do more than deliver a project and move on.
-                We partner with you across development, design, and digital marketing, and
-                here is why businesses across Kenya and the rest of Africa choose us as their
-                technology partner.
+                We go beyond the brief to how your staff, customers, and operations
+                actually work, then design, build, and market around that. The result is
+                a product that keeps performing after launch.
               </p>
             </Reveal>
 

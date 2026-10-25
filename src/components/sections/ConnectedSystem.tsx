@@ -60,7 +60,7 @@ export function ConnectedSystem() {
         <SectionHeading
           align="center"
           eyebrow="One team, one system"
-          intro="Bring us a rough idea, a tired website, or a process held together by spreadsheets, and the same team takes it through to something that works."
+          intro="We take an idea, a tired website, or a process still living in spreadsheets, and the same team carries it through to a system that runs."
         />
 
         {/* Desktop wiring diagram */}
@@ -182,7 +182,7 @@ export function ConnectedSystem() {
                 transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
               >
                 <div className="absolute inset-0 rounded-full bg-brand-500/25 blur-xl" aria-hidden />
-                <LogoMark className="relative h-11 w-11" />
+                <LogoMark size={44} className="relative" />
                 {!reduce && (
                   <motion.span
                     className="absolute inset-0 rounded-full border border-brand-500/50"
@@ -252,7 +252,7 @@ export function ConnectedSystem() {
             <div className="h-8 w-px bg-ink-900/15" />
             <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-brand-500/40 bg-ink-950">
               <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-lg" aria-hidden />
-              <LogoMark className="relative h-9 w-9" />
+              <LogoMark size={36} className="relative" />
             </div>
             <span className="mt-2 font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">
               The Upeo team

@@ -36,5 +36,4 @@ export const pageImages = {
   aboutHeader: "/pages/about-header.jpg",
   contactHeader: "/pages/contact-header.jpg",
   aboutTeam: "/pages/about-team.jpg",
-  founder: "/pages/emanuel-soita.png",
 } as const;

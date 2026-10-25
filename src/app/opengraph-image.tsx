@@ -27,7 +27,7 @@ export default function OGImage() {
         {/* top: mark + name */}
         <div style={{ display: "flex", alignItems: "center", gap: "22px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={markSrc} width={78} height={74} alt="" />
+          <img src={markSrc} width={78} height={78} alt="" />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{

@@ -17,10 +17,10 @@ export function CTA({
         <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
           <Reveal>
             <div className="max-w-xl">
-              <h2 className="text-3xl font-bold leading-tight text-white sm:text-4xl">
+              <h2 className="text-3xl font-bold leading-[1.08] text-white sm:text-4xl md:text-[2.75rem]">
                 {title}
               </h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-white/60">{intro}</p>
+              <p className="mt-4 text-lg leading-relaxed text-white/70">{intro}</p>
             </div>
           </Reveal>
 

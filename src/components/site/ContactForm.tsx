@@ -4,7 +4,9 @@ import { useState } from "react";
 import { CheckCircle2, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { company, services } from "@/lib/content";
+import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { TurnstileField } from "@/components/security/TurnstileField";
 
 type Fields = {
   name: string;
@@ -31,18 +33,15 @@ const empty: Fields = {
 
 const OTHER = "Other";
 
-const budgets = [
-  "Not sure yet",
-  "Under KES 100k",
-  "KES 100k – 500k",
-  "KES 500k – 2M",
-  "Over KES 2M",
-];
+const budgets = [...BUDGET_BANDS];
 
 export function ContactForm() {
   const [values, setValues] = useState<Fields>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [captcha, setCaptcha] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const isOther = values.service === OTHER;
 
@@ -64,29 +63,41 @@ export function ContactForm() {
     if (errors[key]) setErrors((p) => ({ ...p, [key]: undefined }));
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const eObj = validate(values);
     setErrors(eObj);
     if (Object.keys(eObj).length > 0) return;
+    if (!captcha) {
+      setErrors({ message: "Complete the verification check before sending." });
+      return;
+    }
 
-    const service = isOther ? `Other — ${values.serviceOther}` : values.service || "-";
-    const subject = encodeURIComponent(
-      `New project enquiry${values.company ? `: ${values.company}` : ""}`,
-    );
-    const body = encodeURIComponent(
-      [
-        `Name: ${values.name}`,
-        `Email: ${values.email}`,
-        `Phone: ${values.phone || "-"}`,
-        `Company: ${values.company || "-"}`,
-        `Service: ${service}`,
-        `Budget: ${values.budget || "-"}`,
-        "",
-        values.message,
-      ].join("\n"),
-    );
-    window.location.href = `mailto:${company.email}?subject=${subject}&body=${body}`;
+    const service = isOther ? `Other: ${values.serviceOther}` : values.service || "-";
+    setSending(true);
+    const res = await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "contact_form",
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        company: values.company,
+        services: service !== "-" ? [service] : [],
+        budget: values.budget,
+        message: values.message,
+        turnstileToken: captcha,
+      }),
+    });
+    setSending(false);
+    if (!res.ok) {
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      setErrors({ message: json.error || "Could not send. Try again or email us directly." });
+      setCaptcha("");
+      setCaptchaReset((n) => n + 1);
+      return;
+    }
     setSent(true);
   }
 
@@ -98,7 +109,7 @@ export function ContactForm() {
         </span>
         <h3 className="mt-5 text-xl font-semibold text-ink-900">Thank you!</h3>
         <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-body">
-          Your email draft is ready to send. We usually reply within one business day.
+          Your message is with the team. We usually reply within one business day.
           You can also reach us directly at{" "}
           <a
             href={`mailto:${company.email}`}
@@ -247,12 +258,21 @@ export function ContactForm() {
         </Field>
       </div>
 
+      <div className="mt-5">
+        <TurnstileField
+          action="contact"
+          theme="light"
+          onToken={setCaptcha}
+          resetSignal={captchaReset}
+        />
+      </div>
+
       <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted">
           We&apos;ll never share your details. Replies within one business day.
         </p>
-        <Button type="submit" size="lg" className="w-full sm:w-auto">
-          Send message
+        <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={sending}>
+          {sending ? "Sending…" : "Send message"}
           <Send
             className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
             aria-hidden

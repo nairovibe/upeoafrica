@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirm your new email</title>
+</head>
+<body style="margin:0;padding:0;background:#ffffff;width:100%">
+  <div style="display:none;max-height:0;overflow:hidden">Confirm this new email for your Upeo Africa Technologies account.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#ffffff;border-collapse:collapse">
+    <tr>
+      <td style="background:#ffffff;padding:28px 6% 0">
+        <img src="https://upeoafricatechnologies.co.ke/email-logo.png" alt="Upeo Africa Technologies" width="176" height="48" style="display:block;border:0;outline:none;text-decoration:none;height:48px;width:auto;max-width:80%" />
+      </td>
+    </tr>
+    <tr>
+      <td style="background:#ffffff;padding:32px 6% 8px">
+        <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#c2470a">Email change</p>
+        <h1 style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.3;color:#0b0e14;font-weight:700">Confirm this new address</h1>
+        <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#414b5a">Hello{{ with .Data }}{{ with .first_name }}, {{ . }}{{ end }}{{ end }}.</p>
+        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#414b5a">A request was made to move your Upeo Africa Technologies account to this email. Enter the code below only if you started that change. It expires in 60 minutes.</p>
+        <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#414b5a">Until you confirm, your current email stays in place.</p>
+        <p style="margin:28px 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#c2470a">Confirmation code</p>
+        <p style="margin:0;font-family:Georgia,Times,serif;font-size:32px;line-height:1.2;letter-spacing:0.22em;color:#0b0e14;font-weight:700">{{ .Token }}</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-collapse:collapse">
+          <tr>
+            <td style="background:#f97316">
+              <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 22px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none">Confirm new email</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="background:#ffffff;padding:28px 6% 40px">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="120" style="width:120px;margin:0 auto 20px;border-collapse:collapse">
+          <tr><td style="border-top:1px solid #e6e8ee;font-size:0;line-height:0;height:1px">&nbsp;</td></tr>
+        </table>
+        <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b7583">Upeo Africa Technologies Ltd</p>
+        <p style="margin:0 0 14px;font-family:Georgia,'Times New Roman',Times,serif;font-size:11px;letter-spacing:0.02em;line-height:1.6;color:#8a93a0">88225, Moi Avenue, Mombasa 80100</p>
+        <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:#8a93a0">This message was sent to {{ .Email }}. If you did not ask to change your email, ignore this email. Your current address stays as it is.</p>
+        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:#8a93a0">Please do not reply. &copy; 2026 · <a href="https://upeoafricatechnologies.co.ke" style="color:#8a93a0;text-decoration:none">upeoafricatechnologies.co.ke</a></p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

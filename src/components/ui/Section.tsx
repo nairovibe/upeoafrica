@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Reveal } from "./Reveal";
-import { LogoMark } from "@/components/brand/Logo";
+
+/** Section title and lead, taken from the homepage "What we do" block. */
+export const sectionTitleClass =
+  "text-3xl font-bold leading-[1.08] sm:text-4xl md:text-[2.75rem]";
+export const sectionIntroClass = "text-lg leading-relaxed";
 
 export function Eyebrow({
   children,
@@ -22,7 +26,6 @@ export function Eyebrow({
         className,
       )}
     >
-      <LogoMark className="h-4 w-4" />
       {children}
     </Tag>
   );
@@ -38,9 +41,8 @@ export function SectionHeading({
 }: {
   eyebrow?: string;
   /**
-   * Omit to drop the display heading entirely. The kicker then becomes the
-   * section's `h2` and the intro is promoted to a lead paragraph, so the
-   * document outline stays intact without stacking two headings.
+   * Omit to use the eyebrow text as the section `h2`. Size stays the same
+   * either way: the title scale and the text-lg description.
    */
   title?: React.ReactNode;
   intro?: React.ReactNode;
@@ -59,41 +61,26 @@ export function SectionHeading({
         className,
       )}
     >
-      {eyebrow && (
+      {eyebrow && !headless && (
         <Reveal>
-          <Eyebrow tone={tone} as={headless ? "h2" : "span"}>
-            {eyebrow}
-          </Eyebrow>
+          <Eyebrow tone={tone}>{eyebrow}</Eyebrow>
         </Reveal>
       )}
 
-      {title && (
+      {(title || eyebrow) && (
         <Reveal delay={0.05}>
-          <h2
-            className={cn(
-              "text-3xl sm:text-4xl md:text-[2.75rem] font-bold leading-[1.08]",
-              tone === "light" && "text-white",
-            )}
-          >
-            {title}
+          <h2 className={cn(sectionTitleClass, tone === "light" && "text-white")}>
+            {title || eyebrow}
           </h2>
         </Reveal>
       )}
 
       {intro && (
-        <Reveal delay={headless ? 0.05 : 0.1}>
+        <Reveal delay={0.1}>
           <p
             className={cn(
-              headless
-                ? "font-display text-xl leading-[1.45] sm:text-[1.6rem]"
-                : "text-lg leading-relaxed",
-              tone === "light"
-                ? headless
-                  ? "text-white/85"
-                  : "text-white/70"
-                : headless
-                  ? "text-slate-ink"
-                  : "text-body",
+              sectionIntroClass,
+              tone === "light" ? "text-white/70" : "text-body",
             )}
           >
             {intro}

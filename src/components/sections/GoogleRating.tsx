@@ -3,8 +3,11 @@ import { Star, ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { company } from "@/lib/content";
+import { getSettings } from "@/lib/cms";
 
-export function GoogleRating() {
+export async function GoogleRating() {
+  const settings = await getSettings();
+  const reviewUrl = settings?.google_review_url || company.googleReviewUrl;
   return (
     <section className="border-y border-line bg-surface-2 py-14">
       <Container>
@@ -39,7 +42,7 @@ export function GoogleRating() {
             </p>
 
             <a
-              href={company.googleReviewUrl}
+              href={reviewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-flex shrink-0 items-center gap-1.5 border-b-2 border-brand-500 pb-0.5 text-sm font-semibold text-ink-900 transition-colors duration-300 ease-out-expo hover:text-brand-600"

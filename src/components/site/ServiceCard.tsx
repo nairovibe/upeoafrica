@@ -33,7 +33,7 @@ export function ServiceCard({ service }: { service: Service }) {
       >
         Get this service
         <ArrowRight className="h-4 w-4 text-brand-500 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" />
-        <span className="sr-only"> — {service.title}</span>
+        <span className="sr-only">, {service.title}</span>
       </Link>
     </article>
   );

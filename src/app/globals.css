@@ -33,8 +33,8 @@
   --color-surface-3: #f0f2f5;
   --color-line: #e6e8ee;
 
-  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm), ui-sans-serif, system-ui, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -77,6 +77,10 @@
     letter-spacing: -0.02em;
     color: var(--color-ink-900);
     text-wrap: balance;
+  }
+
+  button {
+    font-family: var(--font-display);
   }
 
   p {
@@ -258,7 +262,7 @@
   Everything the body sections add is either a hover affordance or a scroll
   reveal. Hover affordances are Tailwind transitions on the `ease-out-expo`
   token, and the reduced-motion block above collapses every transition and
-  animation to 0.001ms with `!important` — so a visitor who asks for reduced
+  animation to 0.001ms with `!important`, so a visitor who asks for reduced
   motion still lands on the *end* state of every hover, just without the
   travel. Scroll reveals go through `Reveal`, which renders a plain static
   element under reduced motion. Nothing can strand an element at zero opacity.
@@ -270,4 +274,17 @@
    the marquee is already `animation: none`, so this rule is inert there. */
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@media print {
+  .desk-chrome,
+  .invoice-chrome {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .invoice-paper {
+    box-shadow: none !important;
+  }
 }

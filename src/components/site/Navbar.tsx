@@ -1,36 +1,85 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, ChevronDown, ArrowRight, Plus } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight, ArrowUpRight, MapPin, Phone, Mail } from "lucide-react";
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { Logo } from "@/components/brand/Logo";
-import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { OPEN_INQUIRY_EVENT } from "@/components/site/InquiryModal";
-import { services, megaServices, products, payments } from "@/lib/content";
+import { services, company, nav } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-type MegaKey = "services" | "products";
+const navItems: { label: string; href: string; menu?: boolean }[] = nav.map((item) =>
+  item.href === "/services" ? { ...item, menu: true } : item,
+);
 
-const navItems: { label: string; href: string; mega?: MegaKey }[] = [
-  { label: "Home", href: "/" },
-  { label: "Services", href: "/services", mega: "services" },
-  { label: "Products", href: "/#products", mega: "products" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
+const serviceLinks = services.map((service) => ({
+  href: `/services/${service.slug}`,
+  label: service.title,
+}));
 
-const bySlug = Object.fromEntries(services.map((s) => [s.slug, s]));
 const openInquiry = () => window.dispatchEvent(new Event(OPEN_INQUIRY_EVENT));
+const tel = company.phone.replace(/\s/g, "");
 
-export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
+const navLinkClass = (active: boolean) =>
+  cn(
+    "inline-flex items-center gap-1 px-2 py-2 text-[14px] leading-5 font-medium transition-colors duration-300 xl:gap-1.5 xl:px-3 xl:text-[15px]",
+    active ? "text-brand-500" : "text-ink-700 hover:text-brand-500",
+  );
+
+function NavLabel({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return (
+    <span className="relative">
+      {children}
+      <span
+        className={cn(
+          "absolute -bottom-2 left-0 right-0 h-0.5 bg-brand-500",
+          active ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden
+      />
+    </span>
+  );
+}
+
+function SocialIcon({
+  href,
+  label,
+  color,
+  children,
+}: {
+  href: string;
+  label: string;
+  color?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="inline-flex h-12 w-7 items-center justify-center transition-opacity duration-300 hover:opacity-70"
+      style={color ? { color } : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
+export function Navbar({
+  linkedin,
+  xUrl,
+}: {
+  linkedin?: string | null;
+  xUrl?: string | null;
+  github?: string | null;
+}) {
   const [open, setOpen] = useState(false);
-  const [mega, setMega] = useState<MegaKey | null>(null);
-  // Which dropdown is expanded inside the mobile menu (accordion, one at a time).
-  const [mobileMega, setMobileMega] = useState<MegaKey | null>(null);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [mobileServices, setMobileServices] = useState(false);
   const pathname = usePathname();
 
   // Navigating closes both menus. This is React's documented "reset state when
@@ -41,19 +90,9 @@ export function Navbar() {
   if (lastPath !== pathname) {
     setLastPath(pathname);
     setOpen(false);
-    setMega(null);
-    setMobileMega(null);
+    setServicesOpen(false);
+    setMobileServices(false);
   }
-
-  const isHome = pathname === "/";
-  const overHero = isHome && !scrolled && !open && !mega;
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -63,64 +102,115 @@ export function Navbar() {
   }, [open]);
 
   return (
-    <header
-      onMouseLeave={() => setMega(null)}
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
-        overHero
-          ? "bg-transparent"
-          : "border-b border-line bg-white/90 backdrop-blur-xl",
-      )}
-    >
-      <Container className="flex h-18 items-center justify-between">
-        <Logo variant={overHero ? "light" : "default"} priority />
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white font-display">
+      <div className="hidden border-b border-[#ececec] bg-[#F5F5F5] md:block">
+        <Container className="flex h-12 items-center justify-between gap-6 text-[12px] leading-4 font-normal text-[#1c1c1c]">
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{company.addressLine}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-4">
+            <a
+              href={`tel:${tel}`}
+              className="inline-flex h-12 items-center gap-1.5 transition-colors duration-300 hover:text-brand-600"
+            >
+              <Phone className="h-3.5 w-3.5" aria-hidden />
+              {company.phone}
+            </a>
+            <a
+              href={`mailto:${company.email}`}
+              className="hidden h-12 items-center gap-1.5 transition-colors duration-300 hover:text-brand-600 xl:inline-flex"
+            >
+              <Mail className="h-3.5 w-3.5" aria-hidden />
+              {company.email}
+            </a>
+            <span className="inline-flex items-center gap-0.5">
+              <svg width="0" height="0" className="absolute" aria-hidden>
+                <defs>
+                  <linearGradient id="instagram-official" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fccc63" />
+                    <stop offset="20%" stopColor="#f77737" />
+                    <stop offset="45%" stopColor="#e1306c" />
+                    <stop offset="70%" stopColor="#c13584" />
+                    <stop offset="100%" stopColor="#833ab4" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <SocialIcon href={company.social.facebook} label="Facebook" color="#1877F2">
+                <FaFacebookF className="h-3.5 w-3.5" aria-hidden />
+              </SocialIcon>
+              <SocialIcon href={xUrl || company.social.x} label="X" color="#000000">
+                <FaXTwitter className="h-3.5 w-3.5" aria-hidden />
+              </SocialIcon>
+              <SocialIcon href={linkedin || company.social.linkedin} label="LinkedIn" color="#0A66C2">
+                <FaLinkedinIn className="h-3.5 w-3.5" aria-hidden />
+              </SocialIcon>
+              <SocialIcon href={company.social.instagram} label="Instagram">
+                <FaInstagram className="h-3.5 w-3.5 [&>path]:fill-[url(#instagram-official)]" aria-hidden />
+              </SocialIcon>
+            </span>
+          </span>
+        </Container>
+      </div>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+      <Container className="relative flex h-[72px] items-center gap-6">
+        <Logo priority className="relative z-10 shrink-0" />
+
+        <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Primary">
           {navItems.map((item) => {
-            const base = item.href.split("#")[0];
-            const active =
-              item.href === "/"
-                ? pathname === "/"
-                : base !== "/"
-                  ? pathname.startsWith(base)
-                  : false;
-            return (
-              <div
-                key={item.label}
-                onMouseEnter={() => setMega(item.mega ?? null)}
-                className="relative"
-              >
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-none px-4 py-2 text-[15px] font-medium transition-colors duration-300 ease-out-expo",
-                    overHero
-                      ? "text-white/75 hover:text-white"
-                      : active || mega === item.mega
-                        ? "text-brand-600"
-                        : "text-slate-ink hover:text-brand-600",
-                  )}
+            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            if (item.menu) {
+              return (
+                <div
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() => setServicesOpen(true)}
+                  onMouseLeave={() => setServicesOpen(false)}
                 >
-                  {item.label}
-                  {item.mega && (
+                  <Link
+                    href={item.href}
+                    aria-expanded={servicesOpen}
+                    aria-haspopup="true"
+                    aria-current={active ? "page" : undefined}
+                    className={navLinkClass(active)}
+                    onClick={(event) => {
+                      if (!servicesOpen) {
+                        event.preventDefault();
+                        setServicesOpen(true);
+                      }
+                    }}
+                  >
+                    <NavLabel active={active}>{item.label}</NavLabel>
                     <ChevronDown
-                      className={cn(
-                        "h-3.5 w-3.5 transition-transform duration-300 ease-out-expo",
-                        mega === item.mega && "rotate-180",
-                      )}
+                      className={cn("h-3.5 w-3.5 transition-transform duration-300", servicesOpen && "rotate-180")}
+                      aria-hidden
                     />
-                  )}
-                </Link>
-              </div>
+                  </Link>
+                  {servicesOpen && <ServicesMenu />}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={navLinkClass(active)}
+              >
+                <NavLabel active={active}>{item.label}</NavLabel>
+              </Link>
             );
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Button onClick={openInquiry} size="sm" withArrow>
+        <div className="relative z-10 ml-auto hidden items-center lg:flex">
+          <button
+            type="button"
+            onClick={openInquiry}
+            className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-brand-500 px-7 text-[15px] leading-5 font-semibold text-white transition-colors duration-300 hover:bg-brand-600"
+          >
             Start a project
-          </Button>
+          </button>
         </div>
 
         <button
@@ -128,34 +218,11 @@ export function Navbar() {
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
-          className={cn(
-            "inline-flex h-11 w-11 cursor-pointer items-center justify-center transition-colors duration-300 ease-out-expo lg:hidden",
-            overHero
-              ? "bg-[rgba(10,7,7,0.35)] text-white backdrop-blur-[17px] hover:bg-white/10"
-              : "text-ink-900 hover:bg-surface-3",
-          )}
+          className="relative z-10 ml-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center text-ink-900 transition-colors duration-300 ease-out-expo hover:bg-surface-3 lg:ml-0 lg:hidden"
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </Container>
-
-      {/* Mega panel (desktop) */}
-      <AnimatePresence>
-        {mega && (
-          <motion.div
-            key={mega}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-x-0 top-full hidden border-b border-line bg-white lg:block"
-          >
-            <Container className="py-8">
-              {mega === "services" ? <ServicesMega /> : <ProductsMega />}
-            </Container>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Mobile menu */}
       <div
@@ -168,47 +235,38 @@ export function Navbar() {
       >
         <Container className="flex flex-col py-2">
           {navItems.map((item) => {
-            // Items with a mega panel become an accordion: the label still
-            // navigates, and a "+" beside it expands the sub-links in place.
-            if (item.mega) {
-              const expanded = mobileMega === item.mega;
+            if (item.menu) {
               return (
                 <div key={item.label} className="border-b border-line">
                   <div className="flex items-center justify-between">
                     <Link
                       href={item.href}
-                      className="flex-1 py-3.5 text-base font-semibold text-ink-900 transition-colors duration-300 ease-out-expo hover:text-brand-600"
+                      className="flex-1 py-3.5 text-base font-semibold text-ink-900 transition-colors duration-300 hover:text-brand-600"
                     >
                       {item.label}
                     </Link>
                     <button
                       type="button"
-                      onClick={() => setMobileMega(expanded ? null : item.mega!)}
-                      aria-label={`${expanded ? "Collapse" : "Expand"} ${item.label}`}
-                      aria-expanded={expanded}
-                      className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-ink-900 transition-colors duration-300 ease-out-expo hover:text-brand-600"
+                      onClick={() => setMobileServices((value) => !value)}
+                      aria-label={`${mobileServices ? "Collapse" : "Expand"} ${item.label}`}
+                      aria-expanded={mobileServices}
+                      className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-ink-900"
                     >
-                      <Plus
-                        className={cn(
-                          "h-5 w-5 transition-transform duration-300 ease-out-expo",
-                          expanded && "rotate-45",
-                        )}
-                      />
+                      <ChevronDown className={cn("h-5 w-5 transition-transform duration-300", mobileServices && "rotate-180")} />
                     </button>
                   </div>
-
-                  <div
-                    className={cn(
-                      "overflow-hidden transition-[max-height] duration-300 ease-out",
-                      expanded ? "max-h-[1200px]" : "max-h-0",
-                    )}
-                  >
-                    <div className="pb-4">
-                      {item.mega === "services" ? (
-                        <MobileServices />
-                      ) : (
-                        <MobileProducts />
-                      )}
+                  <div className={cn("overflow-hidden transition-[max-height] duration-300", mobileServices ? "max-h-[800px]" : "max-h-0")}>
+                    <div className="flex flex-col gap-2 pb-4">
+                      {serviceLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className="flex items-center justify-between rounded-lg border border-[#ececec] px-4 py-3 text-sm font-medium text-ink-900"
+                        >
+                          {link.label}
+                          <ArrowUpRight className="h-4 w-4 text-muted" aria-hidden />
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -246,212 +304,27 @@ export function Navbar() {
   );
 }
 
-/** Services sub-links for the mobile accordion, grouped as on desktop. */
-function MobileServices() {
+function ServicesMenu() {
+  const midpoint = Math.ceil(serviceLinks.length / 2);
+  const columns = [serviceLinks.slice(0, midpoint), serviceLinks.slice(midpoint)];
+
   return (
-    <div className="pl-3">
-      {megaServices.map((g) => (
-        <div key={g.group} className="py-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
-            {g.group}
-          </p>
-          <div className="mt-1 flex flex-col">
-            {g.slugs.map((slug) => {
-              const s = bySlug[slug];
-              if (!s) return null;
-              const Icon = s.icon;
-              return (
-                <Link
-                  key={slug}
-                  href={`/services/${slug}`}
-                  className="flex items-center gap-2.5 py-2 text-sm text-slate-ink transition-colors duration-300 ease-out-expo hover:text-brand-600"
-                >
-                  <Icon className="h-4 w-4 shrink-0 text-brand-500" />
-                  {s.title}
-                </Link>
-              );
-            })}
+    <div className="absolute left-1/2 top-full z-50 w-[640px] -translate-x-1/2 pt-3">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#ececec] bg-white p-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)]">
+        {columns.map((column, index) => (
+          <div key={index} className="flex flex-col gap-2">
+            {column.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-[#ececec] bg-white px-4 py-3 text-sm font-medium text-[#1c1c1c] transition-colors duration-300 hover:border-brand-200 hover:text-brand-600"
+              >
+                <span>{link.label}</span>
+                <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+              </Link>
+            ))}
           </div>
-        </div>
-      ))}
-      <Link
-        href="/services"
-        className="mt-1 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-brand-600"
-      >
-        All services
-        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-      </Link>
-    </div>
-  );
-}
-
-/** Products + payments sub-links for the mobile accordion. */
-function MobileProducts() {
-  return (
-    <div className="pl-3">
-      <div className="py-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
-          Products
-        </p>
-        <div className="mt-1 flex flex-col">
-          {products.map((p) => {
-            const Icon = p.icon;
-            return (
-              <Link
-                key={p.title}
-                href="/#products"
-                className="flex items-center gap-2.5 py-2 text-sm text-slate-ink transition-colors duration-300 ease-out-expo hover:text-brand-600"
-              >
-                <Icon className="h-4 w-4 shrink-0 text-brand-500" />
-                {p.title}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-      <div className="py-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-600">
-          Payments
-        </p>
-        <div className="mt-1 flex flex-wrap gap-x-5 gap-y-1">
-          {payments.map((pm) => (
-            <Link
-              key={pm}
-              href="/#products"
-              className="flex items-center gap-1.5 py-1 text-sm text-slate-ink transition-colors duration-300 ease-out-expo hover:text-brand-600"
-            >
-              <span className="h-1.5 w-1.5 shrink-0 bg-brand-500" aria-hidden />
-              {pm}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ServicesMega() {
-  return (
-    <div className="grid grid-cols-4 gap-8">
-      {megaServices.map((g) => (
-        <div key={g.group}>
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-            {g.group}
-          </p>
-          <ul className="space-y-4">
-            {g.slugs.map((slug) => {
-              const s = bySlug[slug];
-              if (!s) return null;
-              return (
-                <li key={slug}>
-                  <Link href={`/services/${slug}`} className="group flex gap-3">
-                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center border border-line text-brand-600 transition-[color,background-color,border-color] duration-300 ease-out-expo group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:text-white">
-                      <s.icon className="h-4.5 w-4.5" />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-ink-900 transition-colors duration-300 ease-out-expo group-hover:text-brand-600">
-                        {s.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-snug text-muted">
-                        {s.short}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-
-      {/* Featured CTA */}
-      <div className="flex flex-col justify-between bg-ink-950 p-6 text-white">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">
-            Not sure where to start?
-          </p>
-          <p className="mt-3 text-lg font-semibold leading-snug">
-            Answer a few quick questions and we&apos;ll map it out with you.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openInquiry}
-          className="group mt-6 inline-flex cursor-pointer items-center justify-center gap-2 bg-brand-500 px-5 py-2.5 text-sm font-medium text-white transition-[background-color,box-shadow] duration-300 ease-out-expo hover:bg-brand-600 hover:shadow-[0_12px_28px_-12px_rgba(249,115,22,0.85)]"
-        >
-          Start a project
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
-            aria-hidden
-          />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ProductsMega() {
-  return (
-    <div className="grid grid-cols-4 gap-8">
-      <div className="col-span-2">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-          Our products
-        </p>
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {products.map((p) => (
-            <li key={p.title}>
-              <Link href="/#products" className="group flex gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center border border-line text-brand-600 transition-[color,background-color,border-color] duration-300 ease-out-expo group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:text-white">
-                  <p.icon className="h-4.5 w-4.5" />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-ink-900 transition-colors duration-300 ease-out-expo group-hover:text-brand-600">
-                    {p.title}
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-snug text-muted">
-                    {p.tags.join(" · ")}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
-          Payments
-        </p>
-        <ul className="space-y-2.5">
-          {payments.map((pm) => (
-            <li key={pm}>
-              <Link
-                href="/#products"
-                className="group flex items-center gap-2 text-sm font-medium text-slate-ink transition-colors duration-300 ease-out-expo hover:text-brand-600"
-              >
-                <span className="h-1.5 w-1.5 bg-brand-500 transition-transform duration-300 ease-out-expo group-hover:scale-150" />
-                {pm}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="flex flex-col justify-between bg-ink-950 p-6 text-white">
-        <p className="text-lg font-semibold leading-snug">
-          Get paid the way Africa pays.
-        </p>
-        <button
-          type="button"
-          onClick={openInquiry}
-          className="group mt-6 inline-flex cursor-pointer items-center justify-center gap-2 bg-brand-500 px-5 py-2.5 text-sm font-medium text-white transition-[background-color,box-shadow] duration-300 ease-out-expo hover:bg-brand-600 hover:shadow-[0_12px_28px_-12px_rgba(249,115,22,0.85)]"
-        >
-          Integrate payments
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
-            aria-hidden
-          />
-        </button>
+        ))}
       </div>
     </div>
   );
