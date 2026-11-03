@@ -16,6 +16,10 @@ export function rateLimit(key: string, max = 8, windowMs = 10 * 60 * 1000) {
   return true;
 }
 
+function escapeHtml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function fill(tpl: string, vars: Record<string, string>) {
   return tpl.replace(/\{([a-z_]+)\}/gi, (_, k: string) => vars[k] ?? vars[k.toLowerCase()] ?? "");
 }
@@ -94,7 +98,16 @@ export async function notifyLead(payload: {
   leadId?: string;
 }) {
   const first = payload.name.split(" ")[0] || payload.name;
-  const kind = payload.source === "inquiry" ? "project enquiry" : "contact";
+  const kind =
+    payload.source === "inquiry"
+      ? "project enquiry"
+      : payload.source === "founders"
+        ? "Founders Zone enquiry"
+        : payload.source === "event"
+          ? "event enquiry"
+          : "contact";
+  const html = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\n/g, "<br />");
   const db = await deskDb();
   const { data: settings } = await db.from("site_settings").select("*").eq("id", 1).maybeSingle();
   const hours = String(settings?.autoresponder_hours ?? 24);
@@ -110,7 +123,7 @@ export async function notifyLead(payload: {
     type: "lead",
     title: `New ${kind}: ${payload.name}`,
     body: payload.summary.slice(0, 180),
-    href: payload.leadId ? `/admin/leads/${payload.leadId}` : "/admin/leads",
+    href: payload.leadId ? `/console/leads/${payload.leadId}` : "/console/leads",
   }).catch(() => {});
 
   const studioId = await sendHtml({
@@ -119,7 +132,7 @@ export async function notifyLead(payload: {
     subject: `New ${kind}: ${payload.name}`,
     preview: `New ${kind} from ${payload.name}.`,
     heading: `New ${kind}`,
-    body: payload.summary.replace(/\n/g, "<br />"),
+    body: html(payload.summary),
   });
   await logOutboundEmail({
     to: settings?.public_email || company.email,
@@ -135,8 +148,8 @@ export async function notifyLead(payload: {
     to: payload.email,
     subject,
     preview: `We have your message and will get in touch within ${hours} hours.`,
-    heading: `Hello, ${first}.`,
-    body: ack.replace(/\n/g, "<br />"),
+    heading: `Hello, ${escapeHtml(first)}.`,
+    body: html(ack),
   });
   await logOutboundEmail({
     to: payload.email,
@@ -160,8 +173,8 @@ export async function sendLeadReply(opts: {
     replyTo: company.email,
     subject,
     preview: opts.body.slice(0, 80),
-    heading: `Hello, ${first}.`,
-    body: opts.body.replace(/\n/g, "<br />"),
+    heading: `Hello, ${escapeHtml(first)}.`,
+    body: escapeHtml(opts.body).replace(/\n/g, "<br />"),
   });
   await logOutboundEmail({
     to: opts.to,
@@ -214,7 +227,7 @@ export async function notifyBuyerReceipt(opts: {
     type: "order",
     title: `Paid: ${opts.title}`,
     body: opts.email,
-    href: opts.invoiceId ? `/admin/invoices/${opts.invoiceId}` : "/admin/orders",
+    href: opts.invoiceId ? `/console/invoices/${opts.invoiceId}` : "/console/orders",
   }).catch(() => {});
 }
 
@@ -233,7 +246,7 @@ export async function sendInvoiceEmail(opts: {
     subject,
     preview: `${opts.number} · KES ${opts.total.toLocaleString("en-KE")}`,
     heading: `Invoice ${opts.number}`,
-    body: `Hello, ${opts.name.split(" ")[0] || opts.name}. Please find invoice ${opts.number} for KES ${opts.total.toLocaleString("en-KE")}. You can view or print it from the link below.`,
+    body: `Hello, ${escapeHtml(opts.name.split(" ")[0] || opts.name)}. Please find invoice ${opts.number} for KES ${opts.total.toLocaleString("en-KE")}. You can view or print it from the link below.`,
     buttonLabel: "View invoice",
     buttonUrl: opts.url,
   });
@@ -247,7 +260,7 @@ export async function sendInvoiceEmail(opts: {
 }
 
 export async function firePublishWebhook(body: {
-  type: "article" | "product" | "work";
+  type: "article" | "product" | "work" | "event";
   title: string;
   url: string;
   excerpt?: string;

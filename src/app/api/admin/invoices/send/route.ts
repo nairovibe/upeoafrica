@@ -12,6 +12,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: invoice } = await supabase.from("invoices").select("*").eq("id", invoiceId).maybeSingle();
   if (!invoice) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  if (invoice.status === "paid" || invoice.status === "void") {
+    return NextResponse.json({ error: `This invoice is ${invoice.status}.` }, { status: 409 });
+  }
   const origin = process.env.NEXT_PUBLIC_SITE_URL || company.domain;
   await sendInvoiceEmail({
     to: invoice.bill_email,

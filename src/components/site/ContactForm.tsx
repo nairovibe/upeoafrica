@@ -7,6 +7,20 @@ import { company, services } from "@/lib/content";
 import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
+import { answer, leadContext } from "@/lib/lead-context";
+
+const Q = {
+  name: "Full name",
+  email: "Email",
+  phone: "Phone / WhatsApp",
+  company: "Company",
+  service: "Service of interest",
+  serviceOther: "What do you need?",
+  budget: "Rough budget",
+  message: "How can we help?",
+};
+
+const NO_BUDGET = "Prefer not to say";
 
 type Fields = {
   name: string;
@@ -87,6 +101,20 @@ export function ContactForm() {
         services: service !== "-" ? [service] : [],
         budget: values.budget,
         message: values.message,
+        details: {
+          form: "Contact form",
+          answers: [
+            answer(Q.name, values.name),
+            answer(Q.email, values.email),
+            answer(Q.phone, values.phone),
+            answer(Q.company, values.company),
+            answer(Q.service, values.service),
+            ...(isOther ? [answer(Q.serviceOther, values.serviceOther)] : []),
+            answer(Q.budget, values.budget || NO_BUDGET),
+            answer(Q.message, values.message),
+          ],
+        },
+        ...leadContext(),
         turnstileToken: captcha,
       }),
     });
@@ -140,7 +168,7 @@ export function ContactForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="border border-line bg-white p-6 sm:p-8">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Full name" error={errors.name} htmlFor="name" required>
+        <Field label={Q.name} error={errors.name} htmlFor="name" required>
           <input
             id="name"
             type="text"
@@ -152,7 +180,7 @@ export function ContactForm() {
             aria-invalid={!!errors.name}
           />
         </Field>
-        <Field label="Email" error={errors.email} htmlFor="email" required>
+        <Field label={Q.email} error={errors.email} htmlFor="email" required>
           <input
             id="email"
             type="email"
@@ -164,7 +192,7 @@ export function ContactForm() {
             aria-invalid={!!errors.email}
           />
         </Field>
-        <Field label="Phone / WhatsApp" htmlFor="phone">
+        <Field label={Q.phone} htmlFor="phone">
           <input
             id="phone"
             type="tel"
@@ -175,7 +203,7 @@ export function ContactForm() {
             placeholder="+254 …"
           />
         </Field>
-        <Field label="Company" htmlFor="company">
+        <Field label={Q.company} htmlFor="company">
           <input
             id="company"
             type="text"
@@ -186,7 +214,7 @@ export function ContactForm() {
             placeholder="Your organisation"
           />
         </Field>
-        <Field label="Service of interest" htmlFor="service">
+        <Field label={Q.service} htmlFor="service">
           <select
             id="service"
             value={values.service}
@@ -202,14 +230,14 @@ export function ContactForm() {
             <option value={OTHER}>Other (tell us below)</option>
           </select>
         </Field>
-        <Field label="Rough budget" htmlFor="budget">
+        <Field label={Q.budget} htmlFor="budget">
           <select
             id="budget"
             value={values.budget}
             onChange={(e) => set("budget", e.target.value)}
             className={cn(inputBase, "border-line cursor-pointer appearance-none")}
           >
-            <option value="">Prefer not to say</option>
+            <option value="">{NO_BUDGET}</option>
             {budgets.map((b) => (
               <option key={b} value={b}>
                 {b}
@@ -224,7 +252,7 @@ export function ContactForm() {
       {isOther && (
         <div className="mt-5">
           <Field
-            label="What do you need?"
+            label={Q.serviceOther}
             error={errors.serviceOther}
             htmlFor="serviceOther"
             required
@@ -246,7 +274,7 @@ export function ContactForm() {
       )}
 
       <div className="mt-5">
-        <Field label="How can we help?" error={errors.message} htmlFor="message" required>
+        <Field label={Q.message} error={errors.message} htmlFor="message" required>
           <textarea
             id="message"
             rows={5}

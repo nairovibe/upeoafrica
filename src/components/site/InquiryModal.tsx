@@ -7,6 +7,7 @@ import { company } from "@/lib/content";
 import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
+import { answer, captureLeadContext, leadContext } from "@/lib/lead-context";
 
 export const OPEN_INQUIRY_EVENT = "open-inquiry";
 
@@ -17,6 +18,7 @@ type Answers = {
   budget: string;
   name: string;
   email: string;
+  phone: string;
   companyName: string;
 };
 
@@ -27,7 +29,19 @@ const empty: Answers = {
   budget: "",
   name: "",
   email: "",
+  phone: "",
   companyName: "",
+};
+
+const Q = {
+  services: "What can we help you with?",
+  stage: "Where are you starting from?",
+  timeline: "What's your ideal timeline?",
+  budget: "A rough budget range?",
+  name: "Full name",
+  email: "Email",
+  phone: "Phone / WhatsApp",
+  company: "Company",
 };
 
 const SERVICES = [
@@ -53,6 +67,10 @@ export function InquiryModal() {
   const [captcha, setCaptcha] = useState("");
   const [captchaReset, setCaptchaReset] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    captureLeadContext();
+  }, []);
 
   useEffect(() => {
     const onOpen = () => {
@@ -111,11 +129,26 @@ export function InquiryModal() {
         source: "inquiry",
         name: a.name,
         email: a.email,
+        phone: a.phone,
         company: a.companyName,
         services: a.services,
         stage: a.stage,
         timeline: a.timeline,
         budget: a.budget,
+        details: {
+          form: "Project wizard",
+          answers: [
+            answer(Q.services, a.services),
+            answer(Q.stage, a.stage),
+            answer(Q.timeline, a.timeline),
+            answer(Q.budget, a.budget || "Skipped"),
+            answer(Q.name, a.name),
+            answer(Q.email, a.email),
+            answer(Q.phone, a.phone),
+            answer(Q.company, a.companyName),
+          ],
+        },
+        ...leadContext(),
         turnstileToken: captcha,
       }),
     });
@@ -217,7 +250,7 @@ export function InquiryModal() {
                 >
                   {step === 0 && (
                     <Step
-                      title="What can we help you with?"
+                      title={Q.services}
                       hint="Pick all that apply. This shapes who from our team joins the call."
                     >
                       <div className="flex flex-wrap gap-2.5">
@@ -250,7 +283,7 @@ export function InquiryModal() {
                   )}
 
                   {step === 1 && (
-                    <Step title="Where are you starting from?">
+                    <Step title={Q.stage}>
                       <Options
                         options={STAGES}
                         value={a.stage}
@@ -260,7 +293,7 @@ export function InquiryModal() {
                   )}
 
                   {step === 2 && (
-                    <Step title="What's your ideal timeline?">
+                    <Step title={Q.timeline}>
                       <Options
                         options={TIMELINES}
                         value={a.timeline}
@@ -271,7 +304,7 @@ export function InquiryModal() {
 
                   {step === 3 && (
                     <Step
-                      title="A rough budget range?"
+                      title={Q.budget}
                       hint="Optional. It helps us tailor the right proposal. You can skip this."
                     >
                       <Options
@@ -285,7 +318,7 @@ export function InquiryModal() {
                   {step === 4 && (
                     <Step title="Last step. Where do we send the plan?">
                       <div className="flex flex-col gap-4">
-                        <Field label="Full name" required>
+                        <Field label={Q.name} required>
                           <input
                             value={a.name}
                             onChange={(e) => setA((p) => ({ ...p, name: e.target.value }))}
@@ -293,7 +326,7 @@ export function InquiryModal() {
                             placeholder="Amina Hassan"
                           />
                         </Field>
-                        <Field label="Email" required>
+                        <Field label={Q.email} required>
                           <input
                             type="email"
                             value={a.email}
@@ -302,7 +335,17 @@ export function InquiryModal() {
                             placeholder="you@company.com"
                           />
                         </Field>
-                        <Field label="Company">
+                        <Field label={Q.phone}>
+                          <input
+                            type="tel"
+                            autoComplete="tel"
+                            value={a.phone}
+                            onChange={(e) => setA((p) => ({ ...p, phone: e.target.value }))}
+                            className="w-full border border-line bg-white px-4 py-3 text-[15px] text-ink-900 outline-none transition-colors focus:border-brand-400 focus:ring-4 focus:ring-brand-500/15"
+                            placeholder="+254 …"
+                          />
+                        </Field>
+                        <Field label={Q.company}>
                           <input
                             value={a.companyName}
                             onChange={(e) =>

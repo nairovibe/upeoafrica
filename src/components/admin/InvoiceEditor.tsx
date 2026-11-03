@@ -1,22 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { publicMediaUrl } from "@/lib/constants";
+import { formatKesMoney, publicMediaUrl } from "@/lib/constants";
 import { company } from "@/lib/content";
-import {
-  composeBillTo,
-  defaultFromBlock,
-  firstLine,
-  invoiceTotals,
-  plusDaysIso,
-  statusBanner,
-  todayIso,
-} from "@/lib/invoice";
+import { composeBillTo, defaultFromBlock, firstLine, invoiceTotals, plusDaysIso, todayIso } from "@/lib/invoice";
 import type { Invoice, InvoiceItem, SiteSettings } from "@/lib/cms";
 import { InvoiceDocument, type InvoiceDocValues } from "@/components/invoice/InvoiceDocument";
-import { AdminBtn } from "@/components/admin/ui";
+import { AdminBtn, AdminPage, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
+import {
+  docBanner,
+  formatWhen,
+  invoiceState,
+  invoiceTone,
+  paymentLabel,
+  paymentTone,
+  toMsisdn,
+  todayNairobi,
+} from "@/components/admin/money/format";
+import { cn } from "@/lib/utils";
+
+type Msg = { ok: boolean; text: string } | null;
 
 export function InvoiceEditor({
   initial,
@@ -24,21 +30,26 @@ export function InvoiceEditor({
   settings,
   lead,
   clients = [],
+  payments = [],
+  defaultClientId,
 }: {
   initial?: Invoice;
   items?: InvoiceItem[];
-  settings: SiteSettings;
+  settings: SiteSettings | null;
   lead?: { id: string; name: string; email: string; phone: string | null; company: string | null } | null;
   clients?: { id: string; name: string; billing_email: string | null; phone: string | null; kra_pin: string | null }[];
+  payments?: { id: string; result: string | null; created_at: string }[];
+  defaultClientId?: string;
 }) {
   const router = useRouter();
-  const logo = publicMediaUrl(settings.logo_path) || `${company.domain}/email-logo.png`;
-  const [clientId, setClientId] = useState(initial?.client_id ?? "");
-  const [billEmail, setBillEmail] = useState(initial?.bill_email || lead?.email || "");
-  const [billPhone, setBillPhone] = useState(initial?.bill_phone || lead?.phone || "");
+  const logo = publicMediaUrl(settings?.logo_path) || `${company.domain}/email-logo.png`;
+  const preset = !initial && !lead ? clients.find((c) => c.id === defaultClientId) : undefined;
+  const [clientId, setClientId] = useState(initial?.client_id ?? preset?.id ?? "");
+  const [billEmail, setBillEmail] = useState(initial?.bill_email || lead?.email || preset?.billing_email || "");
+  const [billPhone, setBillPhone] = useState(initial?.bill_phone || lead?.phone || preset?.phone || "");
   const [status, setStatus] = useState(initial?.status || "draft");
-  const [stkPhone, setStkPhone] = useState(initial?.bill_phone || lead?.phone || "254");
-  const [msg, setMsg] = useState<string | null>(null);
+  const [stkPhone, setStkPhone] = useState(toMsisdn(initial?.bill_phone || lead?.phone || preset?.phone) || "254");
+  const [msg, setMsg] = useState<Msg>(null);
   const [busy, setBusy] = useState(false);
   const [doc, setDoc] = useState<Omit<InvoiceDocValues, "banner" | "subtotal" | "discount" | "tax" | "total" | "balance">>(() => ({
     number: initial?.number || "",
@@ -46,10 +57,10 @@ export function InvoiceEditor({
     billTo:
       initial?.bill_to_block ||
       composeBillTo({
-        name: initial?.bill_name || lead?.name,
+        name: initial?.bill_name || lead?.name || preset?.name,
         company: initial?.bill_company || lead?.company,
-        email: initial?.bill_email || lead?.email,
-        phone: initial?.bill_phone || lead?.phone,
+        email: initial?.bill_email || lead?.email || preset?.billing_email,
+        phone: initial?.bill_phone || lead?.phone || preset?.phone,
       }),
     shipTo: initial?.ship_to || "",
     issuedOn: initial?.issued_on || todayIso(),
@@ -63,17 +74,25 @@ export function InvoiceEditor({
         }))
       : [{ description: "", qty: 1, unit: 0 }],
     specs: initial?.notes || "",
-    paymentAdvice: initial?.payment_note || settings.payment_note || "",
+    paymentAdvice: initial?.payment_note || settings?.payment_note || "",
     thankYou: initial?.thank_you || "Thank you for working with us!",
     showDiscount: Number(initial?.discount_kes || 0) > 0 || initial?.discount_percent != null,
     discountKind: initial?.discount_percent != null ? "percent" : "amount",
     discountValue: Number(initial?.discount_percent ?? initial?.discount_kes ?? 0),
     showTax: initial?.vat_percent != null && Number(initial.vat_percent) > 0,
-    taxPercent: Number(initial?.vat_percent ?? settings.vat_percent ?? 0),
+    taxPercent: Number(initial?.vat_percent ?? settings?.vat_percent ?? 0),
     showShipping: Number(initial?.shipping_kes || 0) > 0,
     shipping: Number(initial?.shipping_kes || 0),
     amountPaid: Number(initial?.amount_paid_kes || 0),
   }));
+
+  // The send API and the IntaSend webhook change status and amount paid on the server.
+  const [seenUpdate, setSeenUpdate] = useState(initial?.updated_at);
+  if (initial && initial.updated_at !== seenUpdate) {
+    setSeenUpdate(initial.updated_at);
+    setStatus(initial.status);
+    setDoc((d) => ({ ...d, number: initial.number, amountPaid: Number(initial.amount_paid_kes || 0) }));
+  }
 
   const totals = useMemo(
     () =>
@@ -91,8 +110,10 @@ export function InvoiceEditor({
     [doc],
   );
 
-  const banner = statusBanner(status, totals.balance);
+  const banner = docBanner(status, totals.total, totals.balance);
   const values: InvoiceDocValues = { ...doc, banner, ...totals };
+  const state = invoiceState({ status, due_on: doc.dueOn || null }, todayNairobi());
+  const settled = status === "paid" || status === "void";
 
   function patchDoc(patch: Partial<InvoiceDocValues>) {
     setDoc((prev) => {
@@ -105,15 +126,42 @@ export function InvoiceEditor({
     });
   }
 
-  function payload(nextStatus?: string) {
-    const name = firstLine(doc.billTo) || "Client";
-    return {
-      number: doc.number || initial?.number || "",
+  function itemRows(invoiceId: string) {
+    return doc.lines
+      .filter((l) => l.description.trim())
+      .map((l, i) => ({
+        invoice_id: invoiceId,
+        description: l.description.trim(),
+        qty: l.qty,
+        unit_kes: l.unit,
+        line_kes: l.qty * l.unit,
+        sort_order: i,
+      }));
+  }
+
+  function fail(text: string) {
+    setBusy(false);
+    setMsg({ ok: false, text });
+    return false;
+  }
+
+  async function save(nextStatus?: string) {
+    if (!firstLine(doc.billTo)) return fail("Add who this invoice is for.");
+    if (billEmail && !/^\S+@\S+\.\S+$/.test(billEmail)) return fail("Check the send-to email.");
+    setBusy(true);
+    setMsg(null);
+    const supabase = createClient();
+    let id = initial?.id;
+    let number = doc.number.trim() || initial?.number;
+    const finalStatus = nextStatus || status;
+    const paidAmount = nextStatus === "paid" ? totals.total : totals.paid;
+    const fullyPaid = finalStatus === "paid" || (totals.total > 0 && totals.total - paidAmount <= 0);
+    const row = {
       client_id: clientId || null,
       lead_id: lead?.id ?? initial?.lead_id ?? null,
-      bill_name: name,
-      bill_email: billEmail,
-      bill_phone: billPhone || null,
+      bill_name: firstLine(doc.billTo),
+      bill_email: billEmail.trim(),
+      bill_phone: billPhone.trim() || null,
       bill_company: null,
       from_block: doc.fromBlock,
       bill_to_block: doc.billTo,
@@ -130,237 +178,258 @@ export function InvoiceEditor({
       discount_kes: totals.discount,
       discount_percent: doc.showDiscount && doc.discountKind === "percent" ? doc.discountValue : null,
       shipping_kes: totals.shipping,
-      amount_paid_kes: totals.paid,
-      total_kes: totals.total,
-      status: nextStatus || status,
-      sent_at: nextStatus === "sent" ? new Date().toISOString() : initial?.sent_at,
-      paid_at: nextStatus === "paid" || totals.balance <= 0 ? new Date().toISOString() : initial?.paid_at,
-    };
-  }
-
-  async function save(nextStatus?: string) {
-    setBusy(true);
-    setMsg(null);
-    const supabase = createClient();
-    let id = initial?.id;
-    let number = doc.number || initial?.number;
-    const paidAmount = nextStatus === "paid" ? totals.total : totals.paid;
-    const row = {
-      ...payload(nextStatus),
       amount_paid_kes: paidAmount,
-      paid_at: nextStatus === "paid" || totals.balance <= 0 ? new Date().toISOString() : initial?.paid_at,
+      total_kes: totals.total,
+      status: finalStatus,
+      sent_at: finalStatus === "sent" && !initial?.sent_at ? new Date().toISOString() : (initial?.sent_at ?? null),
+      paid_at: fullyPaid ? (initial?.paid_at ?? new Date().toISOString()) : null,
     };
+
     if (!id) {
       if (!number) {
         const { data: n, error: nErr } = await supabase.rpc("next_invoice_number");
-        if (nErr || !n) {
-          setBusy(false);
-          setMsg(nErr?.message || "Could not mint an invoice number.");
-          return false;
-        }
+        if (nErr || !n) return fail(nErr?.message || "Could not assign an invoice number.");
         number = n;
         setDoc((d) => ({ ...d, number: n }));
       }
       const { data, error } = await supabase
         .from("invoices")
         .insert({ ...row, number })
-        .select("id, number")
+        .select("id")
         .single();
-      if (error || !data) {
-        setBusy(false);
-        setMsg(error?.message || "Could not save.");
-        return false;
-      }
+      if (error || !data) return fail(duplicate(error?.message) || error?.message || "Could not save.");
       id = data.id;
-      await supabase.from("invoice_items").insert(
-        doc.lines
-          .filter((l) => l.description.trim())
-          .map((l, i) => ({
-            invoice_id: id!,
-            description: l.description.trim(),
-            qty: l.qty,
-            unit_kes: l.unit,
-            line_kes: l.qty * l.unit,
-            sort_order: i,
-          })),
-      );
-      setBusy(false);
-      router.push(`/admin/invoices/${id}`);
+      const items = itemRows(id);
+      if (items.length) {
+        const { error: itemsErr } = await supabase.from("invoice_items").insert(items);
+        if (itemsErr) return fail(`Invoice saved, line items failed: ${itemsErr.message}`);
+      }
+      router.push(`/console/invoices/${id}`);
       router.refresh();
       return true;
     }
-    const { error } = await supabase.from("invoices").update(row).eq("id", id);
-    if (error) {
-      setBusy(false);
-      setMsg(error.message);
-      return false;
+
+    const { error } = await supabase
+      .from("invoices")
+      .update({ ...row, number: number || initial!.number })
+      .eq("id", id);
+    if (error) return fail(duplicate(error.message) || error.message);
+    const { error: delErr } = await supabase.from("invoice_items").delete().eq("invoice_id", id);
+    if (delErr) return fail(delErr.message);
+    const items = itemRows(id);
+    if (items.length) {
+      const { error: itemsErr } = await supabase.from("invoice_items").insert(items);
+      if (itemsErr) return fail(`Line items failed to save: ${itemsErr.message}`);
     }
-    await supabase.from("invoice_items").delete().eq("invoice_id", id);
-    await supabase.from("invoice_items").insert(
-      doc.lines
-        .filter((l) => l.description.trim())
-        .map((l, i) => ({
-          invoice_id: id!,
-          description: l.description.trim(),
-          qty: l.qty,
-          unit_kes: l.unit,
-          line_kes: l.qty * l.unit,
-          sort_order: i,
-        })),
-    );
-    if (nextStatus) setStatus(nextStatus);
+    setStatus(finalStatus);
     if (nextStatus === "paid") setDoc((d) => ({ ...d, amountPaid: paidAmount }));
     setBusy(false);
-    setMsg("Saved.");
+    setMsg({ ok: true, text: nextStatus === "paid" ? "Marked paid." : "Saved." });
     router.refresh();
     return true;
   }
 
-  async function send() {
-    if (!billEmail) return setMsg("Add a send-to email in the sidebar first.");
-    const ok = await save();
-    if (!ok || !initial) return;
+  async function post(url: string, body: object, done: string) {
     setBusy(true);
-    const res = await fetch("/api/admin/invoices/send", {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ invoiceId: initial.id }),
+      body: JSON.stringify(body),
     });
-    const json = (await res.json()) as { error?: string };
+    const json = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
     setBusy(false);
-    setMsg(json.error || "Sent.");
+    setMsg(res.ok ? { ok: true, text: json.message || done } : { ok: false, text: json.error || "Something went wrong." });
     router.refresh();
+    return res.ok;
+  }
+
+  async function send() {
+    if (!initial) return;
+    if (!billEmail) return fail("Add a send-to email first.");
+    if (totals.total <= 0) return fail("Add a line item with an amount first.");
+    const ok = await save();
+    if (!ok) return;
+    if (await post("/api/admin/invoices/send", { invoiceId: initial.id }, `Emailed to ${billEmail}.`)) setStatus("sent");
   }
 
   async function collect() {
     if (!initial) return;
-    setBusy(true);
-    const res = await fetch("/api/admin/invoices/collect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ invoiceId: initial.id, phone: stkPhone }),
-    });
-    const json = (await res.json()) as { error?: string; message?: string };
-    setBusy(false);
-    setMsg(json.error || json.message || "M-Pesa prompt sent.");
-    router.refresh();
+    const msisdn = toMsisdn(stkPhone);
+    if (!msisdn) return fail("Use a Safaricom number like 0712 345 678.");
+    await post("/api/admin/invoices/collect", { invoiceId: initial.id, phone: msisdn }, "M-Pesa prompt sent.");
   }
 
   return (
-    <div className="-mx-4 -my-6 min-h-[calc(100vh-3.5rem)] bg-[#eceef2] px-3 py-6 lg:-mx-8 lg:-my-8 lg:px-8 lg:py-8">
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1">
+    <AdminPage
+      title={initial ? initial.number : "New invoice"}
+      action={
+        <div className="invoice-chrome flex items-center gap-2">
+          <AdminBtn variant="ghost" href="/console/invoices">
+            All invoices
+          </AdminBtn>
+          {initial ? (
+            <AdminBtn variant="ghost" href={`/console/invoices/${initial.id}/print`}>
+              Print or PDF
+            </AdminBtn>
+          ) : null}
+          <AdminBtn onClick={() => save()} pending={busy}>
+            {busy ? "Saving..." : initial ? "Save" : "Save draft"}
+          </AdminBtn>
+        </div>
+      }
+    >
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+        <div className="min-w-0 rounded-[5px] border border-line bg-[#eceef2] p-3 sm:p-6">
           <InvoiceDocument mode="edit" logo={logo} values={values} onChange={patchDoc} />
         </div>
-        <aside className="invoice-chrome w-full shrink-0 space-y-3 lg:w-56">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => save()}
-            className="flex h-11 w-full cursor-pointer items-center justify-center rounded-[5px] bg-brand-500 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
+
+        <aside className="invoice-chrome space-y-4 lg:sticky lg:top-20">
+          {msg ? (
+            <p
+              role="status"
+              className={cn(
+                "rounded-[5px] border px-3 py-2 text-[13px]",
+                msg.ok ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700",
+              )}
+            >
+              {msg.text}
+            </p>
+          ) : null}
+
+          <Panel
+            title="Billing"
+            meta={lead && !initial ? `From enquiry by ${lead.name}` : undefined}
+            action={<Pill tone={invoiceTone(state)}>{state}</Pill>}
           >
-            {busy ? "Saving..." : "Save"}
-          </button>
-          {msg ? <p className="text-xs text-body">{msg}</p> : null}
-          <div className="rounded-[5px] border border-line bg-white p-3 space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Invoice settings</p>
-            {clients.length > 0 ? (
-              <label className="block text-xs font-medium text-ink-900">
-                Bill-to account
-                <select
-                  className="mt-1 w-full rounded-[5px] border border-[#e5e7eb] px-2 py-1.5 text-sm"
-                  value={clientId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setClientId(id);
-                    const c = clients.find((x) => x.id === id);
-                    if (c) {
-                      patchDoc({
-                        billTo: composeBillTo({
-                          name: c.name,
-                          email: c.billing_email,
-                          phone: c.phone,
-                        }),
-                      });
-                      if (c.billing_email) setBillEmail(c.billing_email);
-                      if (c.phone) {
-                        setBillPhone(c.phone);
-                        setStkPhone(c.phone);
+            <div className="space-y-3">
+              {clients.length > 0 ? (
+                <Field label="Client">
+                  <select
+                    className={inputClass}
+                    value={clientId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setClientId(id);
+                      const c = clients.find((x) => x.id === id);
+                      if (c) {
+                        patchDoc({ billTo: composeBillTo({ name: c.name, email: c.billing_email, phone: c.phone }) });
+                        if (c.billing_email) setBillEmail(c.billing_email);
+                        if (c.phone) {
+                          setBillPhone(c.phone);
+                          setStkPhone(toMsisdn(c.phone) || c.phone);
+                        }
                       }
-                    }
-                  }}
-                >
-                  <option value="">Ad-hoc</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <label className="block text-xs font-medium text-ink-900">
-              Send-to email
-              <input
-                className="mt-1 w-full rounded-[5px] border border-[#e5e7eb] px-2 py-1.5 text-sm"
-                type="email"
-                value={billEmail}
-                onChange={(e) => setBillEmail(e.target.value)}
-              />
-            </label>
-            <label className="block text-xs font-medium text-ink-900">
-              Phone
-              <input
-                className="mt-1 w-full rounded-[5px] border border-[#e5e7eb] px-2 py-1.5 text-sm"
-                value={billPhone}
-                onChange={(e) => setBillPhone(e.target.value)}
-              />
-            </label>
-            <label className="block text-xs font-medium text-ink-900">
-              Status
-              <select
-                className="mt-1 w-full rounded-[5px] border border-[#e5e7eb] px-2 py-1.5 text-sm"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="draft">Draft</option>
-                <option value="sent">Sent</option>
-                <option value="paid">Paid</option>
-                <option value="void">Void</option>
-              </select>
-            </label>
-            <p className="text-xs text-muted">Currency: KES (KSh)</p>
-          </div>
-          {initial ? (
-            <div className="space-y-2 [&_a]:flex [&_a]:w-full [&_button]:flex [&_button]:w-full">
-              <AdminBtn variant="ink" onClick={send} disabled={busy}>
-                Email invoice
-              </AdminBtn>
-              <AdminBtn href={`/admin/invoices/${initial.id}/print`}>Print / PDF</AdminBtn>
-              <AdminBtn variant="ghost" onClick={() => save("paid")} disabled={busy}>
-                Mark paid
-              </AdminBtn>
-              {status !== "paid" && status !== "void" && totals.balance > 0 ? (
-                <div className="rounded-[5px] border border-line bg-white p-3 space-y-2">
-                  <label className="block text-xs font-medium text-ink-900">
-                    Collect balance with M-Pesa
-                    <input
-                      className="mt-1 w-full rounded-[5px] border border-[#e5e7eb] px-2 py-1.5 text-sm"
-                      value={stkPhone}
-                      onChange={(e) => setStkPhone(e.target.value)}
-                    />
-                  </label>
-                  <AdminBtn variant="primary" onClick={collect} disabled={busy}>
-                    Send STK
-                  </AdminBtn>
-                </div>
+                    }}
+                  >
+                    <option value="">One-off client</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
               ) : null}
+              <Field label="Send to">
+                <input
+                  className={inputClass}
+                  type="email"
+                  value={billEmail}
+                  placeholder="client@company.co.ke"
+                  onChange={(e) => setBillEmail(e.target.value)}
+                />
+              </Field>
+              <Field label="Phone">
+                <input className={inputClass} inputMode="tel" value={billPhone} onChange={(e) => setBillPhone(e.target.value)} />
+              </Field>
+              <Field label="Status">
+                <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="paid">Paid</option>
+                  <option value="void">Void</option>
+                </select>
+              </Field>
             </div>
-          ) : (
-            <p className="text-xs text-muted">Save once to mint the number, then email or collect.</p>
-          )}
+          </Panel>
+
+          {initial ? (
+            <Panel title="Get paid" meta={`Balance ${formatKesMoney(totals.balance)}`}>
+              <div className="space-y-3">
+                {!settled ? (
+                  <div className="grid grid-cols-2 gap-2 [&>*]:w-full">
+                    <AdminBtn variant="ink" onClick={send} disabled={busy || !billEmail}>
+                      {initial.sent_at ? "Email again" : "Email invoice"}
+                    </AdminBtn>
+                    <AdminBtn variant="ghost" onClick={() => save("paid")} disabled={busy}>
+                      Mark paid
+                    </AdminBtn>
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-body">
+                    {status === "paid"
+                      ? `Paid${initial.paid_at ? ` ${formatWhen(initial.paid_at)}` : ""}.`
+                      : "This invoice is void."}
+                  </p>
+                )}
+                {!settled && totals.balance > 0 ? (
+                  <form
+                    className="border-t border-line pt-3"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      collect();
+                    }}
+                  >
+                    <Field label="M-Pesa number">
+                      <div className="flex gap-2">
+                        <input
+                          className={inputClass}
+                          inputMode="tel"
+                          value={stkPhone}
+                          onChange={(e) => setStkPhone(e.target.value)}
+                        />
+                        <AdminBtn type="submit" disabled={busy}>
+                          Prompt
+                        </AdminBtn>
+                      </div>
+                    </Field>
+                  </form>
+                ) : null}
+                {initial.sent_at ? (
+                  <p className="text-xs text-muted">Last emailed {formatWhen(initial.sent_at)}</p>
+                ) : null}
+              </div>
+            </Panel>
+          ) : null}
+
+          {initial ? (
+            <Panel title="Payments" flush>
+              {payments.length ? (
+                <ul>
+                  {payments.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between gap-3 border-t border-line px-5 py-2.5">
+                      <Pill tone={paymentTone(p.result)}>{paymentLabel(p.result)}</Pill>
+                      <span className="text-xs tabular-nums text-muted">{formatWhen(p.created_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="px-5 pb-4 text-[13px] text-muted">No M-Pesa payments yet.</p>
+              )}
+            </Panel>
+          ) : null}
+
+          {initial?.lead_id ? (
+            <Link href={`/console/leads/${initial.lead_id}`} className="block text-[13px] font-medium text-brand-600 hover:underline">
+              Open the enquiry
+            </Link>
+          ) : null}
         </aside>
       </div>
-    </div>
+    </AdminPage>
   );
+}
+
+function duplicate(message: string | undefined) {
+  return message && /invoices_number_key|duplicate key/i.test(message) ? "That invoice number is already used." : null;
 }

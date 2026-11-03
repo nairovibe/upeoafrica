@@ -48,7 +48,9 @@ export function TurnstileField({
   const hostRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const onTokenRef = useRef(onToken);
-  onTokenRef.current = onToken;
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
 
   useEffect(() => {
     if (!SITE_KEY) return;

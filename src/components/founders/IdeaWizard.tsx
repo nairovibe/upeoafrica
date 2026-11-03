@@ -6,6 +6,7 @@ import { company } from "@/lib/content";
 import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
+import { answer, leadContext, type LeadAnswer } from "@/lib/lead-context";
 
 type StageId = "idea" | "prototype" | "live" | "operating";
 type Kind = "build" | "brand" | "pay" | "grow" | "scope";
@@ -91,6 +92,33 @@ const ASKS: Record<StageId, { id: string; label: string; kind: Kind }[]> = {
     { id: "pay-existing", label: "Payments on what we already run", kind: "pay" },
   ],
 };
+
+const Q = {
+  audience: "Who uses it?",
+  surface: "Where should it live?",
+  payments: "Payments in the first version?",
+  identity: "What exists today?",
+  designNeed: "What do you need?",
+  rails: "Which rails?",
+  paymentsHome: "Where do they sit?",
+  presence: "What can people find today?",
+  growthJob: "What is the job?",
+  constraint: "What is tightest?",
+  sector: "Sector, in a few words",
+  timeline: "When does this need to move?",
+  budget: "What budget band is honest?",
+  name: "Your name",
+  email: "Email",
+  phone: "Phone or WhatsApp",
+  startup: "Startup or project",
+  role: "Your role",
+};
+
+const SHARE_OPTIONS: { id: ShareId; label: string; hint: string }[] = [
+  { id: "problem", label: "The problem only", hint: "Who it is for, and what is hard. Not the method." },
+  { id: "brief", label: "A short brief, kept confidential", hint: "What the first version has to do." },
+  { id: "note", label: "A confidentiality note first", hint: "We send that before we ask for anything more." },
+];
 
 const TIMELINES = ["Still exploring", "This quarter", "Already late"];
 const ROLES = ["Founder", "Co-founder", "First hire, writing for the founder"];
@@ -182,6 +210,33 @@ function linesFor(a: Answers) {
     lines.push(a.note.trim());
   }
   return lines;
+}
+
+function answersFor(a: Answers): LeadAnswer[] {
+  const ask = askOf(a);
+  const list = [
+    answer(STEP_TITLES[0], STAGES.find((s) => s.id === a.stage)?.label),
+    answer(STEP_TITLES[1], ask?.label),
+  ];
+  if (ask?.kind === "build") {
+    list.push(answer(Q.audience, a.audience), answer(Q.surface, a.surface), answer(Q.payments, a.payments));
+  }
+  if (ask?.kind === "brand") list.push(answer(Q.identity, a.identity), answer(Q.designNeed, a.designNeed));
+  if (ask?.kind === "pay") list.push(answer(Q.rails, a.rails), answer(Q.paymentsHome, a.paymentsHome));
+  if (ask?.kind === "grow") list.push(answer(Q.presence, a.presence), answer(Q.growthJob, a.growthJob));
+  if (ask?.kind === "scope") list.push(answer(Q.constraint, a.constraint), answer(Q.sector, a.sector));
+  list.push(answer(STEP_TITLES[3], SHARE_OPTIONS.find((o) => o.id === a.share)?.label));
+  if (a.share) list.push(answer(sharePrompt(a.stage, a.share).label, a.note));
+  list.push(
+    answer(Q.timeline, a.timeline),
+    answer(Q.budget, a.budget),
+    answer(Q.name, a.name),
+    answer(Q.email, a.email),
+    answer(Q.phone, a.phone),
+    answer(Q.startup, a.startup),
+    answer(Q.role, a.role),
+  );
+  return list;
 }
 
 const STEP_TITLES = [
@@ -301,7 +356,7 @@ export function IdeaWizard() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        source: "inquiry",
+        source: "founders",
         name: a.name.trim(),
         email: a.email.trim(),
         phone: a.phone.trim(),
@@ -310,7 +365,9 @@ export function IdeaWizard() {
         stage: STAGES.find((item) => item.id === a.stage)?.label,
         timeline: a.timeline,
         budget: a.budget,
-        message: ["Founders Zone", ...linesFor(a)].join("\n"),
+        message: linesFor(a).join("\n"),
+        details: { form: "Founders Zone", answers: answersFor(a) },
+        ...leadContext(),
         turnstileToken: captcha,
       }),
     });
@@ -408,21 +465,21 @@ export function IdeaWizard() {
         {step === 2 && ask?.kind === "build" && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="Who uses it?"
+              legend={Q.audience}
               name={`${baseId}-audience`}
               options={["Customers", "Other businesses", "Our own staff"].map((label) => ({ id: label, label }))}
               value={a.audience}
               onChange={(id) => patch({ audience: id })}
             />
             <ChoiceList
-              legend="Where should it live?"
+              legend={Q.surface}
               name={`${baseId}-surface`}
               options={["A website or web app", "Android and iOS", "Web and mobile"].map((label) => ({ id: label, label }))}
               value={a.surface}
               onChange={(id) => patch({ surface: id })}
             />
             <ChoiceList
-              legend="Payments in the first version?"
+              legend={Q.payments}
               name={`${baseId}-payments`}
               options={["In the first version", "After the first version", "Not part of this"].map((label) => ({ id: label, label }))}
               value={a.payments}
@@ -434,14 +491,14 @@ export function IdeaWizard() {
         {step === 2 && ask?.kind === "brand" && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="What exists today?"
+              legend={Q.identity}
               name={`${baseId}-identity`}
               options={["Nothing public yet", "A name", "A logo and colours"].map((label) => ({ id: label, label }))}
               value={a.identity}
               onChange={(id) => patch({ identity: id })}
             />
             <ChoiceList
-              legend="What do you need?"
+              legend={Q.designNeed}
               name={`${baseId}-design`}
               options={["The identity", "The product screens", "Both"].map((label) => ({ id: label, label }))}
               value={a.designNeed}
@@ -453,7 +510,7 @@ export function IdeaWizard() {
         {step === 2 && ask?.kind === "pay" && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="Which rails?"
+              legend={Q.rails}
               name={`${baseId}-rails`}
               multiple
               options={RAILS.map((label) => ({ id: label, label }))}
@@ -461,7 +518,7 @@ export function IdeaWizard() {
               onToggle={toggleRail}
             />
             <ChoiceList
-              legend="Where do they sit?"
+              legend={Q.paymentsHome}
               name={`${baseId}-home`}
               options={["A product still to be built", "A product already running", "A website checkout"].map((label) => ({
                 id: label,
@@ -476,14 +533,14 @@ export function IdeaWizard() {
         {step === 2 && ask?.kind === "grow" && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="What can people find today?"
+              legend={Q.presence}
               name={`${baseId}-presence`}
               options={["A website", "An app", "Neither yet"].map((label) => ({ id: label, label }))}
               value={a.presence}
               onChange={(id) => patch({ presence: id })}
             />
             <ChoiceList
-              legend="What is the job?"
+              legend={Q.growthJob}
               name={`${baseId}-job`}
               options={["Be found", "Turn attention into enquiries", "Both"].map((label) => ({ id: label, label }))}
               value={a.growthJob}
@@ -495,7 +552,7 @@ export function IdeaWizard() {
         {step === 2 && ask?.kind === "scope" && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="What is tightest?"
+              legend={Q.constraint}
               name={`${baseId}-constraint`}
               options={[
                 "It has to move this quarter",
@@ -506,7 +563,7 @@ export function IdeaWizard() {
               onChange={(id) => patch({ constraint: id })}
             />
             <label className="block" htmlFor={`${baseId}-sector`}>
-              <span className="text-sm font-semibold text-ink-900">Sector, in a few words</span>
+              <span className="text-sm font-semibold text-ink-900">{Q.sector}</span>
               <input
                 id={`${baseId}-sector`}
                 value={a.sector}
@@ -522,23 +579,7 @@ export function IdeaWizard() {
           <div className="mt-8 space-y-8">
             <ChoiceList
               name={`${baseId}-share`}
-              options={[
-                {
-                  id: "problem",
-                  label: "The problem only",
-                  hint: "Who it is for, and what is hard. Not the method.",
-                },
-                {
-                  id: "brief",
-                  label: "A short brief, kept confidential",
-                  hint: "What the first version has to do.",
-                },
-                {
-                  id: "note",
-                  label: "A confidentiality note first",
-                  hint: "We send that before we ask for anything more.",
-                },
-              ]}
+              options={SHARE_OPTIONS}
               value={a.share}
               onChange={(id) => patch({ share: id as ShareId })}
             />
@@ -562,14 +603,14 @@ export function IdeaWizard() {
         {step === 4 && (
           <div className="mt-8 space-y-8">
             <ChoiceList
-              legend="When does this need to move?"
+              legend={Q.timeline}
               name={`${baseId}-when`}
               options={TIMELINES.map((label) => ({ id: label, label }))}
               value={a.timeline}
               onChange={(id) => patch({ timeline: id })}
             />
             <ChoiceList
-              legend="What budget band is honest?"
+              legend={Q.budget}
               name={`${baseId}-budget`}
               options={BUDGET_BANDS.map((label) => ({ id: label, label }))}
               value={a.budget}
@@ -580,19 +621,19 @@ export function IdeaWizard() {
 
         {step === 5 && (
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
-            <Field id={`${baseId}-name`} label="Your name" value={a.name} autoComplete="name" onChange={(name) => patch({ name })} />
-            <Field id={`${baseId}-email`} label="Email" type="email" value={a.email} autoComplete="email" onChange={(email) => patch({ email })} />
-            <Field id={`${baseId}-phone`} label="Phone or WhatsApp" type="tel" value={a.phone} autoComplete="tel" onChange={(phone) => patch({ phone })} optional />
+            <Field id={`${baseId}-name`} label={Q.name} value={a.name} autoComplete="name" onChange={(name) => patch({ name })} />
+            <Field id={`${baseId}-email`} label={Q.email} type="email" value={a.email} autoComplete="email" onChange={(email) => patch({ email })} />
+            <Field id={`${baseId}-phone`} label={Q.phone} type="tel" value={a.phone} autoComplete="tel" onChange={(phone) => patch({ phone })} optional />
             <Field
               id={`${baseId}-startup`}
-              label="Startup or project"
+              label={Q.startup}
               value={a.startup}
               autoComplete="organization"
               onChange={(startup) => patch({ startup })}
             />
             <div className="sm:col-span-2">
               <ChoiceList
-                legend="Your role"
+                legend={Q.role}
                 name={`${baseId}-role`}
                 options={ROLES.map((label) => ({ id: label, label }))}
                 value={a.role}

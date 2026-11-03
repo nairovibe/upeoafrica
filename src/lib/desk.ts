@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { megaServices } from "@/lib/content";
+import { services as serviceCatalog } from "@/lib/services";
 import { formatKes } from "@/lib/constants";
-import type { Lead, Order, Invoice, Event, CaseStudy } from "@/lib/cms";
+import type { Lead } from "@/lib/cms";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
+const TZ = "Africa/Nairobi";
 
 export function hoursAgo(iso: string) {
   return (Date.now() - new Date(iso).getTime()) / HOUR;
@@ -60,9 +62,65 @@ export async function getDeskBadges(): Promise<DeskBadges> {
   };
 }
 
+const dayFormat = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** Calendar day in Nairobi as YYYY-MM-DD. */
+export function nairobiDay(value: string | Date) {
+  return dayFormat.format(typeof value === "string" ? new Date(value) : value);
+}
+
+export function serviceLabel(slugs: string[]) {
+  if (!slugs.length) return "General enquiry";
+  const first = serviceCatalog.find((s) => s.slug === slugs[0])?.title ?? slugs[0];
+  return slugs.length > 1 ? `${first} +${slugs.length - 1}` : first;
+}
+
+const labelFormat = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" });
+
+export type DayPoint = { day: string; label: string; enquiries: number; revenue: number; tickets: number };
+
+export type FunnelStage = { status: "new" | "contacted" | "qualified" | "won"; label: string; reached: number };
+
+export type UpcomingEvent = {
+  id: string;
+  title: string;
+  starts_at: string;
+  mode: string;
+  venue: string | null;
+  capacity: number | null;
+  published: boolean;
+  sold: number;
+  held: number;
+};
+
+export type RecentLead = {
+  id: string;
+  name: string;
+  company: string | null;
+  service: string;
+  status: string;
+  created_at: string;
+};
+
+export type Transaction = {
+  id: string;
+  kind: "product" | "ticket" | "invoice";
+  who: string;
+  what: string;
+  amount: number;
+  status: "paid" | "pending";
+  when: string;
+  href: string;
+};
+
 export type QueueItem = {
   id: string;
-  kind: string;
+  kind: "enquiry" | "payment" | "overdue" | "invoice" | "event";
   who: string;
   what: string;
   when: string;
@@ -70,204 +128,351 @@ export type QueueItem = {
   action: string;
 };
 
-export type TodayBrief = {
-  needsReply: number;
-  slaLate: number;
-  money7: number;
-  moneyPrev: number;
-  pipeline: { Build: number; Design: number; Grow: number; Other: number };
-  waitingPay: number;
-  liveMonth: number;
-  series: { day: string; enquiries: number; money: number }[];
+export type DraftItem = { id: string; kind: string; title: string; updated_at: string; href: string };
+
+export type Overview = {
+  series: DayPoint[];
+  enquiries: { current: number; previous: number };
+  revenue: { current: number; previous: number };
+  outstanding: { total: number; count: number; overdue: number };
+  tickets: { sold: number; events: number };
+  funnel: { stages: FunnelStage[]; total: number; lost: number };
+  lines: { Build: number; Design: number; Grow: number; Other: number };
+  upcoming: UpcomingEvent[];
+  recentLeads: RecentLead[];
+  transactions: Transaction[];
   queue: QueueItem[];
-  nextEvent: Event | null;
-  ticketsSold: number;
+  queueTotal: number;
+  published: { label: string; count: number; href: string }[];
+  drafts: DraftItem[];
 };
 
-export async function getTodayBrief(): Promise<TodayBrief> {
+const SERIES_DAYS = 30;
+const QUEUE_ORDER: QueueItem["kind"][] = ["enquiry", "payment", "overdue", "invoice", "event"];
+
+function sum<T>(rows: T[], pick: (row: T) => number) {
+  return rows.reduce((s, row) => s + pick(row), 0);
+}
+
+export async function getOverview(): Promise<Overview> {
   const supabase = await createClient();
   const now = Date.now();
-  const start7 = new Date(now - 7 * DAY).toISOString();
-  const start14 = new Date(now - 14 * DAY).toISOString();
-  const prev7 = new Date(now - 14 * DAY).toISOString();
-  const monthAgo = new Date(now - 30 * DAY).toISOString();
+  const today = nairobiDay(new Date(now));
+  const seriesStart = new Date(now - SERIES_DAYS * DAY).toISOString();
+  const pipelineStart = new Date(now - 90 * DAY).toISOString();
+  const monthStart = new Date(`${today.slice(0, 7)}-01T00:00:00+03:00`).toISOString();
+  const eventsFrom = new Date(now - 12 * HOUR).toISOString();
+  const failedFrom = new Date(now - 14 * DAY).toISOString();
 
   const [
-    leadsRes,
+    leads90,
+    recentLeads,
+    openLeads,
     paidOrders,
-    paidPrev,
-    pendingOrders,
+    paidInvoices,
     unpaidInvoices,
+    upcomingEvents,
+    ticketStats,
+    txOrders,
+    txInvoices,
+    failedOrders,
     workLive,
     articlesLive,
     productsLive,
-    drafts,
-    failedOrders,
-    eventsRes,
-    ticketOrders,
+    eventsLive,
+    workDrafts,
+    articleDrafts,
+    productDrafts,
+    eventDrafts,
   ] = await Promise.all([
-    supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(80),
-    supabase.from("orders").select("amount_kes, created_at, status").gte("created_at", start7).eq("status", "paid"),
+    supabase.from("leads").select("status, services, created_at").gte("created_at", pipelineStart).limit(5000),
+    supabase
+      .from("leads")
+      .select("id, name, company, services, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("leads")
+      .select("id, name, company, services, status, created_at, updated_at")
+      .in("status", ["new", "contacted"])
+      .order("created_at", { ascending: true })
+      .limit(30),
     supabase
       .from("orders")
-      .select("amount_kes")
-      .gte("created_at", prev7)
-      .lt("created_at", start7)
-      .eq("status", "paid"),
-    supabase.from("orders").select("*").eq("status", "pending").order("created_at", { ascending: false }).limit(20),
-    supabase.from("invoices").select("*").in("status", ["draft", "sent"]).order("created_at", { ascending: false }).limit(20),
+      .select("amount_kes, kind, quantity, created_at")
+      .eq("status", "paid")
+      .gte("created_at", seriesStart),
+    supabase.from("invoices").select("total_kes, paid_at").eq("status", "paid").gte("paid_at", seriesStart),
     supabase
-      .from("case_studies")
-      .select("id", { count: "exact", head: true })
-      .gte("published_at", monthAgo)
-      .not("published_at", "is", null),
-    supabase
-      .from("articles")
-      .select("id", { count: "exact", head: true })
-      .gte("published_at", monthAgo)
-      .not("published_at", "is", null),
-    supabase.from("products").select("id", { count: "exact", head: true }).eq("published", true).gte("updated_at", monthAgo),
-    supabase.from("case_studies").select("id, title, created_at").is("published_at", null).order("created_at", { ascending: false }).limit(5),
-    supabase.from("orders").select("*").eq("status", "failed").order("created_at", { ascending: false }).limit(5),
+      .from("invoices")
+      .select("id, number, bill_name, bill_company, total_kes, amount_paid_kes, status, due_on, created_at")
+      .in("status", ["draft", "sent"])
+      .order("created_at", { ascending: true })
+      .limit(500),
     supabase
       .from("events")
-      .select("*")
-      .gte("starts_at", new Date(now - DAY).toISOString())
-      .order("starts_at")
-      .limit(1),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("kind", "ticket").eq("status", "paid"),
+      .select("id, title, starts_at, mode, venue, capacity, published_at")
+      .gte("starts_at", eventsFrom)
+      .order("starts_at", { ascending: true })
+      .limit(50),
+    supabase.from("event_ticket_stats").select("event_id, sold, held").limit(2000),
+    supabase
+      .from("orders")
+      .select("id, kind, email, attendee_name, amount_kes, quantity, status, created_at, product:products(title), event:events(title)")
+      .in("status", ["paid", "pending"])
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("invoices")
+      .select("id, number, bill_name, bill_company, total_kes, status, sent_at, paid_at, updated_at")
+      .in("status", ["sent", "paid"])
+      .order("updated_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("orders")
+      .select("id, email, attendee_name, amount_kes, created_at")
+      .eq("status", "failed")
+      .gte("created_at", failedFrom)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase.from("case_studies").select("id", { count: "exact", head: true }).gte("published_at", monthStart),
+    supabase.from("articles").select("id", { count: "exact", head: true }).gte("published_at", monthStart),
+    supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("published", true)
+      .gte("created_at", monthStart),
+    supabase.from("events").select("id", { count: "exact", head: true }).gte("published_at", monthStart),
+    supabase
+      .from("case_studies")
+      .select("id, title, updated_at")
+      .is("published_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("articles")
+      .select("id, title, updated_at")
+      .is("published_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("products")
+      .select("id, title, updated_at")
+      .eq("published", false)
+      .order("updated_at", { ascending: false })
+      .limit(4),
+    supabase
+      .from("events")
+      .select("id, title, updated_at")
+      .is("published_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(4),
   ]);
 
-  const paidInvoices7 = await supabase
-    .from("invoices")
-    .select("total_kes, paid_at")
-    .eq("status", "paid")
-    .gte("paid_at", start7);
-  const paidInvoicesPrev = await supabase
-    .from("invoices")
-    .select("total_kes")
-    .eq("status", "paid")
-    .gte("paid_at", prev7)
-    .lt("paid_at", start7);
-
-  const leads = (leadsRes.data ?? []) as Lead[];
-  const open = leads.filter((l) => ["new", "contacted", "qualified"].includes(l.status));
-  const needsReply = leads.filter((l) => l.status === "new" || (l.status === "contacted" && slaBreached(l))).length;
-  const slaLate = leads.filter((l) => slaBreached(l)).length;
-
-  const pipeline = { Build: 0, Design: 0, Grow: 0, Other: 0 };
-  for (const lead of open) {
-    const g = pipelineGroup(lead.services ?? []);
-    pipeline.Build += g.Build;
-    pipeline.Design += g.Design;
-    pipeline.Grow += g.Grow;
-    pipeline.Other += g.Other;
+  // Daily series, oldest first, bucketed by Nairobi calendar day.
+  const series: DayPoint[] = [];
+  for (let i = SERIES_DAYS - 1; i >= 0; i--) {
+    const date = new Date(now - i * DAY);
+    series.push({ day: nairobiDay(date), label: labelFormat.format(date), enquiries: 0, revenue: 0, tickets: 0 });
   }
+  const index = new Map(series.map((p, i) => [p.day, i]));
+  const bump = (iso: string | null, apply: (p: DayPoint) => void) => {
+    if (!iso) return;
+    const i = index.get(nairobiDay(iso));
+    if (i != null) apply(series[i]);
+  };
 
-  const money7 =
-    (paidOrders.data ?? []).reduce((s, o) => s + Number(o.amount_kes), 0) +
-    (paidInvoices7.data ?? []).reduce((s, i) => s + Number(i.total_kes), 0);
-  const moneyPrev =
-    (paidPrev.data ?? []).reduce((s, o) => s + Number(o.amount_kes), 0) +
-    (paidInvoicesPrev.data ?? []).reduce((s, i) => s + Number(i.total_kes), 0);
-
-  const waitingPay = (pendingOrders.data?.length ?? 0) + (unpaidInvoices.data?.length ?? 0);
-
-  const series: TodayBrief["series"] = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now - i * DAY);
-    const key = d.toISOString().slice(0, 10);
-    series.push({ day: key.slice(5), enquiries: 0, money: 0 });
-  }
-  const seriesIndex = Object.fromEntries(series.map((s, i) => [s.day, i]));
-  for (const lead of leads) {
-    if (lead.created_at < start14) continue;
-    const day = lead.created_at.slice(5, 10);
-    const idx = seriesIndex[day];
-    if (idx != null) series[idx].enquiries += 1;
-  }
+  const pipelineLeads = leads90.data ?? [];
+  for (const lead of pipelineLeads) bump(lead.created_at, (p) => (p.enquiries += 1));
   for (const order of paidOrders.data ?? []) {
-    const day = order.created_at.slice(5, 10);
-    const idx = seriesIndex[day];
-    if (idx != null) series[idx].money += Number(order.amount_kes);
+    bump(order.created_at, (p) => {
+      p.revenue += Number(order.amount_kes);
+      if (order.kind === "ticket") p.tickets += order.quantity;
+    });
   }
-  for (const inv of paidInvoices7.data ?? []) {
-    if (!inv.paid_at) continue;
-    const day = inv.paid_at.slice(5, 10);
-    const idx = seriesIndex[day];
-    if (idx != null) series[idx].money += Number(inv.total_kes);
+  for (const inv of paidInvoices.data ?? []) bump(inv.paid_at, (p) => (p.revenue += Number(inv.total_kes)));
+
+  const last7 = series.slice(-7);
+  const prev7 = series.slice(-14, -7);
+
+  const unpaid = unpaidInvoices.data ?? [];
+  const balance = (inv: (typeof unpaid)[number]) => Number(inv.total_kes) - Number(inv.amount_paid_kes);
+  const overdueInvoices = unpaid.filter((inv) => inv.status === "sent" && inv.due_on && inv.due_on < today);
+
+  const statsByEvent = new Map<string, { sold: number; held: number }>();
+  for (const row of ticketStats.data ?? []) {
+    if (!row.event_id) continue;
+    const cur = statsByEvent.get(row.event_id) ?? { sold: 0, held: 0 };
+    cur.sold += row.sold ?? 0;
+    cur.held += row.held ?? 0;
+    statsByEvent.set(row.event_id, cur);
   }
+  const events: UpcomingEvent[] = (upcomingEvents.data ?? []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    starts_at: e.starts_at,
+    mode: e.mode,
+    venue: e.venue,
+    capacity: e.capacity,
+    published: e.published_at != null,
+    sold: statsByEvent.get(e.id)?.sold ?? 0,
+    held: statsByEvent.get(e.id)?.held ?? 0,
+  }));
+
+  const statusCount = (status: string) => pipelineLeads.filter((l) => l.status === status).length;
+  const won = statusCount("won");
+  const qualified = statusCount("qualified") + won;
+  const contacted = statusCount("contacted") + qualified;
+  const lost = statusCount("lost");
+  const funnel = {
+    total: pipelineLeads.length,
+    lost,
+    stages: [
+      { status: "new", label: "New", reached: pipelineLeads.length },
+      { status: "contacted", label: "Contacted", reached: contacted },
+      { status: "qualified", label: "Qualified", reached: qualified },
+      { status: "won", label: "Won", reached: won },
+    ] satisfies FunnelStage[],
+  };
+
+  const lines = { Build: 0, Design: 0, Grow: 0, Other: 0 };
+  for (const lead of pipelineLeads) {
+    if (!["new", "contacted", "qualified"].includes(lead.status)) continue;
+    const g = pipelineGroup(lead.services ?? []);
+    lines.Build += g.Build;
+    lines.Design += g.Design;
+    lines.Grow += g.Grow;
+    lines.Other += g.Other;
+  }
+
+  const transactions: Transaction[] = [
+    ...(txOrders.data ?? []).map((o): Transaction => {
+      const isTicket = o.kind === "ticket";
+      const title = isTicket ? o.event?.title : o.product?.title;
+      return {
+        id: o.id,
+        kind: isTicket ? "ticket" : "product",
+        who: o.attendee_name || o.email,
+        what: title ? (isTicket && o.quantity > 1 ? `${o.quantity} x ${title}` : title) : isTicket ? "Ticket" : "Download",
+        amount: Number(o.amount_kes),
+        status: o.status === "paid" ? "paid" : "pending",
+        when: o.created_at,
+        href: "/console/orders",
+      };
+    }),
+    ...(txInvoices.data ?? []).map(
+      (inv): Transaction => ({
+        id: inv.id,
+        kind: "invoice",
+        who: inv.bill_company || inv.bill_name,
+        what: `Invoice ${inv.number}`,
+        amount: Number(inv.total_kes),
+        status: inv.status === "paid" ? "paid" : "pending",
+        when: inv.paid_at ?? inv.sent_at ?? inv.updated_at,
+        href: `/console/invoices/${inv.id}`,
+      }),
+    ),
+  ]
+    .sort((a, b) => +new Date(b.when) - +new Date(a.when))
+    .slice(0, 5);
 
   const queue: QueueItem[] = [];
-  for (const lead of leads.filter((l) => l.status === "new").slice(0, 5)) {
+  for (const lead of openLeads.data ?? []) {
+    if (!slaBreached(lead)) continue;
     queue.push({
       id: lead.id,
       kind: "enquiry",
-      who: lead.name,
-      what: (lead.services ?? []).join(", ") || lead.message?.slice(0, 80) || "New enquiry",
-      when: lead.created_at,
-      href: `/admin/leads/${lead.id}`,
+      who: lead.company ? `${lead.name}, ${lead.company}` : lead.name,
+      what: lead.status === "new" ? `Unanswered · ${serviceLabel(lead.services ?? [])}` : "Follow-up due",
+      when: lead.status === "new" ? lead.created_at : lead.updated_at,
+      href: `/console/leads/${lead.id}`,
       action: "Reply",
     });
   }
-  for (const inv of (unpaidInvoices.data ?? []) as Invoice[]) {
-    queue.push({
-      id: inv.id,
-      kind: "invoice",
-      who: inv.bill_name,
-      what: `${inv.number} · ${formatKes(Number(inv.total_kes))} · ${inv.status}`,
-      when: inv.created_at,
-      href: `/admin/invoices/${inv.id}`,
-      action: inv.status === "draft" ? "Send" : "Open",
-    });
-  }
-  for (const order of (failedOrders.data ?? []) as Order[]) {
+  for (const order of failedOrders.data ?? []) {
     queue.push({
       id: order.id,
       kind: "payment",
-      who: order.email,
-      what: `M-Pesa failed · ${formatKes(Number(order.amount_kes))}`,
+      who: order.attendee_name || order.email,
+      what: `M-Pesa payment failed · ${formatKes(Number(order.amount_kes))}`,
       when: order.created_at,
-      href: "/admin/orders",
-      action: "Open",
+      href: "/console/orders",
+      action: "Review",
     });
   }
-  for (const draft of (drafts.data ?? []) as Pick<CaseStudy, "id" | "title" | "created_at">[]) {
+  for (const inv of overdueInvoices) {
     queue.push({
-      id: draft.id,
-      kind: "draft",
-      who: "Studio",
-      what: `Draft case study: ${draft.title}`,
-      when: draft.created_at,
-      href: `/admin/work/${draft.id}`,
+      id: inv.id,
+      kind: "overdue",
+      who: inv.bill_company || inv.bill_name,
+      what: `${inv.number} overdue · ${formatKes(balance(inv))}`,
+      when: `${inv.due_on}T00:00:00+03:00`,
+      href: `/console/invoices/${inv.id}`,
+      action: "Chase",
+    });
+  }
+  for (const inv of unpaid.filter((i) => i.status === "draft")) {
+    queue.push({
+      id: inv.id,
+      kind: "invoice",
+      who: inv.bill_company || inv.bill_name,
+      what: `${inv.number} draft · ${formatKes(Number(inv.total_kes))}`,
+      when: inv.created_at,
+      href: `/console/invoices/${inv.id}`,
+      action: "Send",
+    });
+  }
+  for (const e of events) {
+    if (e.published || new Date(e.starts_at).getTime() - now > 14 * DAY) continue;
+    queue.push({
+      id: e.id,
+      kind: "event",
+      who: e.title,
+      what: "Draft event starts soon",
+      when: e.starts_at,
+      href: `/console/events/${e.id}`,
       action: "Publish",
     });
   }
-  const next = (eventsRes.data ?? [])[0] as Event | undefined;
-  if (next && new Date(next.starts_at).getTime() - now < 2 * DAY) {
-    queue.push({
-      id: next.id,
-      kind: "event",
-      who: next.title,
-      what: next.published_at ? "Goes live soon" : "Draft event with a date",
-      when: next.starts_at,
-      href: `/admin/events/${next.id}`,
-      action: "Open",
-    });
-  }
-  queue.sort((a, b) => +new Date(b.when) - +new Date(a.when));
+  queue.sort(
+    (a, b) => QUEUE_ORDER.indexOf(a.kind) - QUEUE_ORDER.indexOf(b.kind) || +new Date(a.when) - +new Date(b.when),
+  );
+
+  const drafts: DraftItem[] = [
+    ...(workDrafts.data ?? []).map((d) => ({ ...d, kind: "Work", href: `/console/work/${d.id}` })),
+    ...(articleDrafts.data ?? []).map((d) => ({ ...d, kind: "Blog", href: `/console/insights/${d.id}` })),
+    ...(productDrafts.data ?? []).map((d) => ({ ...d, kind: "Product", href: `/console/products/${d.id}` })),
+    ...(eventDrafts.data ?? []).map((d) => ({ ...d, kind: "Event", href: `/console/events/${d.id}` })),
+  ]
+    .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))
+    .slice(0, 4);
 
   return {
-    needsReply,
-    slaLate,
-    money7,
-    moneyPrev,
-    pipeline,
-    waitingPay,
-    liveMonth: (workLive.count ?? 0) + (articlesLive.count ?? 0) + (productsLive.count ?? 0),
     series,
-    queue: queue.slice(0, 8),
-    nextEvent: ((eventsRes.data ?? [])[0] as Event | undefined) ?? null,
-    ticketsSold: ticketOrders.count ?? 0,
+    enquiries: { current: sum(last7, (p) => p.enquiries), previous: sum(prev7, (p) => p.enquiries) },
+    revenue: { current: sum(last7, (p) => p.revenue), previous: sum(prev7, (p) => p.revenue) },
+    outstanding: { total: sum(unpaid, balance), count: unpaid.length, overdue: overdueInvoices.length },
+    tickets: { sold: sum(events, (e) => e.sold), events: events.length },
+    funnel,
+    lines,
+    upcoming: events.slice(0, 3),
+    recentLeads: (recentLeads.data ?? []).map((l) => ({
+      id: l.id,
+      name: l.name,
+      company: l.company,
+      service: serviceLabel(l.services ?? []),
+      status: l.status,
+      created_at: l.created_at,
+    })),
+    transactions,
+    queue: queue.slice(0, 6),
+    queueTotal: queue.length,
+    published: [
+      { label: "Work", count: workLive.count ?? 0, href: "/console/work" },
+      { label: "Blog", count: articlesLive.count ?? 0, href: "/console/insights" },
+      { label: "Products", count: productsLive.count ?? 0, href: "/console/products" },
+      { label: "Events", count: eventsLive.count ?? 0, href: "/console/events" },
+    ],
+    drafts,
   };
 }

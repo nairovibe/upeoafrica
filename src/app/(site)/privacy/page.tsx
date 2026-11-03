@@ -201,7 +201,7 @@ export default function PrivacyPage() {
       <h2>7. Cookies and similar technologies</h2>
       <p>
         <strong>7.1</strong> Essential cookies are used to keep a staff session on the
-        studio desk at /admin. These are strictly necessary to operate that area of the
+        studio desk at /console. These are strictly necessary to operate that area of the
         site and are not used for advertising.
       </p>
       <p>

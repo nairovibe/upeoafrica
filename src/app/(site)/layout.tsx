@@ -4,12 +4,12 @@ import { InquiryModal } from "@/components/site/InquiryModal";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { GtmSnippet } from "@/components/site/GtmSnippet";
 import { company } from "@/lib/content";
-import { getSettings } from "@/lib/cms";
+import { getPublicSettings } from "@/lib/cms";
 
 const siteUrl = "https://upeoafricatechnologies.co.ke";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID || settings?.gtm_id || "";
 
   return (

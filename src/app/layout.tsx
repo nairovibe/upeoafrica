@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Sora } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import { NavProgress } from "@/components/ui/NavProgress";
 import { company } from "@/lib/content";
 
 /** Display face for headings and UI. Body copy uses DM Sans. Wired in globals.css. */
@@ -79,7 +81,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${sora.variable} ${dmSans.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

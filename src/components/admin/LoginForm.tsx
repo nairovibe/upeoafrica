@@ -1,23 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { inputClass } from "@/components/admin/ui";
 import { LoginShell } from "@/components/admin/LoginShell";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import {
-  AUTH_OTP_LENGTH,
   isPasswordAcceptable,
   passwordChecks,
   passwordScore,
   STAFF_ACCESS_DENIED,
 } from "@/lib/constants";
-import { guardAuthAttempt, guardStaffEmail } from "@/app/admin/login/actions";
+import { guardAuthAttempt, guardStaffEmail } from "@/app/console/login/actions";
+import { persistRemember } from "@/lib/supabase/remember";
 import { cn } from "@/lib/utils";
 
 type Mode = "in" | "up" | "verify" | "forgot" | "reset";
+
+const CODE_PATTERN = /^\d{6,10}$/;
+
+function openConsole(next: string) {
+  const dest =
+    next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/console/login")
+      ? next
+      : "/console";
+  window.location.assign(dest);
+}
 
 function mapAuthError(raw: string) {
   if (/already work here|reserved for people/i.test(raw)) return STAFF_ACCESS_DENIED;
@@ -37,15 +47,15 @@ function mapAuthError(raw: string) {
 }
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/admin";
+  const next = params.get("next") || "/console";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [mode, setMode] = useState<Mode>("in");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -55,6 +65,38 @@ export function LoginForm() {
   const strength = passwordScore(password);
   const checks = passwordChecks(password);
   const canCreate = isPasswordAcceptable(password) && name.trim().length > 1;
+
+  useEffect(() => {
+    const codeParam = params.get("code");
+    const tokenHash = params.get("token_hash");
+    const otpType = params.get("type");
+    if (!codeParam && !tokenHash) return;
+    const marker = `upeo-auth:${codeParam || tokenHash}`;
+    if (sessionStorage.getItem(marker)) return;
+    sessionStorage.setItem(marker, "1");
+
+    const supabase = createClient();
+    const type =
+      otpType === "recovery" || otpType === "invite" || otpType === "email" || otpType === "signup"
+        ? otpType
+        : "signup";
+
+    void (async () => {
+      await Promise.resolve();
+      setPending(true);
+      setError(null);
+      const { error: err } = codeParam
+        ? await supabase.auth.exchangeCodeForSession(codeParam)
+        : await supabase.auth.verifyOtp({ token_hash: tokenHash!, type });
+      if (err) {
+        sessionStorage.removeItem(marker);
+        setPending(false);
+        setError(mapAuthError(err.message));
+        return;
+      }
+      openConsole("/console");
+    })();
+  }, [params]);
 
   function bumpCaptcha() {
     setCaptcha("");
@@ -78,56 +120,54 @@ export function LoginForm() {
     return true;
   }
 
-  async function enterDesk() {
-    router.replace(next);
-    router.refresh();
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setNotice(null);
-
-    if (!(await requireStaff())) return;
-    if (!requireCaptcha()) return;
-    const captchaOk = await guardAuthAttempt(captcha);
-    if (!captchaOk.ok) {
-      setError(captchaOk.message);
-      bumpCaptcha();
-      return;
-    }
-
-    if (mode === "up" && !isPasswordAcceptable(password)) {
-      setError("Choose a stronger password before we create the desk.");
-      return;
-    }
-    if ((mode === "verify" || mode === "reset") && !new RegExp(`^\\d{${AUTH_OTP_LENGTH}}$`).test(code)) {
-      setError(`Enter the ${AUTH_OTP_LENGTH}-digit code from your email.`);
-      return;
-    }
-    if (mode === "reset" && !isPasswordAcceptable(password)) {
-      setError("Choose a stronger password before we save it.");
-      return;
-    }
-
     setPending(true);
+    let opened = false;
+
+    try {
+      if (!(await requireStaff())) return;
+      if (!requireCaptcha()) return;
+      const captchaOk = await guardAuthAttempt(captcha);
+      if (!captchaOk.ok) {
+        setError(captchaOk.message);
+        bumpCaptcha();
+        return;
+      }
+
+      if (mode === "up" && !isPasswordAcceptable(password)) {
+        setError("Choose a stronger password before we create the desk.");
+        return;
+      }
+      if ((mode === "verify" || mode === "reset") && !CODE_PATTERN.test(code)) {
+        setError("Enter the code from your email.");
+        return;
+      }
+      if (mode === "reset" && !isPasswordAcceptable(password)) {
+        setError("Choose a stronger password before we save it.");
+        return;
+      }
+
+      persistRemember(remember);
     const supabase = createClient();
     const origin = window.location.origin;
 
-    try {
       if (mode === "up") {
         const { data, error: err } = await supabase.auth.signUp({
           email,
           password,
           options: {
             captchaToken: captcha,
-            emailRedirectTo: `${origin}/admin/login`,
+            emailRedirectTo: `${origin}/console/login`,
             data: { full_name: name.trim(), first_name: name.trim().split(/\s+/)[0] },
           },
         });
         if (err) throw err;
         if (data.session) {
-          await enterDesk();
+          opened = true;
+          openConsole("/console");
           return;
         }
         setMode("verify");
@@ -153,14 +193,15 @@ export function LoginForm() {
           }
           throw err;
         }
-        await enterDesk();
+        opened = true;
+        openConsole(next);
         return;
       }
 
       if (mode === "forgot") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
           captchaToken: captcha,
-          redirectTo: `${origin}/admin/login`,
+          redirectTo: `${origin}/console/login`,
         });
         if (err) throw err;
         setMode("reset");
@@ -178,6 +219,7 @@ export function LoginForm() {
           type: "signup",
           options: { captchaToken: captcha },
         });
+        let session = attempt.data.session;
         if (attempt.error) {
           const fallback = await supabase.auth.verifyOtp({
             email,
@@ -185,9 +227,23 @@ export function LoginForm() {
             type: "email",
             options: { captchaToken: captcha },
           });
-          if (fallback.error) throw fallback.error;
+          if (fallback.error) throw attempt.error;
+          session = fallback.data.session;
         }
-        await enterDesk();
+        if (!session && password) {
+          const signedIn = await supabase.auth.signInWithPassword({
+            email,
+            password,
+            options: { captchaToken: captcha },
+          });
+          if (signedIn.error) throw signedIn.error;
+          session = signedIn.data.session;
+        }
+        if (!session) {
+          throw new Error("That code was accepted, but the desk did not open. Sign in with your password.");
+        }
+        opened = true;
+        openConsole("/console");
         return;
       }
 
@@ -201,13 +257,14 @@ export function LoginForm() {
         if (err) throw err;
         const { error: updateErr } = await supabase.auth.updateUser({ password });
         if (updateErr) throw updateErr;
-        await enterDesk();
+        opened = true;
+        openConsole("/console");
       }
     } catch (err) {
       setError(mapAuthError(err instanceof Error ? err.message : "Could not continue."));
       bumpCaptcha();
     } finally {
-      setPending(false);
+      if (!opened) setPending(false);
     }
   }
 
@@ -226,7 +283,7 @@ export function LoginForm() {
       if (mode === "reset") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
           captchaToken: captcha,
-          redirectTo: `${window.location.origin}/admin/login`,
+          redirectTo: `${window.location.origin}/console/login`,
         });
         if (err) throw err;
       } else {
@@ -235,7 +292,7 @@ export function LoginForm() {
           email,
           options: {
             captchaToken: captcha,
-            emailRedirectTo: `${window.location.origin}/admin/login`,
+            emailRedirectTo: `${window.location.origin}/console/login`,
           },
         });
         if (err) throw err;
@@ -285,7 +342,15 @@ export function LoginForm() {
     mode === "up" ? "signup" : mode === "in" ? "login" : "recovery";
 
   const submitLabel = pending
-    ? "Please wait..."
+    ? mode === "up"
+      ? "Creating account..."
+      : mode === "verify"
+        ? "Confirming..."
+        : mode === "forgot"
+          ? "Sending code..."
+          : mode === "reset"
+            ? "Saving password..."
+            : "Signing in..."
     : mode === "up"
       ? "Create account"
       : mode === "verify"
@@ -339,14 +404,12 @@ export function LoginForm() {
               className={cn(inputClass, "text-center text-2xl tracking-[0.18em]")}
               inputMode="numeric"
               autoComplete="one-time-code"
-              pattern={`[0-9]{${AUTH_OTP_LENGTH}}`}
-              maxLength={AUTH_OTP_LENGTH}
+              pattern="[0-9]{6,10}"
+              maxLength={10}
               required
-              placeholder={"0".repeat(AUTH_OTP_LENGTH)}
+              placeholder="Code from email"
               value={code}
-              onChange={(e) =>
-                setCode(e.target.value.replace(/\D/g, "").slice(0, AUTH_OTP_LENGTH))
-              }
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 10))}
             />
           )}
           {showPasswordField && (
@@ -367,11 +430,23 @@ export function LoginForm() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 inline-flex w-11 cursor-pointer items-center justify-center text-ink-500 hover:text-ink-900"
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 z-10 inline-flex w-11 cursor-pointer items-center justify-center text-ink-600 hover:text-ink-900"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
               </button>
             </div>
+          )}
+          {(mode === "in" || mode === "up") && (
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-white/70">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="size-4 accent-brand-500"
+              />
+              Remember this desk for 14 days
+            </label>
           )}
           {showStrength && (
             <div>
@@ -427,8 +502,10 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={disableSubmit}
-          className="mt-6 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-[5px] bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+          aria-busy={pending}
+          className="mt-6 inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[5px] bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:cursor-wait disabled:opacity-80"
         >
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
           {submitLabel}
         </button>
         {(mode === "verify" || mode === "reset") && (

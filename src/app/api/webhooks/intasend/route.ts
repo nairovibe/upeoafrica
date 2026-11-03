@@ -2,22 +2,27 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { notifyBuyerReceipt, pushDeskEvent } from "@/lib/notify";
 import { company } from "@/lib/content";
+import { sendTicketEmail } from "@/lib/tickets";
 
 export async function POST(request: Request) {
+  const payload = (await request.json().catch(() => null)) as {
+    api_ref?: string;
+    invoice_id?: string;
+    challenge?: string;
+    state?: string;
+  } | null;
+  if (!payload) return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+
   const secret = process.env.INTASEND_WEBHOOK_SECRET;
-  const header = request.headers.get("x-intasend-signature") || request.headers.get("authorization");
-  if (secret && header && !header.includes(secret)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (secret) {
+    const header = request.headers.get("x-intasend-signature") || request.headers.get("authorization") || "";
+    if (payload.challenge !== secret && !header.includes(secret)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const service = await createServiceClient();
   if (!service) return NextResponse.json({ error: "Service role not configured." }, { status: 503 });
-
-  const payload = (await request.json()) as {
-    api_ref?: string;
-    invoice_id?: string;
-    state?: string;
-  };
 
   const ref = payload.api_ref;
   if (!ref) return NextResponse.json({ ok: true });
@@ -30,7 +35,48 @@ export async function POST(request: Request) {
     ? { data: null }
     : await service.from("invoices").select("*").eq("id", ref).maybeSingle();
 
-  if (order) {
+  if (order && order.kind === "ticket") {
+    if (paid && order.status !== "paid") {
+      await service
+        .from("orders")
+        .update({ status: "paid", provider_ref: payload.invoice_id || order.provider_ref })
+        .eq("id", order.id);
+      const [{ data: event }, { data: ticket }] = await Promise.all([
+        order.event_id
+          ? service.from("events").select("id, title, slug, starts_at, ends_at, venue, mode").eq("id", order.event_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        order.ticket_type_id
+          ? service.from("ticket_types").select("name").eq("id", order.ticket_type_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      if (event && order.ticket_code) {
+        await sendTicketEmail({
+          to: order.email,
+          name: order.attendee_name,
+          code: order.ticket_code,
+          orderId: order.id,
+          quantity: order.quantity,
+          amount: Number(order.amount_kes),
+          ticketName: ticket?.name ?? null,
+          event,
+        }).catch(() => {});
+      }
+    } else if (failed && order.status === "pending") {
+      await service.from("orders").update({ status: "failed" }).eq("id", order.id);
+      await pushDeskEvent({
+        type: "payment",
+        title: "M-Pesa failed",
+        body: order.email,
+        href: order.event_id ? `/console/events/${order.event_id}/attendees` : "/console/orders",
+      }).catch(() => {});
+    }
+    await service.from("payments").insert({
+      order_id: order.id,
+      provider: "intasend",
+      result: payload.state || null,
+      payload,
+    });
+  } else if (order) {
     if (paid) {
       const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       await service
@@ -65,7 +111,7 @@ export async function POST(request: Request) {
         type: "payment",
         title: "M-Pesa failed",
         body: order.email,
-        href: "/admin/orders",
+        href: "/console/orders",
       }).catch(() => {});
     }
     await service.from("payments").insert({

@@ -1,159 +1,141 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
-import { SectionHeading } from "@/components/ui/Section";
 import { CTA } from "@/components/sections/CTA";
-import { getPublishedEvents } from "@/lib/cms";
-import { formatKes, publicMediaUrl } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/server";
+import { getPublishedEvents, getTicketHolds, getTicketTypesForEvents, type Event } from "@/lib/cms";
+import {
+  dateBlock,
+  formatEventDate,
+  formatEventTime,
+  isEventOver,
+  modeLabel,
+  priceLabel,
+} from "@/components/events/utils";
+
+const intro =
+  "Talks, workshops, bootcamps and online sessions run by the Upeo Africa studio in Mombasa. Book a free seat or pay for your ticket with M-Pesa.";
 
 export const metadata: Metadata = {
   title: "Events",
-  description:
-    "Join talks and training, in person and online. A seat is a ticket for a session taught from projects we have already shipped.",
+  description: intro,
+  alternates: { canonical: "/events" },
+  openGraph: { title: "Events", description: intro, url: "/events" },
 };
 
 export default async function EventsPage() {
   const events = await getPublishedEvents();
-  const supabase = await createClient();
   const ids = events.map((e) => e.id);
-  const { data: tickets } = ids.length
-    ? await supabase.from("ticket_types").select("event_id, price_kes").in("event_id", ids)
-    : { data: [] };
-  const fromPrice = new Map<string, number>();
-  for (const t of tickets ?? []) {
-    const current = fromPrice.get(t.event_id);
-    if (current == null || t.price_kes < current) fromPrice.set(t.event_id, t.price_kes);
-  }
-  const now = Date.now();
-  const upcoming = events.filter((e) => new Date(e.starts_at).getTime() >= now - 12 * 60 * 60 * 1000);
-  const past = events.filter((e) => new Date(e.starts_at).getTime() < now - 12 * 60 * 60 * 1000);
+  const [tickets, holds] = await Promise.all([getTicketTypesForEvents(ids), getTicketHolds(ids)]);
+
+  const prices = new Map<string, number[]>();
+  for (const t of tickets) prices.set(t.event_id, [...(prices.get(t.event_id) ?? []), t.price_kes]);
+
+  const upcoming = events.filter((e) => !isEventOver(e.starts_at));
+  const past = events.filter((e) => isEventOver(e.starts_at)).reverse();
 
   return (
     <>
-      <PageHeader
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "About", href: "/about" }, { label: "Events" }]}
-        title="Events"
-        intro="Join talks and training, in person and online. A seat is a ticket for a session taught from projects we have already shipped."
-      />
-      <section className="bg-white py-24 lg:py-32">
+      <PageHeader breadcrumb={[{ label: "Home", href: "/" }, { label: "Events" }]} title="Events" intro={intro} />
+
+      <section className="bg-white py-20 lg:py-28">
         <Container>
-          <SectionHeading
-            title="Who a seat is for"
-            intro="Sessions are for people who will use the hour, not for a general audience."
-          />
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {[
-              ["Founders", "You are deciding what to build, or you already have a product and need the next decision made in the open."],
-              ["Teams that already ship", "Your staff run the product. The session is on payments, launch, or how the work is held after go-live."],
-              ["A public date", "When a session is scheduled it is listed below, with a price and a way to take a seat."],
-            ].map(([title, body]) => (
-              <article key={title} className="border border-line p-8">
-                <h3 className="font-display text-xl font-semibold text-ink-900">{title}</h3>
-                <p className="mt-3 text-lg leading-relaxed text-body">{body}</p>
-              </article>
-            ))}
-          </div>
-        </Container>
-      </section>
-      <section className="bg-[#edf3f8] py-24 lg:py-32">
-        <Container>
-          <SectionHeading title="Sessions" intro="Upcoming first. Past sessions stay listed so you can see what the studio has already taught." />
-          <div className="mt-14">
-          {events.length === 0 ? (
-            <p className="max-w-2xl text-lg leading-relaxed text-body">
-              No session is scheduled. When one is, the date, the place, and the ticket price will be listed here. For a private conversation, start on{" "}
-              <Link href="/founders#share" className="font-medium text-brand-600 hover:underline">
-                Founders Zone
-              </Link>
-              .
-            </p>
+          {upcoming.length === 0 ? (
+            <div className="max-w-2xl rounded-[5px] border border-line p-8">
+              <h2 className="font-display text-2xl font-semibold text-ink-900">No upcoming events</h2>
+              <p className="mt-3 text-lg leading-relaxed text-body">
+                New dates are posted here first. For a private session for your team,{" "}
+                <Link href="/contact" className="font-medium text-brand-600 hover:underline">
+                  talk to us
+                </Link>
+                .
+              </p>
+            </div>
           ) : (
-            <div className="space-y-16">
-              {upcoming.length > 0 ? (
-                <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
-                  {upcoming.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      href={`/events/${event.slug}`}
-                      title={event.title}
-                      summary={event.summary}
-                      startsAt={event.starts_at}
-                      mode={event.mode}
-                      venue={event.venue}
-                      cover={publicMediaUrl(event.cover_path)}
-                      from={fromPrice.get(event.id)}
-                    />
-                  ))}
-                </div>
-              ) : null}
-              {past.length > 0 ? (
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-ink-900">Past sessions</h3>
-                  <div className="mt-6 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
-                    {past.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        href={`/events/${event.slug}`}
-                        title={event.title}
-                        summary={event.summary}
-                        startsAt={event.starts_at}
-                        mode={event.mode}
-                        venue={event.venue}
-                        cover={publicMediaUrl(event.cover_path)}
-                        from={fromPrice.get(event.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-ink-900">Upcoming</h2>
+              <ul className="mt-6 space-y-4">
+                {upcoming.map((event) => {
+                  const taken = holds?.byEvent.get(event.id);
+                  const seatsLeft =
+                    event.capacity != null && taken != null ? Math.max(event.capacity - taken, 0) : null;
+                  return (
+                    <li key={event.id}>
+                      <UpcomingRow event={event} price={priceLabel(prices.get(event.id) ?? [])} seatsLeft={seatsLeft} />
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
-          </div>
+
+          {past.length > 0 ? (
+            <div className="mt-20">
+              <h2 className="font-display text-2xl font-semibold text-ink-900">Past events</h2>
+              <ul className="mt-6 divide-y divide-line border-y border-line">
+                {past.map((event) => (
+                  <li key={event.id}>
+                    <Link
+                      href={`/events/${event.slug}`}
+                      className="group grid gap-1 py-4 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-center sm:gap-6"
+                    >
+                      <time dateTime={event.starts_at} className="text-sm text-muted">
+                        {formatEventDate(event.starts_at)}
+                      </time>
+                      <span className="font-medium text-ink-900 group-hover:text-brand-600">{event.title}</span>
+                      <span className="text-sm text-muted">{event.category || modeLabel(event.mode)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </Container>
       </section>
-      <CTA />
+
+      <CTA
+        title="Want a session for your team?"
+        intro="We run private workshops and trainings on software, payments, design and growth. Tell us who it is for and we will plan it with you."
+      />
     </>
   );
 }
 
-function EventCard({
-  href,
-  title,
-  summary,
-  startsAt,
-  mode,
-  venue,
-  cover,
-  from,
-}: {
-  href: string;
-  title: string;
-  summary: string;
-  startsAt: string;
-  mode: string;
-  venue: string | null;
-  cover: string | null;
-  from?: number;
-}) {
+function UpcomingRow({ event, price, seatsLeft }: { event: Event; price: string | null; seatsLeft: number | null }) {
+  const d = dateBlock(event.starts_at);
+  const meta = [event.category, modeLabel(event.mode), event.venue, `${formatEventTime(event.starts_at)} EAT`]
+    .filter(Boolean)
+    .join(" · ");
   return (
-    <Link href={href} className="group block border border-line hover:border-brand-300">
-      {cover ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={cover} alt="" className="h-40 w-full object-cover" />
-      ) : null}
-      <div className="p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
-          {mode}
-          {venue ? ` · ${venue}` : ""}
-        </p>
-        <h3 className="mt-3 font-display text-xl font-semibold text-ink-900 group-hover:text-brand-600">{title}</h3>
-        <p className="mt-2 text-sm text-muted">{new Date(startsAt).toLocaleString("en-KE")}</p>
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-body">{summary}</p>
-        <p className="mt-4 text-sm font-medium text-ink-900">
-          {from == null ? "Details" : from > 0 ? `From ${formatKes(from)}` : "Free"}
-        </p>
+    <Link
+      href={`/events/${event.slug}`}
+      className="group grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-5 rounded-[5px] border border-line p-4 transition-colors duration-200 hover:border-brand-300 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:gap-6 sm:p-5"
+    >
+      <time
+        dateTime={event.starts_at}
+        className="flex flex-col items-center justify-center rounded-[5px] bg-surface-2 py-3 text-center"
+      >
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">{d.month}</span>
+        <span className="font-display text-3xl font-semibold leading-none text-ink-900">{d.day}</span>
+        <span className="mt-1 text-xs text-muted">{d.weekday}</span>
+      </time>
+      <div className="min-w-0">
+        <h3 className="font-display text-xl font-semibold text-ink-900 group-hover:text-brand-600">{event.title}</h3>
+        <p className="mt-1 truncate text-sm text-muted">{meta}</p>
+      </div>
+      <div className="col-span-2 flex items-center justify-between gap-4 sm:col-span-1 sm:flex-col sm:items-end sm:justify-center sm:gap-1">
+        <span className="font-display text-lg font-semibold text-ink-900">{price ?? "Details"}</span>
+        {seatsLeft != null ? (
+          <span className={seatsLeft === 0 ? "text-sm font-medium text-brand-600" : "text-sm text-muted"}>
+            {seatsLeft === 0 ? "Sold out" : `${seatsLeft} seats left`}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+            View
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </span>
+        )}
       </div>
     </Link>
   );

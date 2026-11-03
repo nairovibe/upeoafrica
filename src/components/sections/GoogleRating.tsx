@@ -3,10 +3,10 @@ import { Star, ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { company } from "@/lib/content";
-import { getSettings } from "@/lib/cms";
+import { getPublicSettings } from "@/lib/cms";
 
 export async function GoogleRating() {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
   const reviewUrl = settings?.google_review_url || company.googleReviewUrl;
   return (
     <section className="border-y border-line bg-surface-2 py-14">

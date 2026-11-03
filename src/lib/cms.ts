@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { publicRead } from "@/lib/public-cache";
 import type { Tables } from "@/lib/database.types";
 
 export type SiteSettings = Tables<"site_settings">;
@@ -19,37 +20,59 @@ export type EmailLog = Tables<"email_log">;
 export type Event = Tables<"events">;
 export type TicketType = Tables<"ticket_types">;
 
+async function _getPublicSettings() {
+  const supabase = createPublicClient();
+  const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
+  return data;
+}
+
+export const getPublicSettings = publicRead("cms:getPublicSettings", _getPublicSettings);
+
+/** Fresh read for the console; public pages use getPublicSettings. */
 export async function getSettings() {
   const supabase = await createClient();
   const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
   return data;
 }
 
-export async function getPublishedWork(limit?: number) {
-  const supabase = await createClient();
+const WORK_CARD_COLUMNS =
+  "id, slug, title, summary, cover_path, industry, services, project_year, featured, sort_order, published_at, updated_at, client:clients(name)";
+
+/** Portfolio order: featured first, then the manual sort order, then the newest project. */
+async function _getPublishedWork(limit?: number) {
+  const supabase = createPublicClient();
   let q = supabase
     .from("case_studies")
-    .select("*")
+    .select(WORK_CARD_COLUMNS)
     .not("published_at", "is", null)
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("project_year", { ascending: false, nullsFirst: false })
     .order("published_at", { ascending: false });
   if (limit) q = q.limit(limit);
   const { data } = await q;
   return data ?? [];
 }
 
-export async function getWorkBySlug(slug: string) {
-  const supabase = await createClient();
+export type WorkCard = Awaited<ReturnType<typeof _getPublishedWork>>[number];
+
+async function _getWorkBySlug(slug: string) {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("case_studies")
-    .select("*")
+    .select(
+      "id, slug, title, summary, body, cover_path, gallery, video_url, industry, services, outcomes, tech_stack, role, project_year, project_url, testimonial_quote, testimonial_author, testimonial_title, meta_title, meta_description, published_at, updated_at, client:clients(name, logo_path, url)",
+    )
     .eq("slug", slug)
     .not("published_at", "is", null)
     .maybeSingle();
   return data;
 }
 
-export async function getPublishedArticles(opts?: { audience?: string; limit?: number }) {
-  const supabase = await createClient();
+export type WorkDetail = NonNullable<Awaited<ReturnType<typeof _getWorkBySlug>>>;
+
+async function _getPublishedArticles(opts?: { audience?: string; limit?: number }) {
+  const supabase = createPublicClient();
   let q = supabase
     .from("articles")
     .select("*")
@@ -61,8 +84,8 @@ export async function getPublishedArticles(opts?: { audience?: string; limit?: n
   return data ?? [];
 }
 
-export async function getArticleBySlug(slug: string) {
-  const supabase = await createClient();
+async function _getArticleBySlug(slug: string) {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("articles")
     .select("*")
@@ -72,14 +95,14 @@ export async function getArticleBySlug(slug: string) {
   return data;
 }
 
-export async function getPartners() {
-  const supabase = await createClient();
+async function _getPartners() {
+  const supabase = createPublicClient();
   const { data } = await supabase.from("partners").select("*").order("sort_order").order("name");
   return data ?? [];
 }
 
-export async function getFeaturedClients() {
-  const supabase = await createClient();
+async function _getFeaturedClients() {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("clients")
     .select("*")
@@ -89,8 +112,8 @@ export async function getFeaturedClients() {
   return data ?? [];
 }
 
-export async function getPublishedProducts() {
-  const supabase = await createClient();
+async function _getPublishedProducts() {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("products")
     .select("*")
@@ -99,8 +122,8 @@ export async function getPublishedProducts() {
   return data ?? [];
 }
 
-export async function getProductBySlug(slug: string) {
-  const supabase = await createClient();
+async function _getProductBySlug(slug: string) {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("products")
     .select("*")
@@ -110,8 +133,8 @@ export async function getProductBySlug(slug: string) {
   return data;
 }
 
-export async function getPublishedEvents() {
-  const supabase = await createClient();
+async function _getPublishedEvents() {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("events")
     .select("*")
@@ -120,8 +143,8 @@ export async function getPublishedEvents() {
   return data ?? [];
 }
 
-export async function getEventBySlug(slug: string) {
-  const supabase = await createClient();
+async function _getEventBySlug(slug: string) {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("events")
     .select("*")
@@ -131,8 +154,8 @@ export async function getEventBySlug(slug: string) {
   return data;
 }
 
-export async function getTicketTypes(eventId: string) {
-  const supabase = await createClient();
+async function _getTicketTypes(eventId: string) {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("ticket_types")
     .select("*")
@@ -152,3 +175,58 @@ export async function getStaff() {
   if (error) return null;
   return data;
 }
+
+async function _getTicketTypesForEvents(eventIds: string[]) {
+  if (eventIds.length === 0) return [];
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("ticket_types")
+    .select("*")
+    .in("event_id", eventIds)
+    .order("sort_order")
+    .order("name");
+  return data ?? [];
+}
+
+async function _getPublishedEventSlugs() {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("events")
+    .select("slug, updated_at, starts_at")
+    .not("published_at", "is", null)
+    .order("starts_at", { ascending: false });
+  return data ?? [];
+}
+
+export type TicketHolds = { byTicket: Map<string, number>; byEvent: Map<string, number> };
+
+/**
+ * Seats taken (paid plus pending) per ticket type and per event. Orders are
+ * staff only under RLS, so this needs the service role; null means unknown.
+ */
+export async function getTicketHolds(eventIds: string[]): Promise<TicketHolds | null> {
+  const holds: TicketHolds = { byTicket: new Map(), byEvent: new Map() };
+  if (eventIds.length === 0) return holds;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("ticket_holds", { p_event_ids: eventIds });
+  if (error || !data) return null;
+  for (const row of data) {
+    holds.byTicket.set(row.ticket_type_id, row.taken);
+    holds.byEvent.set(row.event_id, (holds.byEvent.get(row.event_id) ?? 0) + row.taken);
+  }
+  return holds;
+}
+
+export const getPublishedWork = publicRead("cms:getPublishedWork", _getPublishedWork);
+export const getWorkBySlug = publicRead("cms:getWorkBySlug", _getWorkBySlug);
+export const getPublishedArticles = publicRead("cms:getPublishedArticles", _getPublishedArticles);
+export const getArticleBySlug = publicRead("cms:getArticleBySlug", _getArticleBySlug);
+export const getPartners = publicRead("cms:getPartners", _getPartners);
+export const getFeaturedClients = publicRead("cms:getFeaturedClients", _getFeaturedClients);
+export const getPublishedProducts = publicRead("cms:getPublishedProducts", _getPublishedProducts);
+export const getProductBySlug = publicRead("cms:getProductBySlug", _getProductBySlug);
+export const getPublishedEvents = publicRead("cms:getPublishedEvents", _getPublishedEvents);
+export const getEventBySlug = publicRead("cms:getEventBySlug", _getEventBySlug);
+export const getTicketTypes = publicRead("cms:getTicketTypes", _getTicketTypes);
+export const getTicketTypesForEvents = publicRead("cms:getTicketTypesForEvents", _getTicketTypesForEvents);
+export const getPublishedEventSlugs = publicRead("cms:getPublishedEventSlugs", _getPublishedEventSlugs);

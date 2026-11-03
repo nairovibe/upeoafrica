@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { ContactForm } from "@/components/site/ContactForm";
 import { company, faqs } from "@/lib/content";
 import { images } from "@/lib/images";
-import { getSettings } from "@/lib/cms";
+import { getPublicSettings } from "@/lib/cms";
 import { CalEmbed } from "@/components/site/CalEmbed";
 
 export const metadata: Metadata = {
@@ -42,7 +42,7 @@ const details = [
 ];
 
 export default async function ContactPage() {
-  const settings = await getSettings();
+  const settings = await getPublicSettings();
   const cal = process.env.CAL_COM_EMBED_URL || settings?.cal_com_embed_url || "";
   return (
     <>

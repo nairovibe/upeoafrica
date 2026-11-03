@@ -11,9 +11,6 @@ export function LoginShell({ children }: { children: React.ReactNode }) {
             <p className="font-display text-3xl font-semibold leading-tight">
               The studio desk.
             </p>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/55">
-              Leads, work, products, and partners. The same brand the public sees, without the noise of a generic dashboard.
-            </p>
           </div>
         </div>
       </div>

@@ -82,8 +82,8 @@ export function formatInvoiceDate(iso: string | null | undefined) {
 
 export function statusBanner(status: string, balance: number) {
   if (status === "void") return "VOID";
-  if (status === "paid" || balance <= 0) return "PAID";
   if (status === "draft") return "DRAFT";
+  if (status === "paid" || balance <= 0) return "PAID";
   return "UNPAID";
 }
 
