@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notifyLead, rateLimit } from "@/lib/notify";
 import { verifyTurnstile } from "@/lib/turnstile";
 
@@ -43,27 +43,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Could not verify this submission." }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: lead, error } = await supabase
-    .from("leads")
-    .insert({
-      source: body.source,
-      name,
-      email,
-      phone: body.phone?.trim() || null,
-      company: body.company?.trim() || null,
-      services: body.services ?? [],
-      stage: body.stage || null,
-      timeline: body.timeline || null,
-      budget: body.budget || null,
-      message: body.message?.trim() || null,
-      status: "new",
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: "Could not save your enquiry." }, { status: 500 });
+  const row = {
+    source: body.source,
+    name,
+    email,
+    phone: body.phone?.trim() || null,
+    company: body.company?.trim() || null,
+    services: body.services ?? [],
+    stage: body.stage || null,
+    timeline: body.timeline || null,
+    budget: body.budget || null,
+    message: body.message?.trim() || null,
+    status: "new" as const,
+  };
+  // Returning the new id needs the service role. The public policy allows the
+  // insert either way, so a missing key still saves the enquiry.
+  const service = await createServiceClient();
+  let leadId: string | undefined;
+  if (service) {
+    const { data: lead, error } = await service.from("leads").insert(row).select("id").single();
+    if (error) return NextResponse.json({ error: "Could not save your enquiry." }, { status: 500 });
+    leadId = lead?.id;
+  } else {
+    const { error } = await (await createClient()).from("leads").insert(row);
+    if (error) return NextResponse.json({ error: "Could not save your enquiry." }, { status: 500 });
   }
 
   const summary = [
@@ -79,7 +82,7 @@ export async function POST(request: Request) {
     body.message || "",
   ].join("\n");
 
-  await notifyLead({ name, email, source: body.source, summary, leadId: lead?.id }).catch(() => {});
+  await notifyLead({ name, email, source: body.source, summary, leadId }).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

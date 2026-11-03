@@ -76,7 +76,7 @@ export default function PrivacyPage() {
       <h2>2. Data Controller and Data Protection Officer</h2>
       <p>
         <strong>2.1</strong> The Data Controller responsible for your personal data is{" "}
-        {company.legalName}, of {company.addressLine}, {company.poBox}, Kenya.
+        {company.legalName}, of {company.addressLine}, Kenya.
       </p>
       <p>
         <strong>2.2</strong> Questions, requests, or complaints regarding this Policy or the

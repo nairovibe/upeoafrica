@@ -658,9 +658,10 @@ export function IdeaWizard() {
             type="button"
             onClick={submit}
             disabled={sending}
-            className="inline-flex h-11 cursor-pointer items-center gap-2 bg-ink-900 px-5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-brand-600 disabled:opacity-60"
+            className="inline-flex h-11 cursor-pointer items-center gap-2 bg-ink-900 px-5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-brand-500 disabled:opacity-60"
           >
             {sending ? "Sending…" : "Send this"}
+            <ArrowRight className="h-4 w-4" aria-hidden />
           </button>
         )}
       </div>

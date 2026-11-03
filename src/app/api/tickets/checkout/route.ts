@@ -33,7 +33,11 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const db = (await createServiceClient()) ?? supabase;
+  const service = await createServiceClient();
+  const db = service ?? supabase;
+  if (!service) {
+    return NextResponse.json({ error: "Ticket checkout is not configured yet." }, { status: 503 });
+  }
 
   const { data: event } = await supabase
     .from("events")

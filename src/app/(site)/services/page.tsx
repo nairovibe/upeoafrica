@@ -9,7 +9,6 @@ import { Process } from "@/components/sections/Process";
 import { GoogleRating } from "@/components/sections/GoogleRating";
 import { CTA } from "@/components/sections/CTA";
 import { services } from "@/lib/content";
-import { pageImages } from "@/lib/images";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -25,8 +24,6 @@ export default function ServicesPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "Services" }]}
         title="Services"
         intro="Explore software, design, and marketing delivered by one team. Each service is scoped with you and carried through launch and support."
-        image={pageImages.servicesHeader}
-        imageAlt="Software developer at his workstation with a code editor open on the monitor beside him"
       />
 
       <section className="bg-surface-2 py-24 lg:py-32">

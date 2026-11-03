@@ -18,8 +18,8 @@ export default function NotFound() {
               The URL may be old, or the work has not been published yet. Head home, or tell us what you were looking for.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href="/">Home</Button>
-              <Button href="/contact" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
+              <Button href="/" withArrow>Home</Button>
+              <Button href="/contact" variant="outline" withArrow className="border-white/20 bg-transparent text-white hover:border-brand-500 hover:bg-brand-500 hover:text-white">
                 Contact
               </Button>
             </div>

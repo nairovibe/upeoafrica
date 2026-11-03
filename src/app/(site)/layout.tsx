@@ -31,7 +31,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             areaServed: "KE",
             address: {
               "@type": "PostalAddress",
-              streetAddress: "Yunis Building, Moi Avenue",
+              streetAddress: "88225 Moi Avenue",
               postOfficeBoxNumber: "88225-80100",
               addressLocality: "Mombasa",
               postalCode: "80100",

@@ -349,9 +349,10 @@ export function InquiryModal() {
                       <button
                         type="button"
                         onClick={() => setOpen(false)}
-                        className="mt-8 inline-flex cursor-pointer items-center justify-center bg-ink-950 px-6 py-3 text-sm font-medium text-white transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-0.5 hover:bg-ink-800 hover:shadow-[0_14px_34px_-14px_rgba(11,14,20,0.75)] active:translate-y-0 active:duration-100"
+                        className="mt-8 inline-flex cursor-pointer items-center justify-center gap-2 bg-ink-950 px-6 py-3 text-sm font-medium text-white transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-0.5 hover:bg-brand-500 hover:shadow-[0_14px_34px_-12px_rgba(249,115,22,0.8)] active:translate-y-0 active:duration-100"
                       >
                         Done
+                        <Check className="h-4 w-4" aria-hidden />
                       </button>
                     </div>
                   )}
@@ -378,9 +379,10 @@ export function InquiryModal() {
                   <button
                     type="button"
                     onClick={() => go(1)}
-                    className="inline-flex cursor-pointer items-center gap-2 border border-line px-5 py-2.5 text-sm font-medium text-slate-ink transition-[color,border-color,background-color] duration-300 ease-out-expo hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600"
+                    className="inline-flex cursor-pointer items-center gap-2 border border-ink-900 px-5 py-2.5 text-sm font-medium text-ink-900 transition-[color,border-color,background-color] duration-300 ease-out-expo hover:border-brand-500 hover:bg-brand-500 hover:text-white"
                   >
                     Skip
+                    <ArrowRight className="h-4 w-4" aria-hidden />
                   </button>
                 ) : step === 4 ? (
                   <button

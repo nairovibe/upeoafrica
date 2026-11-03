@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { formatKes } from "@/lib/constants";
 import type { TicketType } from "@/lib/cms";
@@ -106,13 +107,14 @@ export function TicketCheckoutForm({
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex h-11 w-full cursor-pointer items-center justify-center bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+        className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
       >
         {busy
           ? "Working..."
           : selected && selected.price_kes > 0
             ? "Pay with M-Pesa"
             : "Claim this seat"}
+        <ArrowRight className="h-4 w-4" aria-hidden />
       </button>
     </form>
   );

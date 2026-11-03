@@ -42,9 +42,9 @@ export function AdminBtn({
   disabled?: boolean;
 }) {
   const cls = cn(
-    "inline-flex h-9 cursor-pointer items-center justify-center rounded-[5px] px-3.5 text-[13px] font-medium transition-colors duration-200 disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex h-9 cursor-pointer items-center justify-center px-3.5 text-[13px] font-medium transition-colors duration-200 disabled:pointer-events-none disabled:opacity-50",
     variant === "primary" && "bg-brand-500 text-white hover:bg-brand-600",
-    variant === "ink" && "bg-ink-900 text-white hover:bg-ink-800",
+    variant === "ink" && "bg-ink-900 text-white hover:bg-brand-500",
     variant === "ghost" && "border border-line bg-white text-ink-900 hover:bg-surface-3",
   );
   if (href) {

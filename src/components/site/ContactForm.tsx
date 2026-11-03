@@ -125,6 +125,7 @@ export function ContactForm() {
             setSent(false);
           }}
           variant="outline"
+          withArrow
           className="mt-6"
         >
           Send another message

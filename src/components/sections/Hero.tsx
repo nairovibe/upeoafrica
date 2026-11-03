@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
 import { OpenInquiry } from "@/components/site/OpenInquiry";
 import { Container } from "@/components/ui/Container";
 import { company } from "@/lib/content";
@@ -55,14 +55,15 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <OpenInquiry className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-500 px-6 font-display text-[14px] font-semibold leading-5 text-white transition-colors duration-300 hover:bg-brand-600">
+            <OpenInquiry className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 bg-brand-500 px-6 font-display text-[14px] font-semibold leading-5 text-white transition-colors duration-300 hover:bg-brand-600">
               Start a project
               <ArrowRight className="h-4 w-4" aria-hidden />
             </OpenInquiry>
             <a
               href={`tel:${tel}`}
-              className="inline-flex h-9 items-center justify-center rounded-full border border-black px-5 font-display text-[14px] font-medium leading-5 text-black transition-colors duration-300 hover:bg-black hover:text-white"
+              className="inline-flex h-11 items-center justify-center gap-2 border border-ink-900 px-5 font-display text-[14px] font-medium leading-5 text-ink-900 transition-colors duration-300 hover:border-brand-500 hover:bg-brand-500 hover:text-white"
             >
+              <Phone className="h-4 w-4" aria-hidden />
               Call {company.phone}
             </a>
           </div>

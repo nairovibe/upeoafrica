@@ -12,17 +12,19 @@ import { Reveal } from "@/components/ui/Reveal";
  * three or four lines of keyword-bearing copy rather than one display-size
  * flourish. Never trim it for looks: shortening it costs search visibility.
  *
- * `image` turns the header into a photographic hero in the same key as the
- * homepage hero: photo, a left-to-right scrim so copy always sits on ink, and a
- * bottom fade into the section that follows. Without it the header falls back
- * to the grid-and-glow treatment, which suits the legal documents.
+ * `image` turns the header into a photographic hero: photo, a left-to-right
+ * scrim so copy always sits on ink, and a bottom fade into the section that
+ * follows. The studio shot behind "How we work" is the default until a page
+ * has its own photograph.
  */
+const DEFAULT_HERO_IMAGE = "/how-we-work-bg.jpg";
+
 export function PageHeader({
   title,
   intro,
   meta,
-  image,
-  imageAlt,
+  image = DEFAULT_HERO_IMAGE,
+  imageAlt = "The Upeo Africa Technologies studio",
   breadcrumb,
 }: {
   title: React.ReactNode;
@@ -40,7 +42,7 @@ export function PageHeader({
         <>
           <Image
             src={image}
-            alt={imageAlt ?? ""}
+            alt={imageAlt}
             fill
             sizes="100vw"
             preload

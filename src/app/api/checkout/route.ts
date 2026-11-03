@@ -28,7 +28,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = await createClient();
+  const service = await createServiceClient();
+  const supabase = service ?? (await createClient());
+  if (!service) {
+    return NextResponse.json({ error: "Checkout is not configured yet." }, { status: 503 });
+  }
   const { data: product } = await supabase
     .from("products")
     .select("*")
@@ -83,7 +87,6 @@ export async function POST(request: Request) {
     await supabase.from("orders").update({ provider_ref: stk.providerRef }).eq("id", order.id);
   }
 
-  const service = await createServiceClient();
   if (service) {
     await service.from("payments").insert({
       order_id: order.id,

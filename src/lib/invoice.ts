@@ -46,7 +46,7 @@ export function invoiceTotals(opts: {
 
 export function defaultFromBlock(settings: SiteSettings | null) {
   const name = settings?.legal_name || settings?.trading_name || company.legalName;
-  const address = settings?.address_line || `${company.poBox}\n${company.street}, ${company.city} ${company.postalCode}`;
+  const address = settings?.address_line || company.addressLine;
   return [name, address, "Kenya"].filter(Boolean).join("\n");
 }
 

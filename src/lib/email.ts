@@ -3,7 +3,7 @@ import { company } from "@/lib/content";
 const LOGO = `${company.domain}/email-logo.png`;
 const FONT = "Arial,Helvetica,sans-serif";
 export const EMAIL_OTP_MINUTES = 60;
-export const EMAIL_FOOTER_ADDRESS = "88225, Moi Avenue, Mombasa 80100";
+export const EMAIL_FOOTER_ADDRESS = "88225 Moi Avenue, Mombasa 80100";
 
 export function emailFooterHtml(sentTo?: string) {
   const recipient = sentTo

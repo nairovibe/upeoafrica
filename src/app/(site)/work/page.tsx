@@ -6,7 +6,6 @@ import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { getPublishedWork } from "@/lib/cms";
 import { publicMediaUrl } from "@/lib/constants";
-import { pageImages } from "@/lib/images";
 
 const intro =
   "Get to explore projects delivered for clients across Africa and abroad. Custom software, product design, and digital marketing, each engagement carried from the agreed scope through handover.";
@@ -24,8 +23,6 @@ export default async function WorkPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "Our Work" }]}
         title="Our Work"
         intro={intro}
-        image={pageImages.servicesHeader}
-        imageAlt="Upeo Africa Technologies project work"
       />
       <section className="bg-white py-24 lg:py-32">
         <Container>

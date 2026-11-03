@@ -7,7 +7,7 @@ import { SectionHeading } from "@/components/ui/Section";
 import { PageHeader } from "@/components/site/PageHeader";
 import { ContactForm } from "@/components/site/ContactForm";
 import { company, faqs } from "@/lib/content";
-import { images, pageImages } from "@/lib/images";
+import { images } from "@/lib/images";
 import { getSettings } from "@/lib/cms";
 import { CalEmbed } from "@/components/site/CalEmbed";
 
@@ -50,8 +50,6 @@ export default async function ContactPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
         title="Contact Us"
         intro="Get in touch with us for expert guidance on a software, design, or marketing project. Share what you need, and the team replies within one business day with a clear plan, timeline, and quote."
-        image={pageImages.contactHeader}
-        imageAlt="Client support specialist talking a caller through a question at her desk"
       />
 
       <section className="border-b border-line bg-white">

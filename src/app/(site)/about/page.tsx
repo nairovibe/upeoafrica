@@ -72,8 +72,6 @@ export default function AboutPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "About Us" }]}
         title="About Us"
         intro="Meet the studio on Moi Avenue. Since 2019 we have delivered 791 projects in software, design, and marketing for clients across Africa, and nine in ten either come back or refer someone."
-        image={pageImages.aboutHeader}
-        imageAlt="Four colleagues talking together in a modern office reception area"
       />
 
       <section className="border-t border-line bg-surface-2 py-24 lg:py-32">

@@ -80,6 +80,7 @@ export function Navbar({
   const [open, setOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [mobileServices, setMobileServices] = useState(false);
+  const [compact, setCompact] = useState(false);
   const pathname = usePathname();
 
   // Navigating closes both menus. This is React's documented "reset state when
@@ -101,56 +102,68 @@ export function Navbar({
     };
   }, [open]);
 
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setCompact(window.scrollY > 24));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white font-display">
-      <div className="hidden border-b border-[#ececec] bg-[#F5F5F5] md:block">
-        <Container className="flex h-12 items-center justify-between gap-6 text-[12px] leading-4 font-normal text-[#1c1c1c]">
-          <span className="inline-flex min-w-0 items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{company.addressLine}</span>
-          </span>
-          <span className="flex shrink-0 items-center gap-4">
-            <a
-              href={`tel:${tel}`}
-              className="inline-flex h-12 items-center gap-1.5 transition-colors duration-300 hover:text-brand-600"
-            >
-              <Phone className="h-3.5 w-3.5" aria-hidden />
-              {company.phone}
-            </a>
-            <a
-              href={`mailto:${company.email}`}
-              className="hidden h-12 items-center gap-1.5 transition-colors duration-300 hover:text-brand-600 xl:inline-flex"
-            >
-              <Mail className="h-3.5 w-3.5" aria-hidden />
-              {company.email}
-            </a>
-            <span className="inline-flex items-center gap-0.5">
-              <svg width="0" height="0" className="absolute" aria-hidden>
-                <defs>
-                  <linearGradient id="instagram-official" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#fccc63" />
-                    <stop offset="20%" stopColor="#f77737" />
-                    <stop offset="45%" stopColor="#e1306c" />
-                    <stop offset="70%" stopColor="#c13584" />
-                    <stop offset="100%" stopColor="#833ab4" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <SocialIcon href={company.social.facebook} label="Facebook" color="#1877F2">
-                <FaFacebookF className="h-3.5 w-3.5" aria-hidden />
-              </SocialIcon>
-              <SocialIcon href={xUrl || company.social.x} label="X" color="#000000">
-                <FaXTwitter className="h-3.5 w-3.5" aria-hidden />
-              </SocialIcon>
-              <SocialIcon href={linkedin || company.social.linkedin} label="LinkedIn" color="#0A66C2">
-                <FaLinkedinIn className="h-3.5 w-3.5" aria-hidden />
-              </SocialIcon>
-              <SocialIcon href={company.social.instagram} label="Instagram">
-                <FaInstagram className="h-3.5 w-3.5 [&>path]:fill-[url(#instagram-official)]" aria-hidden />
-              </SocialIcon>
-            </span>
-          </span>
-        </Container>
+      <div
+        className={cn(
+          "hidden transition-[grid-template-rows] duration-300 ease-out-expo motion-reduce:transition-none md:grid",
+          compact ? "grid-rows-[0fr]" : "grid-rows-[1fr]",
+        )}
+      >
+        <div className={cn("overflow-hidden", compact && "pointer-events-none")} aria-hidden={compact || undefined}>
+          <div className="border-b border-black/10 bg-brand-500">
+            <Container className="flex h-12 items-center justify-between gap-6 text-[12px] leading-4 font-medium text-ink-950">
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{company.addressLine}</span>
+              </span>
+              <span className="flex shrink-0 items-center gap-4">
+                <a
+                  href={`tel:${tel}`}
+                  className="inline-flex h-12 items-center gap-1.5 transition-opacity duration-300 hover:opacity-70"
+                >
+                  <Phone className="h-3.5 w-3.5" aria-hidden />
+                  {company.phone}
+                </a>
+                <a
+                  href={`mailto:${company.email}`}
+                  className="hidden h-12 items-center gap-1.5 transition-opacity duration-300 hover:opacity-70 xl:inline-flex"
+                >
+                  <Mail className="h-3.5 w-3.5" aria-hidden />
+                  {company.email}
+                </a>
+                <span className="inline-flex items-center gap-0.5">
+                  <SocialIcon href={company.social.facebook} label="Facebook">
+                    <FaFacebookF className="h-3.5 w-3.5" aria-hidden />
+                  </SocialIcon>
+                  <SocialIcon href={xUrl || company.social.x} label="X">
+                    <FaXTwitter className="h-3.5 w-3.5" aria-hidden />
+                  </SocialIcon>
+                  <SocialIcon href={linkedin || company.social.linkedin} label="LinkedIn">
+                    <FaLinkedinIn className="h-3.5 w-3.5" aria-hidden />
+                  </SocialIcon>
+                  <SocialIcon href={company.social.instagram} label="Instagram">
+                    <FaInstagram className="h-3.5 w-3.5" aria-hidden />
+                  </SocialIcon>
+                </span>
+              </span>
+            </Container>
+          </div>
+        </div>
       </div>
 
       <Container className="relative flex h-[72px] items-center gap-6">
@@ -207,9 +220,13 @@ export function Navbar({
           <button
             type="button"
             onClick={openInquiry}
-            className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-brand-500 px-7 text-[15px] leading-5 font-semibold text-white transition-colors duration-300 hover:bg-brand-600"
+            className="group inline-flex h-11 cursor-pointer items-center justify-center gap-2 bg-brand-500 px-6 text-[15px] leading-5 font-semibold text-white transition-colors duration-300 hover:bg-brand-600"
           >
             Start a project
+            <ArrowRight
+              className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
+              aria-hidden
+            />
           </button>
         </div>
 

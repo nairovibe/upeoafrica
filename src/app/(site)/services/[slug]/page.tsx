@@ -113,8 +113,6 @@ export default async function ServicePage({ params }: Params) {
         ]}
         title={service.title}
         intro={service.detail.lead}
-        image={service.image}
-        imageAlt={service.imageAlt}
       />
 
       {/* How we help + what you get */}
@@ -135,7 +133,7 @@ export default async function ServicePage({ params }: Params) {
 
               <Reveal delay={0.18}>
                 <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-line pt-8">
-                  <OpenInquiry className="group inline-flex cursor-pointer items-center gap-2 bg-ink-900 px-6 py-3.5 text-sm font-medium text-white transition-colors duration-300 ease-out-expo hover:bg-brand-600">
+                  <OpenInquiry className="group inline-flex cursor-pointer items-center gap-2 bg-ink-900 px-6 py-3.5 text-sm font-medium text-white transition-colors duration-300 ease-out-expo hover:bg-brand-500">
                     Get this service
                     <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" />
                   </OpenInquiry>

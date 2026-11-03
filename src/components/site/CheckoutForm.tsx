@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { TurnstileField } from "@/components/security/TurnstileField";
 
 export function CheckoutForm({ productId }: { productId: string }) {
@@ -69,9 +70,10 @@ export function CheckoutForm({ productId }: { productId: string }) {
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex h-11 w-full cursor-pointer items-center justify-center bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+        className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
       >
         {busy ? "Sending prompt..." : "Pay with M-Pesa"}
+        <ArrowRight className="h-4 w-4" aria-hidden />
       </button>
     </form>
   );

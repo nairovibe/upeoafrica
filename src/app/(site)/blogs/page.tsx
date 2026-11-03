@@ -6,7 +6,6 @@ import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { getPublishedArticles } from "@/lib/cms";
 import { publicMediaUrl } from "@/lib/constants";
-import { pageImages } from "@/lib/images";
 
 const intro =
   "Read articles on software, payments, design, and growing a business across Africa and abroad. New pieces are added here as they are published.";
@@ -35,8 +34,6 @@ export default async function BlogsPage() {
         breadcrumb={[{ label: "Home", href: "/" }, { label: "Blogs" }]}
         title="Blogs"
         intro={intro}
-        image={pageImages.servicesHeader}
-        imageAlt="Writing from Upeo Africa Technologies"
       />
 
       <section className="bg-white py-20 lg:py-28">

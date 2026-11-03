@@ -86,11 +86,11 @@ export function Products() {
                   Accept payments the way your customers actually pay. We wire mobile money,
                   bank, and card rails into your products, secure and reconciled.
                 </p>
-                <ul className="mt-7 grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+                <ul className="mt-7 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-4">
                   {payments.map((pm) => (
                     <li
                       key={pm}
-                      className="flex h-16 items-center justify-center gap-2.5 rounded-xl bg-white/[0.04] px-3 ring-1 ring-white/10 transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-0.5 hover:bg-white/[0.08] hover:ring-white/25 sm:px-4"
+                      className="flex h-16 items-center justify-center gap-2.5 bg-ink-950 px-3"
                     >
                       {paymentMark[pm] ?? (
                         <span className="text-sm font-medium text-white/80">{pm}</span>

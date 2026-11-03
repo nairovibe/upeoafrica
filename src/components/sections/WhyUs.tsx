@@ -76,7 +76,7 @@ export function WhyUs() {
 
             <Reveal delay={0.2}>
               <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4 border-t border-line pt-8">
-                <OpenInquiry className="group inline-flex cursor-pointer items-center gap-2 rounded-xl bg-ink-900 px-6 py-3.5 text-sm font-medium text-white transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-0.5 hover:bg-ink-800 hover:shadow-[0_14px_34px_-14px_rgba(11,14,20,0.75)] active:translate-y-0 active:duration-100">
+                <OpenInquiry className="group inline-flex cursor-pointer items-center gap-2 bg-ink-900 px-6 py-3.5 text-sm font-medium text-white transition-[background-color,box-shadow,transform] duration-300 ease-out-expo hover:-translate-y-0.5 hover:bg-brand-500 hover:shadow-[0_14px_34px_-12px_rgba(249,115,22,0.8)] active:translate-y-0 active:duration-100">
                   Start a project
                   <ArrowRight
                     className="h-4 w-4 transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
