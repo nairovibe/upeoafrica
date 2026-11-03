@@ -59,14 +59,7 @@ export function WhyUs() {
             <div className="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2">
               {differentiators.map((d, i) => (
                 <Reveal key={d.title} delay={0.12 + stagger(i, 2)}>
-                  <div className="group relative pl-6">
-                    <span
-                      className="absolute inset-y-1 left-0 w-px overflow-hidden bg-line"
-                      aria-hidden
-                    >
-                      <span className="absolute inset-x-0 top-0 h-0 bg-brand-500 transition-[height] duration-500 ease-out-expo group-hover:h-full" />
-                    </span>
-
+                  <div className="group">
                     <div className="flex items-center gap-2.5">
                       <d.icon className="h-[18px] w-[18px] shrink-0 text-brand-600 transition-transform duration-300 ease-out-expo group-hover:scale-110" />
                       <h3 className="font-display text-[17px] font-semibold text-ink-900 transition-colors duration-300 ease-out-expo group-hover:text-brand-700">

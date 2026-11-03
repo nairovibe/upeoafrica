@@ -175,37 +175,37 @@ export const differentiators: Differentiator[] = [
   {
     title: "End-to-End Synergy",
     description:
-      "Stop playing referee between a design team, an offshore dev shop, and a marketing agency. We bring engineering, UI/UX, and growth strategy into one room under one contract. Every product we ship is designed to scale and built to sell, with absolute accountability from day one.",
+      "We bring engineering, UI/UX, and growth strategy into one room under one contract.",
     icon: Handshake,
   },
   {
     title: "African Payment Mastery",
     description:
-      "Navigating pan-African checkout rails isn't something an offshore team should learn on your dime. From M-Pesa and Airtel Money to regional card switches and bank transfers, we engineer seamless, battle-tested payment experiences that keep your conversion rates high and failure rates low.",
+      "From M-Pesa and Airtel Money to regional card switches and bank transfers, we engineer payment experiences that keep conversion high and failures low.",
     icon: CreditCard,
   },
   {
     title: "700+ Ships & Proven Retention",
     description:
-      "We don't measure success in launched code; we measure it in long-term momentum. With over 791 projects delivered since 2019, 90% of our business comes from clients who return or send us their network. The people who know our work best are the ones who keep trusting us.",
+      "With over 791 projects delivered since 2019, 90% of our business comes from clients who return or send us their network.",
     icon: Award,
   },
   {
     title: "Architectural & Data Security",
     description:
-      "Security isn't a patch you buy after a breach--it's built into the foundation. We bake enterprise-grade encryption, strict access control, automated backups, and real-time monitoring directly into your system's architecture before a single line of client data touches it.",
+      "We bake enterprise-grade encryption, strict access control, automated backups, and real-time monitoring into the architecture before any client data touches it.",
     icon: ShieldCheck,
   },
   {
     title: "100% IP & Code Ownership",
     description:
-      "Your platform is your asset, period. Once the project is delivered, full intellectual property rights, repositories, and cloud access belong entirely to you in writing. We keep our client partnerships thriving through exceptional execution, never by holding codebase keys hostage.",
+      "Once the project is delivered, full intellectual property rights, repositories, and cloud access belong entirely to you in writing.",
     icon: KeyRound,
   },
   {
     title: "SLA-Backed Reliability",
     description:
-      "Launch day is just the beginning. Our Service Level Agreements commit us to target response times under one hour for critical operational issues. We keep your systems monitored, updated, and performing reliably long after your go-live party ends.",
+      "Our Service Level Agreements commit us to target response times under one hour for critical operational issues, with monitoring and updates after launch.",
     icon: LifeBuoy,
   },
 ];

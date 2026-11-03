@@ -31,7 +31,7 @@ export function TechMarquee() {
   return (
     <section
       aria-label="The modern stack we build on"
-      className="relative z-10 -mt-8 -mb-8 md:-mt-10 md:-mb-10"
+      className="relative z-10 -mt-6 -mb-6 md:-mt-8 md:-mb-8"
     >
       <div className="px-5 sm:px-10 lg:px-20">
         <div className="h-16 overflow-hidden rounded-full bg-[#f5f5f5] md:h-20">

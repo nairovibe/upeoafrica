@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" fill="none">
+  <rect width="390" height="780" rx="46" fill="#111621"/>
+  <rect x="10" y="10" width="370" height="760" rx="38" fill="#fff8f3"/>
+  <rect x="10" y="10" width="370" height="292" rx="38" fill="#f97316"/>
+  <rect x="10" y="220" width="370" height="82" fill="#f97316"/>
+  <circle cx="195" cy="28" r="8" fill="#1b2231"/>
+  <rect x="168" y="22" width="54" height="12" rx="6" fill="#1b2231"/>
+  <text x="32" y="78" fill="#fff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600">9:41</text>
+  <text x="32" y="128" fill="#fff7ed" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="500">Wallet</text>
+  <text x="32" y="188" fill="#fff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="44" font-weight="700">KES 48,250</text>
+  <text x="32" y="224" fill="#ffedd5" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18">Available to send</text>
+  <rect x="32" y="252" width="100" height="40" rx="20" fill="#fff"/>
+  <text x="82" y="278" text-anchor="middle" fill="#c2470a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">Send</text>
+  <rect x="144" y="252" width="112" height="40" rx="20" fill="#fff"/>
+  <text x="200" y="278" text-anchor="middle" fill="#c2470a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">Request</text>
+  <rect x="268" y="252" width="90" height="40" rx="20" fill="#9a3a10"/>
+  <text x="313" y="278" text-anchor="middle" fill="#fff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">Scan</text>
+  <text x="32" y="360" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700">Recent</text>
+  <rect x="32" y="384" width="326" height="84" rx="18" fill="#fff"/>
+  <circle cx="72" cy="426" r="22" fill="#fff5ec"/>
+  <text x="72" y="432" text-anchor="middle" fill="#ea5e0b" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">AM</text>
+  <text x="108" y="418" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650">Amina M.</text>
+  <text x="108" y="444" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Sent  -  2:14 pm</text>
+  <text x="338" y="432" text-anchor="end" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">-1,200</text>
+  <rect x="32" y="482" width="326" height="84" rx="18" fill="#fff"/>
+  <circle cx="72" cy="524" r="22" fill="#fff5ec"/>
+  <text x="72" y="530" text-anchor="middle" fill="#ea5e0b" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">JK</text>
+  <text x="108" y="516" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650">Juma Kariuki</text>
+  <text x="108" y="542" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Received  -  Yesterday</text>
+  <text x="338" y="530" text-anchor="end" fill="#15803d" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">+6,400</text>
+  <rect x="32" y="580" width="326" height="84" rx="18" fill="#fff"/>
+  <circle cx="72" cy="622" r="22" fill="#fff5ec"/>
+  <text x="72" y="628" text-anchor="middle" fill="#ea5e0b" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700">NL</text>
+  <text x="108" y="614" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650">Nyali Grocers</text>
+  <text x="108" y="640" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Till  -  Yesterday</text>
+  <text x="338" y="628" text-anchor="end" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700">-860</text>
+  <rect x="116" y="708" width="158" height="36" rx="18" fill="#0b0e14"/>
+  <text x="195" y="732" text-anchor="middle" fill="#fff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="600">View statement</text>
+</svg>

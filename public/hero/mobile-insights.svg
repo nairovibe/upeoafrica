@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 780" fill="none">
+  <rect width="390" height="780" rx="46" fill="#111621"/>
+  <rect x="10" y="10" width="370" height="760" rx="38" fill="#f4f7fb"/>
+  <circle cx="195" cy="28" r="8" fill="#1b2231"/>
+  <rect x="168" y="22" width="54" height="12" rx="6" fill="#1b2231"/>
+  <text x="32" y="86" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="600">THIS WEEK</text>
+  <text x="32" y="132" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32" font-weight="700">Orders up 18%</text>
+  <rect x="32" y="160" width="326" height="250" rx="22" fill="#fff"/>
+  <rect x="58" y="320" width="28" height="52" rx="6" fill="#ffe6d0"/>
+  <rect x="102" y="292" width="28" height="80" rx="6" fill="#ffc79b"/>
+  <rect x="146" y="268" width="28" height="104" rx="6" fill="#fb8836"/>
+  <rect x="190" y="236" width="28" height="136" rx="6" fill="#f97316"/>
+  <rect x="234" y="252" width="28" height="120" rx="6" fill="#ea5e0b"/>
+  <rect x="278" y="214" width="28" height="158" rx="6" fill="#c2470a"/>
+  <text x="72" y="390" text-anchor="middle" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Mon</text>
+  <text x="160" y="390" text-anchor="middle" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Wed</text>
+  <text x="248" y="390" text-anchor="middle" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Fri</text>
+  <text x="292" y="390" text-anchor="middle" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13">Sat</text>
+  <rect x="32" y="430" width="156" height="118" rx="20" fill="#fff"/>
+  <text x="48" y="468" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Visits</text>
+  <text x="48" y="512" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700">12.4k</text>
+  <rect x="202" y="430" width="156" height="118" rx="20" fill="#fff"/>
+  <text x="218" y="468" fill="#6b7583" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Paid</text>
+  <text x="218" y="512" fill="#0b0e14" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700">64%</text>
+  <rect x="32" y="566" width="326" height="92" rx="20" fill="#0b0e14"/>
+  <text x="52" y="608" fill="#ffedd5" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Top source</text>
+  <text x="52" y="636" fill="#fff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700">Search  -  Mombasa</text>
+  <circle cx="318" cy="612" r="18" fill="#f97316"/>
+  <rect x="120" y="700" width="150" height="8" rx="4" fill="#d5d8e0"/>
+</svg>
