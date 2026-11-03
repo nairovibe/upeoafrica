@@ -4,7 +4,6 @@ import { Capabilities } from "@/components/sections/Capabilities";
 import { Services } from "@/components/sections/Services";
 import { WhyUs } from "@/components/sections/WhyUs";
 import { Products } from "@/components/sections/Products";
-import { ConnectedSystem } from "@/components/sections/ConnectedSystem";
 import { HowWeWork } from "@/components/sections/HowWeWork";
 import { Industries } from "@/components/sections/Industries";
 import { ClientsStrip } from "@/components/sections/ClientsStrip";
@@ -21,7 +20,6 @@ export default function HomePage() {
       <Services />
       <WhyUs />
       <Products />
-      <ConnectedSystem />
       <HowWeWork />
       <Industries />
       <GoogleRating />
