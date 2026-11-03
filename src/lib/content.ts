@@ -143,7 +143,7 @@ export const capabilities: Capability[] = [
     description:
       "Our designers shape logos, visual identity, websites, and app interfaces that look credible and convert, from first wireframe to a reusable design system your team can build on.",
     bullets: ["Brand identity & creative", "UI/UX & product design", "Design systems"],
-    image: images.strategy,
+    image: "/capabilities/design.jpg",
     imageAlt: "Upeo Africa Technologies designers working on brand and product UI",
     cta: { label: "See design work", href: "/work" },
   },
@@ -153,7 +153,7 @@ export const capabilities: Capability[] = [
     description:
       "Our software engineers develop custom web platforms, Android and iOS apps, and the APIs behind them, with M-Pesa and Airtel Money payments, secure cloud hosting, and DevOps built to scale as your business grows.",
     bullets: ["Web & mobile apps", "M-Pesa & Airtel Money APIs", "Cloud & DevOps"],
-    image: images.software,
+    image: "/capabilities/build.jpg",
     imageAlt: "Upeo Africa Technologies engineer building a web and mobile application",
     cta: { label: "Explore development", href: "/services" },
   },
@@ -163,7 +163,7 @@ export const capabilities: Capability[] = [
     description:
       "Our marketers get you found and chosen with technical SEO, content, social, and paid campaigns, all tracked against real leads and sales so every shilling of marketing spend is accountable.",
     bullets: ["SEO & content", "Social & paid ads", "Analytics & reporting"],
-    image: images.marketing,
+    image: "/capabilities/scale.jpg",
     imageAlt: "Upeo Africa Technologies marketing team driving SEO and growth",
     cta: { label: "Grow with us", href: "/contact" },
   },
