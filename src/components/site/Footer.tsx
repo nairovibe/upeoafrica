@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { ArrowUpRight, Mail, Phone, MapPin } from "lucide-react";
 import { FaGithub, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { Logo } from "@/components/brand/Logo";
 import { Container } from "@/components/ui/Container";
@@ -117,6 +117,20 @@ export function Footer({
             ))}
           </div>
         </div>
+        <p className="mt-4 text-center text-xs text-white/40">
+          Upeo Africa Technologies is a subsidiary of{" "}
+          <a
+            href="https://averissystems.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-0.5 text-white/60 underline-offset-2 transition-colors duration-300 ease-out-expo hover:text-brand-400 hover:underline"
+          >
+            Averis Systems Limited
+            <ArrowUpRight className="h-3 w-3" aria-hidden />
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          .
+        </p>
       </Container>
     </footer>
   );
