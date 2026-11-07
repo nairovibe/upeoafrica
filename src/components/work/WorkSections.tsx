@@ -2,8 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Quote } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { needsUnoptimized } from "@/components/work/WorkCard";
+import { needsUnoptimized } from "@/components/work/format";
+import { StackMarks } from "@/components/work/StackMarks";
 import type { WorkCard, WorkDetail } from "@/lib/cms";
+import { groupsForStack } from "@/lib/stack";
 
 function hostOf(url: string) {
   try {
@@ -15,7 +17,8 @@ function hostOf(url: string) {
 
 export function WorkFacts({ item }: { item: WorkDetail }) {
   const facts: { label: string; value: React.ReactNode }[] = [];
-  if (item.client?.name) facts.push({ label: "Client", value: item.client.name });
+  if (item.confidential) facts.push({ label: "Client", value: "Protected by NDA" });
+  else if (item.client?.name) facts.push({ label: "Client", value: item.client.name });
   if (item.project_year) facts.push({ label: "Year", value: item.project_year });
   if (item.role) facts.push({ label: "Our role", value: item.role });
   if (item.industry) {
@@ -28,7 +31,7 @@ export function WorkFacts({ item }: { item: WorkDetail }) {
       ),
     });
   }
-  if (item.project_url) {
+  if (!item.confidential && item.project_url) {
     facts.push({
       label: "Live",
       value: (
@@ -54,6 +57,9 @@ export function WorkFacts({ item }: { item: WorkDetail }) {
 
 export function WorkScope({ services, tech }: { services: string[]; tech: string[] }) {
   if (!services.length && !tech.length) return null;
+  const groups = groupsForStack(tech);
+  const known = new Set(groups.flatMap((group) => group.items.map((item) => item.name.toLowerCase())));
+  const other = tech.filter((name) => !known.has(name.toLowerCase()));
   return (
     <div className="space-y-8">
       {services.length ? (
@@ -63,7 +69,7 @@ export function WorkScope({ services, tech }: { services: string[]; tech: string
             {services.map((s) => (
               <li key={s}>
                 <Link
-                  href={`/work?service=${encodeURIComponent(s)}`}
+                  href={`/work?q=${encodeURIComponent(s)}`}
                   className="flex items-center justify-between gap-3 py-2.5 text-[15px] text-ink-900 hover:text-brand-600"
                 >
                   {s}
@@ -75,15 +81,22 @@ export function WorkScope({ services, tech }: { services: string[]; tech: string
         </div>
       ) : null}
       {tech.length ? (
-        <div>
+        <div className="space-y-5">
           <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Built with</h2>
-          <ul className="mt-3 flex flex-wrap gap-1.5">
-            {tech.map((t) => (
-              <li key={t} className="rounded-[5px] border border-line px-2.5 py-1 text-sm text-body">
-                {t}
-              </li>
-            ))}
-          </ul>
+          {groups.map((group) => {
+            const names = group.items
+              .filter((item) => tech.some((name) => name.toLowerCase() === item.name.toLowerCase()))
+              .map((item) => item.name);
+            return (
+              <div key={group.id}>
+                <h3 className="text-sm font-medium text-ink-900">{group.label}</h3>
+                <div className="mt-2">
+                  <StackMarks names={names} />
+                </div>
+              </div>
+            );
+          })}
+          {other.length ? <StackMarks names={other} /> : null}
         </div>
       ) : null}
     </div>

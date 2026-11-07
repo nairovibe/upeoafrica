@@ -116,6 +116,7 @@ export type Database = {
         Row: {
           body: string
           client_id: string | null
+          confidential: boolean
           cover_path: string | null
           created_at: string
           created_by: string | null
@@ -146,6 +147,7 @@ export type Database = {
         Insert: {
           body?: string
           client_id?: string | null
+          confidential?: boolean
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -176,6 +178,7 @@ export type Database = {
         Update: {
           body?: string
           client_id?: string | null
+          confidential?: boolean
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -813,6 +816,7 @@ export type Database = {
           id: string
           source: string
           status: string
+          unsubscribe_token: string
           unsubscribed_at: string | null
         }
         Insert: {
@@ -821,6 +825,7 @@ export type Database = {
           id?: string
           source?: string
           status?: string
+          unsubscribe_token?: string
           unsubscribed_at?: string | null
         }
         Update: {
@@ -829,7 +834,47 @@ export type Database = {
           id?: string
           source?: string
           status?: string
+          unsubscribe_token?: string
           unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          id: string
+          intro: string
+          kind: string
+          link_label: string | null
+          link_url: string | null
+          sent_count: number
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          intro?: string
+          kind: string
+          link_label?: string | null
+          link_url?: string | null
+          sent_count?: number
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          intro?: string
+          kind?: string
+          link_label?: string | null
+          link_url?: string | null
+          sent_count?: number
+          subject?: string
         }
         Relationships: []
       }

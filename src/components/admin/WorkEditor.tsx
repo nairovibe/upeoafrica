@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { Check, ExternalLink, X } from "lucide-react";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
 import { FileField } from "@/components/admin/FileField";
 import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
@@ -11,8 +11,10 @@ import { ChipSelect, GalleryField, ListInput } from "@/components/admin/studio/f
 import { formatDay } from "@/components/admin/studio/format";
 import { parseVideoUrl } from "@/components/admin/studio/video";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { slugify } from "@/lib/constants";
-import { company } from "@/lib/content";
+import { company, stackGroups } from "@/lib/content";
+import { safeHttpUrl, techByName } from "@/lib/stack";
 import { refreshSite } from "@/lib/refresh-site";
 import { startNavProgress } from "@/components/ui/NavProgress";
 import type { CaseStudy } from "@/lib/cms";
@@ -54,6 +56,7 @@ export function WorkEditor({
   const [metaTitle, setMetaTitle] = useState(initial?.meta_title ?? "");
   const [metaDescription, setMetaDescription] = useState(initial?.meta_description ?? "");
   const [featured, setFeatured] = useState(initial?.featured ?? false);
+  const [confidential, setConfidential] = useState(initial?.confidential ?? false);
   const [published, setPublished] = useState(Boolean(initial?.published_at));
   const [msg, setMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -67,6 +70,10 @@ export function WorkEditor({
     const parsedYear = year.trim() ? Number(year) : null;
     if (parsedYear !== null && (parsedYear < 2000 || parsedYear > 2100)) {
       return setMsg({ tone: "error", text: "Use a four-digit year." });
+    }
+    const liveUrl = safeHttpUrl(projectUrl);
+    if (projectUrl.trim() && !liveUrl) {
+      return setMsg({ tone: "error", text: "Paste the full address, including https://." });
     }
     setBusy(true);
     setMsg(null);
@@ -85,7 +92,7 @@ export function WorkEditor({
       gallery,
       video_url: video.trim() || null,
       project_year: parsedYear,
-      project_url: projectUrl.trim() || null,
+      project_url: liveUrl,
       role: role.trim() || null,
       tech_stack: tech.map((s) => s.trim()).filter(Boolean),
       testimonial_quote: quote.trim() || null,
@@ -95,6 +102,7 @@ export function WorkEditor({
       meta_title: metaTitle.trim() || null,
       meta_description: metaDescription.trim() || null,
       featured,
+      confidential,
       published_at: published ? initial?.published_at || new Date().toISOString() : null,
     };
     const { data, error } = initial
@@ -189,10 +197,7 @@ export function WorkEditor({
               <span className="mb-1.5 block text-[13px] font-medium text-ink-900">Services</span>
               <ChipSelect options={serviceOptions} value={services} onChange={setServices} disabled={readOnly} />
             </div>
-            <div>
-              <span className="mb-1.5 block text-[13px] font-medium text-ink-900">Tech stack</span>
-              <ListInput value={tech} onChange={setTech} placeholder="Next.js" addLabel="Add technology" disabled={readOnly} />
-            </div>
+            <StackPicker value={tech} onChange={setTech} disabled={readOnly} />
             <Field label="Industry">
               <input
                 className={inputClass}
@@ -217,6 +222,17 @@ export function WorkEditor({
           <div className="space-y-3.5">
             <Toggle label="Live on the site" checked={published} onChange={setPublished} disabled={readOnly} />
             <Toggle label="Featured" checked={featured} onChange={setFeatured} disabled={readOnly} />
+            <Toggle
+              label="Under NDA"
+              checked={confidential}
+              onChange={setConfidential}
+              disabled={readOnly}
+            />
+            {confidential ? (
+              <p className="text-xs leading-relaxed text-muted">
+                The project stays on the site. The client name, testimonial, and live preview stay in the console.
+              </p>
+            ) : null}
             {initial && wasLive ? (
               <a
                 href={`/work/${initial.slug}`}
@@ -265,7 +281,10 @@ export function WorkEditor({
                 <input className={inputClass} inputMode="numeric" value={sortOrder} disabled={readOnly} onChange={(e) => setSortOrder(e.target.value.replace(/\D/g, "").slice(0, 4))} />
               </Field>
             </div>
-            <Field label="Live link">
+            <Field
+              label="Live website or web app"
+              hint="Hovering the project on Our Work plays a scrolling preview of this address. A site that refuses to be embedded keeps its cover image."
+            >
               <input className={inputClass} value={projectUrl} disabled={readOnly} placeholder="https://" onChange={(e) => setProjectUrl(e.target.value)} />
             </Field>
           </div>
@@ -347,6 +366,75 @@ export function WorkEditor({
       >
         <p className="text-sm text-body">It comes off the site straight away. Linked videos stay in the library.</p>
       </Modal>
+    </div>
+  );
+}
+
+function StackPicker({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+  disabled?: boolean;
+}) {
+  const known = new Set(stackGroups.flatMap((group) => group.items.map((item) => item.name.toLowerCase())));
+  const extra = value.filter((name) => name.trim() && !known.has(name.trim().toLowerCase()));
+  return (
+    <div className="space-y-4">
+      <span className="block text-[13px] font-medium text-ink-900">Stack</span>
+      {stackGroups.map((group) => (
+        <div key={group.id}>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{group.label}</p>
+          <div className="flex flex-wrap gap-2">
+            {group.items.map((item) => {
+              const on = value.some((name) => name.toLowerCase() === item.name.toLowerCase());
+              return (
+                <button
+                  key={item.name}
+                  type="button"
+                  disabled={disabled}
+                  aria-pressed={on}
+                  onClick={() =>
+                    onChange(
+                      on
+                        ? value.filter((name) => name.toLowerCase() !== item.name.toLowerCase())
+                        : [...value.filter((name) => name.toLowerCase() !== item.name.toLowerCase()), item.name],
+                    )
+                  }
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-[5px] border px-2.5 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-60",
+                    on ? "border-brand-500 bg-brand-50 text-brand-700" : "border-line bg-white text-body hover:border-brand-300",
+                  )}
+                >
+                  {on ? <Check className="h-3.5 w-3.5" /> : null}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/logos/${item.slug}.svg?v=color`} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {extra.length ? (
+        <div className="flex flex-wrap gap-2">
+          {extra.map((name) => (
+            <button
+              key={name}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(value.filter((item) => item !== name))}
+              className="inline-flex items-center gap-1.5 rounded-[5px] border border-line px-2.5 py-1.5 text-[12px] font-medium text-body"
+            >
+              {techByName(name)?.name ?? name}
+              <X className="h-3.5 w-3.5" aria-hidden />
+              <span className="sr-only">Remove {name}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

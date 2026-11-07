@@ -37,7 +37,7 @@ export async function getSettings() {
 }
 
 const WORK_CARD_COLUMNS =
-  "id, slug, title, summary, cover_path, industry, services, project_year, featured, sort_order, published_at, updated_at, client:clients(name)";
+  "id, slug, title, summary, cover_path, industry, services, tech_stack, project_url, confidential, project_year, featured, sort_order, published_at, updated_at, client:clients(name)";
 
 /** Portfolio order: featured first, then the manual sort order, then the newest project. */
 async function _getPublishedWork(limit?: number) {
@@ -62,7 +62,7 @@ async function _getWorkBySlug(slug: string) {
   const { data } = await supabase
     .from("case_studies")
     .select(
-      "id, slug, title, summary, body, cover_path, gallery, video_url, industry, services, outcomes, tech_stack, role, project_year, project_url, testimonial_quote, testimonial_author, testimonial_title, meta_title, meta_description, published_at, updated_at, client:clients(name, logo_path, url)",
+      "id, slug, title, summary, body, cover_path, gallery, video_url, industry, services, outcomes, tech_stack, confidential, role, project_year, project_url, testimonial_quote, testimonial_author, testimonial_title, meta_title, meta_description, published_at, updated_at, client:clients(name, logo_path, url)",
     )
     .eq("slug", slug)
     .not("published_at", "is", null)
@@ -221,8 +221,8 @@ export async function getTicketHolds(eventIds: string[]): Promise<TicketHolds | 
   return holds;
 }
 
-export const getPublishedWork = publicRead("cms:getPublishedWork", _getPublishedWork);
-export const getWorkBySlug = publicRead("cms:getWorkBySlug", _getWorkBySlug);
+export const getPublishedWork = publicRead("cms:getPublishedWork:v2", _getPublishedWork);
+export const getWorkBySlug = publicRead("cms:getWorkBySlug:v2", _getWorkBySlug);
 export const getPublishedArticles = publicRead("cms:getPublishedArticles", _getPublishedArticles);
 export const getArticleBySlug = publicRead("cms:getArticleBySlug", _getArticleBySlug);
 export const getPartners = publicRead("cms:getPartners", _getPartners);

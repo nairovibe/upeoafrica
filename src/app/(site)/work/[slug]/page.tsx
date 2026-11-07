@@ -5,11 +5,13 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { StoryBody } from "@/components/work/StoryBody";
-import { workByline } from "@/components/work/WorkCard";
+import { WorkDemo } from "@/components/work/WorkDemo";
+import { workByline } from "@/components/work/format";
 import { NextProject, WorkFacts, WorkGallery, WorkResults, WorkScope, WorkTestimonial } from "@/components/work/WorkSections";
 import { getPublishedWork, getWorkBySlug } from "@/lib/cms";
 import { publicMediaUrl } from "@/lib/constants";
 import { company } from "@/lib/content";
+import { safeHttpUrl } from "@/lib/stack";
 
 type Params = Promise<{ slug: string }>;
 
@@ -59,6 +61,8 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
   const next = all.length > 1 ? all[(index + 1) % all.length] : null;
   const byline = workByline(item);
   const pageUrl = `${company.domain}/work/${item.slug}`;
+  const live = item.confidential ? null : safeHttpUrl(item.project_url);
+  const publicClient = item.confidential ? null : item.client;
   const hasStory = Boolean(item.body.trim()) || item.services.length > 0 || item.tech_stack.length > 0;
 
   const jsonLd = {
@@ -79,10 +83,10 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
         genre: item.industry ?? undefined,
         keywords: [...item.services, ...item.tech_stack].join(", ") || undefined,
         creator: { "@type": "Organization", name: company.name, url: company.domain },
-        sponsor: item.client?.name
-          ? { "@type": "Organization", name: item.client.name, url: item.client.url ?? undefined }
+        sponsor: publicClient?.name
+          ? { "@type": "Organization", name: publicClient.name, url: publicClient.url ?? undefined }
           : undefined,
-        sameAs: item.project_url ?? undefined,
+        sameAs: live ?? undefined,
         video: video
           ? { "@type": "VideoObject", name: `${item.title} walkthrough`, embedUrl: video.embedUrl, thumbnailUrl: video.thumbUrl ?? cover ?? undefined, uploadDate: item.published_at ?? undefined }
           : undefined,
@@ -114,6 +118,11 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
       <section className="bg-white py-14 lg:py-20">
         <Container>
           <WorkFacts item={item} />
+          {live ? (
+            <div className="mt-10">
+              <WorkDemo url={live} title={item.title} />
+            </div>
+          ) : null}
           {hasStory ? (
             <div className="mt-14 grid gap-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
               <article className="max-w-2xl">
@@ -155,7 +164,7 @@ export default async function WorkDetailPage({ params }: { params: Params }) {
         </Container>
       ) : null}
 
-      {item.testimonial_quote ? (
+      {!item.confidential && item.testimonial_quote ? (
         <section className="border-t border-line bg-white py-16 lg:py-24">
           <Container>
             <WorkTestimonial quote={item.testimonial_quote} author={item.testimonial_author} title={item.testimonial_title} />

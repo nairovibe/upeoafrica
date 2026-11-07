@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Images, Plus, Star, Video } from "lucide-react";
+import { Images, Lock, Plus, Star, Video } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AdminBtn, AdminPage, AdminTable, FilterTabs, Pill } from "@/components/admin/ui";
 import { Thumb } from "@/components/admin/studio/Thumb";
@@ -22,7 +22,7 @@ export default async function WorkListPage({ searchParams }: { searchParams: Pro
   const [{ data }, { data: clients }] = await Promise.all([
     supabase
       .from("case_studies")
-      .select("id, title, slug, cover_path, industry, services, featured, published_at, updated_at, project_year, gallery, video_url, client_id")
+      .select("id, title, slug, cover_path, industry, services, featured, confidential, published_at, updated_at, project_year, gallery, video_url, client_id")
       .order("featured", { ascending: false })
       .order("sort_order", { ascending: true })
       .order("updated_at", { ascending: false }),
@@ -70,7 +70,15 @@ export default async function WorkListPage({ searchParams }: { searchParams: Pro
                 <Link href={`/console/work/${row.id}`} className="block truncate font-medium text-ink-900 hover:text-brand-600">
                   {row.title}
                 </Link>
-                <p className="truncate text-xs text-muted">{(row.client_id && clientName.get(row.client_id)) || "No client"}</p>
+                <p className="flex items-center gap-1.5 truncate text-xs text-muted">
+                  <span className="truncate">{(row.client_id && clientName.get(row.client_id)) || "No client"}</span>
+                  {row.confidential ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 text-ink-900">
+                      <Lock className="h-3 w-3" aria-hidden />
+                      NDA
+                    </span>
+                  ) : null}
+                </p>
               </div>
             </div>,
             <span key="year" className="tabular-nums text-body">{row.project_year || "-"}</span>,

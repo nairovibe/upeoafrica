@@ -273,23 +273,59 @@ export const stats = [
   { value: 90, suffix: "%", label: "Repeat & referral clients" },
 ];
 
-/* Tech stack, keyed to Simple Icons slugs for real brand marks. */
-export const techStack: { name: string; slug: string }[] = [
-  { name: "React", slug: "react" },
-  { name: "Next.js", slug: "nextdotjs" },
-  { name: "TypeScript", slug: "typescript" },
-  { name: "Node.js", slug: "nodedotjs" },
-  { name: "React Native", slug: "react" },
-  { name: "Flutter", slug: "flutter" },
-  { name: "Python", slug: "python" },
-  { name: "PostgreSQL", slug: "postgresql" },
-  { name: "MongoDB", slug: "mongodb" },
-  { name: "Tailwind CSS", slug: "tailwindcss" },
-  { name: "WordPress", slug: "wordpress" },
-  { name: "Magento", slug: "magento" },
-  { name: "Docker", slug: "docker" },
-  { name: "Figma", slug: "figma" },
+/* Tech stack, keyed to Simple Icons slugs for real brand marks.
+   Order is the pecking order used on Our Work: frontend, backend, UI/UX, then digital marketing. */
+export type StackItem = { name: string; slug: string };
+export type StackGroupId = "frontend" | "backend" | "design" | "marketing";
+export type StackGroup = { id: StackGroupId; label: string; items: StackItem[] };
+
+export const stackGroups: StackGroup[] = [
+  {
+    id: "frontend",
+    label: "Frontend",
+    items: [
+      { name: "React", slug: "react" },
+      { name: "Next.js", slug: "nextdotjs" },
+      { name: "TypeScript", slug: "typescript" },
+      { name: "React Native", slug: "react" },
+      { name: "Flutter", slug: "flutter" },
+      { name: "Tailwind CSS", slug: "tailwindcss" },
+      { name: "WordPress", slug: "wordpress" },
+      { name: "Magento", slug: "magento" },
+    ],
+  },
+  {
+    id: "backend",
+    label: "Backend",
+    items: [
+      { name: "Node.js", slug: "nodedotjs" },
+      { name: "Python", slug: "python" },
+      { name: "PostgreSQL", slug: "postgresql" },
+      { name: "MongoDB", slug: "mongodb" },
+      { name: "Docker", slug: "docker" },
+    ],
+  },
+  {
+    id: "design",
+    label: "UI/UX",
+    items: [
+      { name: "Figma", slug: "figma" },
+      { name: "Framer", slug: "framer" },
+    ],
+  },
+  {
+    id: "marketing",
+    label: "Digital marketing",
+    items: [
+      { name: "Google Ads", slug: "googleads" },
+      { name: "Meta", slug: "meta" },
+      { name: "Google Analytics", slug: "googleanalytics" },
+      { name: "Mailchimp", slug: "mailchimp" },
+    ],
+  },
 ];
+
+export const techStack: StackItem[] = stackGroups.flatMap((group) => group.items);
 
 export type Product = { title: string; icon: LucideIcon; description: string; tags: string[]; href: string };
 

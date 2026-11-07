@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Download, Plus, Trash2 } from "lucide-react";
+import { Download, Plus, Send, Trash2 } from "lucide-react";
 import { AdminBtn, AdminTable, Pill, inputClass } from "@/components/admin/ui";
 import { fullDate } from "@/components/admin/leads/data";
 import { addSubscriber, deleteSubscribers, setSubscriberStatus } from "@/app/console/(console)/newsletter/actions";
@@ -76,6 +76,9 @@ export function MailingList({
         />
         <AdminBtn type="submit" pending={pending} icon={<Plus />}>
           Add
+        </AdminBtn>
+        <AdminBtn href="/console/newsletter/compose" icon={<Send />}>
+          Send
         </AdminBtn>
         <AdminBtn href={exportHref} variant="ghost" icon={<Download />}>
           Export CSV

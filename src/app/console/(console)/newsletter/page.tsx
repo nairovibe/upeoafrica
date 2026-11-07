@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { AdminPage, FilterTabs } from "@/components/admin/ui";
+import { AdminBtn, AdminPage, FilterTabs } from "@/components/admin/ui";
 import { MailingList } from "@/components/admin/newsletter/MailingList";
 
 const TABS = [
@@ -49,7 +49,8 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
   return (
     <AdminPage
       title="Mailing list"
-      hint="Addresses from the footer newsletter, plus any you add here. Export the subscribed list when you are ready to send."
+      hint="Addresses from the footer, plus any you add here. Send a live article, an event, or a short note. Export stays available for a copy of the list."
+      action={<AdminBtn href="/console/newsletter/compose">Send</AdminBtn>}
     >
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <FilterTabs

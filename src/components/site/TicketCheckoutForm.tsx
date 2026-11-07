@@ -323,7 +323,7 @@ export function TicketCheckoutForm({
                 aria-label="Fewer tickets"
                 disabled={qty <= 1 || busy}
                 onClick={() => setQuantity(Math.max(1, qty - 1))}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-11 w-11 cursor-pointer items-center justify-center text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Minus className="h-4 w-4" aria-hidden />
               </button>
@@ -335,7 +335,7 @@ export function TicketCheckoutForm({
                 aria-label="More tickets"
                 disabled={qty >= maxQty || busy}
                 onClick={() => setQuantity(Math.min(maxQty, qty + 1))}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-11 w-11 cursor-pointer items-center justify-center text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plus className="h-4 w-4" aria-hidden />
               </button>
