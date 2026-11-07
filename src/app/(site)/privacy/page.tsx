@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro="This policy explains what personal data Upeo Africa Technologies collects when you use our website or engage us for work, why we hold it, how we protect it, and the rights you can exercise over it at any time."
       effective="1 September 2026"
-      updated="23 August 2026"
+      updated="7 November 2026"
       activeHref="/privacy"
     >
       <p className="lead">
@@ -125,7 +125,8 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Marketing and communications data</strong>: your preferences in receiving
-          communications from us.
+          communications from us, including the email address you give when you join the
+          mailing list.
         </li>
       </ul>
       <p>
@@ -300,9 +301,10 @@ export default function PrivacyPage() {
 
       <h2>14. Direct marketing</h2>
       <p>
-        <strong>14.1</strong> We send marketing communications only where you have consented or
-        where permitted by law. You may opt out at any time by using the unsubscribe mechanism in
-        our communications or by contacting us.
+        <strong>14.1</strong> We send marketing communications only where you have consented,
+        including when you join the mailing list on this website, or where permitted by law. You
+        may opt out at any time by using the unsubscribe mechanism in our communications or by
+        contacting us.
       </p>
 
       <h2>15. Children&rsquo;s personal data</h2>

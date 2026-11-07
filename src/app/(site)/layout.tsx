@@ -61,11 +61,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         github={settings?.github_url}
       />
       <main id="main">{children}</main>
-      <Footer
-        linkedin={settings?.linkedin_url}
-        xUrl={settings?.x_url}
-        github={settings?.github_url}
-      />
+      <Footer linkedin={settings?.linkedin_url} xUrl={settings?.x_url} />
       <InquiryModal />
       <WhatsAppButton />
     </>

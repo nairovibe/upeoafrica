@@ -1,4 +1,4 @@
-const ACTIONS = ["login", "signup", "recovery", "contact", "inquiry", "checkout", "ticket"] as const;
+const ACTIONS = ["login", "signup", "recovery", "contact", "inquiry", "checkout", "ticket", "newsletter"] as const;
 export type TurnstileAction = (typeof ACTIONS)[number];
 
 function remoteIp(ip: string) {

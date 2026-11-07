@@ -1,5 +1,6 @@
 import {
   Inbox,
+  Mail,
   Briefcase,
   Newspaper,
   Package,
@@ -28,7 +29,13 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; badge?: k
 
 export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   { label: "Today", items: [{ href: "/console", label: "Overview", icon: LayoutGrid }] },
-  { label: "Inbox", items: [{ href: "/console/leads", label: "Enquiries", icon: Inbox, badge: "inbox" }] },
+  {
+    label: "Inbox",
+    items: [
+      { href: "/console/leads", label: "Enquiries", icon: Inbox, badge: "inbox" },
+      { href: "/console/newsletter", label: "Mailing list", icon: Mail },
+    ],
+  },
   {
     label: "Money",
     items: [
@@ -96,6 +103,7 @@ export const SHORTCUTS: Shortcut[] = [
   { id: "new-event", title: "Event", subtitle: "Tickets and RSVPs", href: "/console/events/new", icon: Ticket, create: true },
   { id: "new-post", title: "Blog post", subtitle: "Write and publish", href: "/console/insights/new", icon: PenLine, create: true },
   { id: "enquiries", title: "Enquiries", subtitle: "Reply to briefs", href: "/console/leads", icon: Inbox },
+  { id: "mailing-list", title: "Mailing list", subtitle: "Newsletter opt-ins", href: "/console/newsletter", icon: Mail },
   { id: "orders", title: "Orders", subtitle: "Payments in", href: "/console/orders", icon: Receipt },
   { id: "media", title: "Media", subtitle: "Upload files", href: "/console/media", icon: ImageUp },
   { id: "new-product", title: "Product", subtitle: "Sell a download", href: "/console/products/new", icon: PackagePlus, create: true },
