@@ -201,12 +201,14 @@ export function analyzeSeo(input: SeoInput): SeoReport {
     add("kw-slug", "Focus keyword in slug", 5, "fail", "Set a focus keyword");
     add("kw-desc", "Focus keyword in meta description", 6, "fail", "Set a focus keyword");
     add("kw-intro", "Focus keyword in first paragraph", 6, "fail", "Set a focus keyword");
+    add("kw-h2", "Focus keyword in a subheading", 5, "fail", "Set a focus keyword");
     add("kw-density", "Keyword density 0.5% to 2.5%", 6, "fail", "Set a focus keyword");
   } else {
     add("kw-title", "Focus keyword in title", 7, yes(norm(effectiveTitle).includes(kw) || norm(input.title).includes(kw)));
     add("kw-slug", "Focus keyword in slug", 5, yes(input.slug.includes(headingId(kw))));
     add("kw-desc", "Focus keyword in meta description", 6, yes(norm(effectiveDescription).includes(kw)));
     add("kw-intro", "Focus keyword in first paragraph", 6, yes(paras.length > 0 && norm(paras[0]).includes(kw)));
+    add("kw-h2", "Focus keyword in a subheading", 5, yes(headings.some((h) => norm(h.text).includes(kw))));
     const density = words ? (countPhrase(lowerText, kw) / words) * 100 : 0;
     const dState = density >= 0.5 && density <= 2.5 ? "pass" : density > 0 ? "warn" : "fail";
     add("kw-density", "Keyword density 0.5% to 2.5%", 6, dState, `${density.toFixed(1)}%`);
@@ -258,6 +260,13 @@ export function analyzeSeo(input: SeoInput): SeoReport {
     5,
     questions.length >= 1 ? "pass" : "fail",
     questions.length ? `${questions.length} found` : "Add an H2 that ends with a question mark",
+  );
+  add(
+    "cover",
+    "Featured image",
+    5,
+    yes(Boolean(input.hasCover)),
+    input.hasCover ? "Set" : "Add a cover at least 1200 pixels wide",
   );
   const opener = paras[0] ? countWords(paras[0]) : 0;
   add(

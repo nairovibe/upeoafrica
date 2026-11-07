@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { company, services } from "@/lib/content";
 import { getPublishedWork, getPublishedProducts, getPublishedEvents } from "@/lib/cms";
 import { getSitemapArticles } from "@/lib/blog";
+import { publicMediaUrl } from "@/lib/constants";
 
 const base = company.domain;
 
@@ -31,12 +32,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
-    ...articles.map((a) => ({
-      url: `${base}/blogs/${a.slug}`,
-      lastModified: new Date(a.updated_at),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
+    ...articles.map((a) => {
+      const image = publicMediaUrl(a.cover_path);
+      return {
+        url: `${base}/blogs/${a.slug}`,
+        lastModified: new Date(a.updated_at),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+        images: image ? [image] : undefined,
+      };
+    }),
     ...work.map((w) => ({
       url: `${base}/work/${w.slug}`,
       lastModified: new Date(w.updated_at),

@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/:path((?!console(?:/|$)|api(?:/|$)|_next(?:/|$)|favicon\\.ico|icon\\.png|robots\\.txt|indexnow-key\\.txt).*)",
+        source: "/:path((?!console(?:/|$)|api(?:/|$)|_next(?:/|$)|favicon\\.ico|icon\\.png|robots\\.txt|ads\\.txt|feed\\.xml|indexnow-key\\.txt).*)",
         has: [{ type: "host", value: consoleHost }],
         destination: `https://${consoleHost}/console`,
         permanent: false,

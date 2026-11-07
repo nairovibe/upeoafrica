@@ -246,7 +246,18 @@ export function ArticleEditor({
       setBaseline(JSON.stringify(next));
       setSavedPublishedAt(publishedAt);
       setDraftSavedAt(null);
-      setNotice(wentLive ? "Published." : nextStatus === "scheduled" ? "Scheduled." : "Saved.");
+      const engines = res.search
+        ? res.search.indexnow > 0
+          ? "IndexNow and Bing have the URL."
+          : res.search.bing
+            ? "Bing has the sitemap. IndexNow is not configured on this deployment."
+            : "Search engines were not notified. Set INDEXNOW_KEY on the host."
+        : "";
+      setNotice(
+        [wentLive ? "Published." : nextStatus === "scheduled" ? "Scheduled." : nextStatus === "live" ? "Updated." : "Saved.", engines]
+          .filter(Boolean)
+          .join(" "),
+      );
       refreshSite();
       startNav(() => {
         if (!initial) {

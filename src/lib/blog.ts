@@ -212,7 +212,7 @@ async function _getSitemapArticles() {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("articles")
-    .select("slug, title, updated_at, published_at")
+    .select("slug, title, updated_at, published_at, cover_path")
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .eq("noindex", false)

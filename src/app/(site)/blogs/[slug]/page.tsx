@@ -29,7 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     keywords: keywords.length ? keywords : undefined,
     authors: [{ name: a.author_name || company.name }],
     alternates: { canonical: a.canonical_url || url },
-    robots: a.noindex ? { index: false, follow: true } : undefined,
+    robots: a.noindex
+      ? { index: false, follow: true }
+      : {
+          index: true,
+          follow: true,
+          googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+        },
     openGraph: {
       type: "article",
       url,

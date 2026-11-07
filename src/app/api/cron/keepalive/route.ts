@@ -25,6 +25,9 @@ export async function GET(request: Request) {
     db.from("events").select("slug").gte("published_at", since).lte("published_at", now),
   ]);
   const urls = [
+    `${company.domain}/sitemap.xml`,
+    `${company.domain}/blogs`,
+    `${company.domain}/feed.xml`,
     ...(articles.data ?? []).map((row) => `${company.domain}/blogs/${row.slug}`),
     ...(work.data ?? []).map((row) => `${company.domain}/work/${row.slug}`),
     ...(products.data ?? []).map((row) => `${company.domain}/products/${row.slug}`),

@@ -62,7 +62,20 @@ export const metadata: Metadata = {
     description:
       "Upeo Africa Technologies designs and builds custom web and mobile apps, M-Pesa and Airtel Money payments, branding, and digital marketing from Mombasa, Kenya, for businesses across Africa.",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  alternates: {
+    types: { "application/rss+xml": "/feed.xml" },
+  },
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
     shortcut: "/icon.png",

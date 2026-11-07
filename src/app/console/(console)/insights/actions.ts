@@ -7,6 +7,7 @@ import { getStaff } from "@/lib/cms";
 import { analyzeSeo, sanitizeArticleHtml } from "@/lib/blog";
 import { slugify } from "@/lib/constants";
 import { company } from "@/lib/content";
+import { announceToSearchEngines } from "@/lib/search-submit";
 
 export type ArticleInput = {
   title: string;
@@ -30,7 +31,9 @@ export type ArticleInput = {
   published_at: string | null;
 };
 
-export type SaveResult = { ok: true; id: string; slug: string; seoScore: number } | { ok: false; error: string };
+export type SaveResult =
+  | { ok: true; id: string; slug: string; seoScore: number; search: { indexnow: number; bing: boolean } | null }
+  | { ok: false; error: string };
 
 const blank = (v: string) => (v.trim() ? v.trim() : null);
 
@@ -57,6 +60,7 @@ export async function saveArticle(id: string | null, input: ArticleInput): Promi
     keywords: input.keywords,
     html: body,
     domain: company.domain,
+    hasCover: Boolean(input.cover_path.trim()),
   });
 
   const row = {
@@ -96,6 +100,12 @@ export async function saveArticle(id: string | null, input: ArticleInput): Promi
   revalidateTag(PUBLIC_TAG, { expire: 0 });
   revalidatePath("/blogs");
   revalidatePath(`/blogs/${res.data.slug}`);
+  revalidatePath("/sitemap.xml");
+  revalidatePath("/feed.xml");
   revalidatePath("/console/insights");
-  return { ok: true, id: res.data.id, slug: res.data.slug, seoScore: report.score };
+
+  const published = input.published_at ? new Date(input.published_at).getTime() : NaN;
+  const live = !input.noindex && Number.isFinite(published) && published <= Date.now();
+  const search = live ? await announceToSearchEngines([`${company.domain}/blogs/${res.data.slug}`]) : null;
+  return { ok: true, id: res.data.id, slug: res.data.slug, seoScore: report.score, search };
 }
