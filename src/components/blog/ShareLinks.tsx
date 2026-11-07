@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import { Check, Link2 } from "lucide-react";
-import { FaLinkedinIn, FaWhatsapp, FaXTwitter } from "react-icons/fa6";
+import { FaFacebookF, FaLinkedinIn, FaWhatsapp, FaXTwitter } from "react-icons/fa6";
 
-const rowCls =
-  "inline-flex h-9 items-center rounded-[5px] border border-line bg-white px-3 text-[13px] font-medium text-ink-900 transition-colors hover:border-brand-300 hover:text-brand-600";
-
-const stackCls =
-  "flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-ink-900 transition-colors hover:border-brand-300 hover:text-brand-600";
+const buttonCls =
+  "inline-flex h-9 w-9 items-center justify-center rounded-full text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 sm:h-10 sm:w-10";
 
 export function ShareLinks({ url, title, stacked = false }: { url: string; title: string; stacked?: boolean }) {
   const [copied, setCopied] = useState(false);
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title);
+  const networks = [
+    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${u}`, icon: FaFacebookF, color: "bg-[#1877F2]" },
+    { label: "X", href: `https://x.com/intent/post?url=${u}&text=${t}`, icon: FaXTwitter, color: "bg-black" },
+    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`, icon: FaLinkedinIn, color: "bg-[#0A66C2]" },
+    { label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, icon: FaWhatsapp, color: "bg-[#25D366]" },
+  ];
 
   async function copy() {
     try {
@@ -25,42 +28,19 @@ export function ShareLinks({ url, title, stacked = false }: { url: string; title
     }
   }
 
-  const items = [
-    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`, icon: FaLinkedinIn },
-    { label: "X", href: `https://x.com/intent/post?url=${u}&text=${t}`, icon: FaXTwitter },
-    { label: "WhatsApp", href: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, icon: FaWhatsapp },
-  ];
-
-  if (stacked) {
-    return (
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Share</p>
-        <div className="mt-3 flex flex-col gap-2">
-          {items.map((item) => (
-            <a key={item.label} className={stackCls} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${item.label}`}>
-              <item.icon className="h-4 w-4" aria-hidden />
-            </a>
-          ))}
-          <button type="button" className={stackCls} onClick={copy} aria-label={copied ? "Link copied" : "Copy link"}>
-            {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 text-sm font-medium text-ink-900">Share</span>
-      {items.map((item) => (
-        <a key={item.label} className={rowCls} href={item.href} target="_blank" rel="noopener noreferrer">
-          {item.label}
-        </a>
-      ))}
-      <button type="button" className={rowCls} onClick={copy}>
-        {copied ? <Check className="mr-1.5 h-3.5 w-3.5" /> : <Link2 className="mr-1.5 h-3.5 w-3.5" />}
-        {copied ? "Copied" : "Copy link"}
-      </button>
+    <div className={stacked ? undefined : "w-full sm:ml-auto sm:w-auto"}>
+      {stacked ? <p className="text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Share</p> : null}
+      <div className={stacked ? "mt-3 flex flex-col items-center gap-2" : "flex items-center gap-2"} role="group" aria-label="Share this article">
+        {networks.map((item) => (
+          <a key={item.label} className={`${buttonCls} ${item.color}`} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${item.label}`}>
+            <item.icon className="h-4 w-4" aria-hidden />
+          </a>
+        ))}
+        <button type="button" className={`${buttonCls} bg-ink-900`} onClick={copy} aria-label={copied ? "Link copied" : "Copy link"}>
+          {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+        </button>
+      </div>
     </div>
   );
 }

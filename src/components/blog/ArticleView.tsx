@@ -9,6 +9,20 @@ import { publicMediaUrl } from "@/lib/constants";
 import { company } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
 
+function splitAfterParagraphs(html: string, count: number) {
+  const re = /<p\b[^>]*>[\s\S]*?<\/p>/gi;
+  let seen = 0;
+  let end = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html))) {
+    seen += 1;
+    end = match.index + match[0].length;
+    if (seen >= count) break;
+  }
+  if (!seen) return { opening: "", rest: html };
+  return { opening: html.slice(0, end), rest: html.slice(end) };
+}
+
 export async function ArticleView({ article: a, preview = false }: { article: Tables<"articles">; preview?: boolean }) {
   const { html, toc } = renderArticleBody(a.body);
   const words = countWords(htmlToText(html));
@@ -21,6 +35,7 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
   const related = preview ? [] : await getRelatedArticles(a);
   const faq = extractFaq(html);
   const showToc = toc.length > 1;
+  const { opening, rest } = splitAfterParagraphs(html, 2);
   const initials = author
     .split(/\s+/)
     .filter(Boolean)
@@ -122,29 +137,28 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
             </Link>
           ) : null}
 
-          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] text-ink-900 md:text-5xl">{a.title}</h1>
+          <h1 className="mt-4 font-display text-3xl font-bold leading-[1.08] text-ink-900 sm:text-4xl md:text-[2.75rem]">{a.title}</h1>
 
-          <div className="mt-6 flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white" aria-hidden>
-              {initials || "U"}
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-ink-900">{author}</p>
-              <p className="text-xs text-muted">
-                {a.published_at ? <time dateTime={a.published_at}>{formatBlogDate(a.published_at)}</time> : null}
-                {updated ? (
-                  <>
-                    {a.published_at ? " · " : null}
-                    Updated <time dateTime={a.updated_at}>{formatBlogDate(a.updated_at)}</time>
-                  </>
-                ) : null}
-                {" · "}
-                {minutes} min read
-              </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white" aria-hidden>
+                {initials || "U"}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-ink-900">{author}</p>
+                <p className="text-xs text-muted">
+                  {a.published_at ? <time dateTime={a.published_at}>{formatBlogDate(a.published_at)}</time> : null}
+                  {updated ? (
+                    <>
+                      {a.published_at ? " · " : null}
+                      Updated <time dateTime={a.updated_at}>{formatBlogDate(a.updated_at)}</time>
+                    </>
+                  ) : null}
+                  {" · "}
+                  {minutes} min read
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="mt-6 lg:hidden">
             <ShareLinks url={pageUrl} title={a.title} />
           </div>
         </header>
@@ -157,17 +171,22 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
           </div>
         ) : null}
 
-        <div className="mx-auto mt-10 grid max-w-6xl gap-10 px-5 sm:px-8 lg:mt-14 lg:grid-cols-[14rem_minmax(0,42rem)] lg:justify-center lg:gap-16">
-          <aside className={showToc ? "lg:sticky lg:top-24 lg:self-start" : "hidden lg:sticky lg:top-24 lg:block lg:self-start"}>
-            <div className={showToc ? "mb-8 hidden lg:block" : undefined}>
-              <ShareLinks url={pageUrl} title={a.title} stacked />
-            </div>
-            {showToc ? <TableOfContents items={toc} /> : null}
+        <div className="mx-auto mt-10 grid max-w-6xl gap-10 px-5 sm:px-8 lg:mt-14 lg:grid-cols-[4.5rem_minmax(0,42rem)] lg:justify-center lg:gap-12">
+          <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+            <ShareLinks url={pageUrl} title={a.title} stacked />
           </aside>
 
           <div className="min-w-0">
             {a.excerpt ? <p className="mb-8 text-xl leading-relaxed text-ink-900">{a.excerpt}</p> : null}
-            <div className="article-body" dangerouslySetInnerHTML={{ __html: html }} />
+            {showToc ? (
+              <>
+                {opening ? <div className="article-body" dangerouslySetInnerHTML={{ __html: opening }} /> : null}
+                <TableOfContents items={toc} />
+                {rest ? <div className="article-body is-rest" dangerouslySetInnerHTML={{ __html: rest }} /> : null}
+              </>
+            ) : (
+              <div className="article-body" dangerouslySetInnerHTML={{ __html: html }} />
+            )}
 
             {a.gallery.length ? (
               <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">

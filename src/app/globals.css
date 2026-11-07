@@ -357,6 +357,11 @@
     line-height: 1.7;
     color: var(--color-ink-900);
   }
+  .article-body.is-rest > p:first-of-type {
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
   .article-body a {
     color: var(--color-brand-600);
     text-decoration: underline;
