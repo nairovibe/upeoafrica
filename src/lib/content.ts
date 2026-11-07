@@ -25,6 +25,10 @@ import {
   AppWindow,
   Puzzle,
   Store,
+  LayoutGrid,
+  Route,
+  LockKeyhole,
+  Building2,
 } from "lucide-react";
 import { images } from "./images";
 
@@ -57,9 +61,25 @@ export const company = {
 
 export const nav = [
   { label: "Home", href: "/" },
+  { label: "Services", href: "/services", menu: "services" as const },
+  { label: "Products", href: "/products", menu: "products" as const },
+  { label: "Our Work", href: "/work" },
+  { label: "Our Process", href: "/process", menu: "process" as const },
+  { label: "Events", href: "/events" },
+  { label: "Blogs", href: "/blogs" },
+  { label: "Contact Us", href: "/contact" },
+];
+
+/** Pages a visitor can already open, including the ones that live inside a menu. */
+export const companyNav = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
+  { label: "Products", href: "/products" },
   { label: "Our Work", href: "/work" },
   { label: "Our Process", href: "/process" },
+  { label: "Founders Zone", href: "/founders" },
+  { label: "Partners", href: "/partners" },
   { label: "Events", href: "/events" },
   { label: "Blogs", href: "/blogs" },
   { label: "Contact Us", href: "/contact" },
@@ -270,7 +290,7 @@ export const techStack: { name: string; slug: string }[] = [
   { name: "Figma", slug: "figma" },
 ];
 
-export type Product = { title: string; icon: LucideIcon; description: string; tags: string[] };
+export type Product = { title: string; icon: LucideIcon; description: string; tags: string[]; href: string };
 
 export const products: Product[] = [
   {
@@ -279,6 +299,7 @@ export const products: Product[] = [
     description:
       "Web and mobile products we've designed, launched, and continue to run. Reliable, scalable, and a pleasure to use.",
     tags: ["Web apps", "Mobile apps", "Dashboards"],
+    href: "/products?type=saas",
   },
   {
     title: "WordPress plugins",
@@ -286,6 +307,7 @@ export const products: Product[] = [
     description:
       "Custom plugins that extend WordPress with exactly the features your site needs, with no bloat and no compromises.",
     tags: ["Custom features", "Integrations", "Maintenance"],
+    href: "/products?type=plugin",
   },
   {
     title: "POS systems & plugins",
@@ -293,8 +315,77 @@ export const products: Product[] = [
     description:
       "Point-of-sale software and plugins that keep retail and hospitality businesses running smoothly, on and offline.",
     tags: ["Retail", "Hospitality", "Inventory"],
+    href: "/products?type=pos",
   },
 ];
+
+export const productMenu = [
+  {
+    href: "/products",
+    title: "All products",
+    description: "Plugins, point of sale, and the software we sell.",
+    icon: LayoutGrid,
+  },
+  {
+    href: "/products?type=plugin",
+    title: "WordPress plugins",
+    description: "Features for a WordPress site, without the bloat.",
+    icon: Puzzle,
+  },
+  {
+    href: "/products?type=pos",
+    title: "POS systems",
+    description: "Retail and hospitality, on the counter and offline.",
+    icon: Store,
+  },
+  {
+    href: "/products?type=saas",
+    title: "Apps & SaaS",
+    description: "Products the studio runs and keeps improving.",
+    icon: AppWindow,
+  },
+];
+
+export const processMenu = [
+  {
+    href: "/process",
+    title: "Our process",
+    description: "From the first call through to handover.",
+    icon: Route,
+  },
+  {
+    href: "/founders",
+    title: "Founders Zone",
+    description: "Share an idea while it is still private.",
+    icon: LockKeyhole,
+  },
+  {
+    href: "/about",
+    title: "About the studio",
+    description: "The team on Moi Avenue, since 2019.",
+    icon: Building2,
+  },
+  {
+    href: "/partners",
+    title: "Partners",
+    description: "Organisations we have actually shipped with.",
+    icon: Handshake,
+  },
+];
+
+export const PRODUCT_LINES = ["plugin", "pos", "saas"] as const;
+export type ProductLine = (typeof PRODUCT_LINES)[number];
+
+export function matchesProductLine(
+  product: { type: string; title: string; description: string },
+  line: string,
+) {
+  const hay = `${product.type} ${product.title} ${product.description}`.toLowerCase();
+  if (line === "plugin") return product.type === "plugin" || hay.includes("plugin") || hay.includes("wordpress");
+  if (line === "pos") return product.type === "pos" || /\bpos\b|point of sale|point-of-sale/.test(hay);
+  if (line === "saas") return product.type === "saas" || hay.includes("saas");
+  return true;
+}
 
 export const payments = ["M-Pesa", "Airtel Money", "Bank transfers", "Card payments"];
 

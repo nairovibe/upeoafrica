@@ -1,31 +1,57 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Menu, X, ChevronDown, ArrowRight, ArrowUpRight, MapPin, Phone, Mail } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight, MapPin, Phone, Mail } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { Logo } from "@/components/brand/Logo";
 import { Container } from "@/components/ui/Container";
 import { OPEN_INQUIRY_EVENT } from "@/components/site/InquiryModal";
-import { services, company, nav } from "@/lib/content";
+import { services, company, nav, productMenu, processMenu } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-const navItems: { label: string; href: string; menu?: boolean }[] = nav.map((item) =>
-  item.href === "/services" ? { ...item, menu: true } : item,
-);
+type MenuId = "services" | "products" | "process";
 
-const serviceLinks = services.map((service) => ({
+type MenuLink = { href: string; title: string; description: string; icon: LucideIcon };
+
+const serviceLinks: MenuLink[] = services.map((service) => ({
   href: `/services/${service.slug}`,
-  label: service.title,
+  title: service.title,
+  description: service.short,
+  icon: service.icon,
 }));
+
+const menus: Record<MenuId, { links: MenuLink[]; wide?: boolean }> = {
+  services: { links: serviceLinks, wide: true },
+  products: { links: productMenu },
+  process: { links: processMenu },
+};
 
 const openInquiry = () => window.dispatchEvent(new Event(OPEN_INQUIRY_EVENT));
 const tel = company.phone.replace(/\s/g, "");
 
+function pathOf(href: string) {
+  return href.split("?")[0];
+}
+
+function isCurrent(href: string, pathname: string) {
+  const path = pathOf(href);
+  if (path === "/") return pathname === "/";
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function itemActive(item: (typeof nav)[number], pathname: string) {
+  if (item.menu && menus[item.menu]) {
+    return menus[item.menu].links.some((link) => isCurrent(link.href, pathname)) || isCurrent(item.href, pathname);
+  }
+  return isCurrent(item.href, pathname);
+}
+
 const navLinkClass = (active: boolean) =>
   cn(
-    "inline-flex items-center gap-1 px-2 py-2 text-[14px] leading-5 font-medium transition-colors duration-300 xl:gap-1.5 xl:px-3 xl:text-[15px]",
+    "inline-flex items-center gap-1 px-1.5 py-2 text-[13px] leading-5 font-medium transition-colors duration-300 xl:gap-1.5 xl:px-2.5 xl:text-[14.5px]",
     active ? "text-brand-500" : "text-ink-700 hover:text-brand-500",
   );
 
@@ -47,12 +73,10 @@ function NavLabel({ active, children }: { active: boolean; children: React.React
 function SocialIcon({
   href,
   label,
-  color,
   children,
 }: {
   href: string;
   label: string;
-  color?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -62,10 +86,43 @@ function SocialIcon({
       rel="noopener noreferrer"
       aria-label={label}
       className="inline-flex h-12 w-7 items-center justify-center transition-opacity duration-300 hover:opacity-70"
-      style={color ? { color } : undefined}
     >
       {children}
     </a>
+  );
+}
+
+function MenuPanel({ links, wide, labelledBy }: { links: MenuLink[]; wide?: boolean; labelledBy: string }) {
+  return (
+    <div className="absolute left-0 top-full z-50 pt-2">
+      <div
+        role="region"
+        aria-labelledby={labelledBy}
+        className={cn(
+          "rounded-[5px] border border-line bg-white p-2 shadow-[0_24px_50px_-28px_rgba(11,14,20,0.45)]",
+          wide ? "w-[min(40rem,calc(100vw-3rem))]" : "w-[min(22rem,calc(100vw-3rem))]",
+        )}
+      >
+        <ul className={cn("grid gap-1", wide && "sm:grid-cols-2")}>
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="flex min-h-11 items-start gap-3 rounded-[5px] px-3 py-3 transition-colors duration-300 hover:bg-surface-3 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+              >
+                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center bg-brand-50 text-brand-600">
+                  <link.icon className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-ink-900">{link.title}</span>
+                  <span className="mt-0.5 block text-xs leading-5 text-muted">{link.description}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -78,21 +135,20 @@ export function Navbar({
   github?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const [mobileServices, setMobileServices] = useState(false);
+  const [menu, setMenu] = useState<MenuId | null>(null);
+  const [mobileMenu, setMobileMenu] = useState<MenuId | null>(null);
+  const pinned = useRef<MenuId | null>(null);
   const [compact, setCompact] = useState(false);
   const pathname = usePathname();
+  const menuBaseId = useId();
 
-  // Navigating closes both menus. This is React's documented "reset state when
-  // an input changes" pattern rather than an effect: adjusting during render
-  // re-renders immediately, before the browser paints, so an open panel never
-  // flashes onto the new page the way an effect-based reset does.
   const [lastPath, setLastPath] = useState(pathname);
   if (lastPath !== pathname) {
     setLastPath(pathname);
     setOpen(false);
-    setServicesOpen(false);
-    setMobileServices(false);
+    setMenu(null);
+    setMobileMenu(null);
+    pinned.current = null;
   }
 
   useEffect(() => {
@@ -101,6 +157,18 @@ export function Navbar({
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        pinned.current = null;
+        setMenu(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menu]);
 
   useEffect(() => {
     let frame = 0;
@@ -166,40 +234,69 @@ export function Navbar({
         </div>
       </div>
 
-      <Container className="relative flex h-[72px] items-center gap-6">
+      <Container className="relative flex h-[72px] items-center gap-4">
         <Logo priority className="relative z-10 shrink-0" />
 
-        <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Primary">
-          {navItems.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        <nav className="hidden flex-1 items-center justify-center xl:flex" aria-label="Primary">
+          {nav.map((item) => {
+            const active = itemActive(item, pathname);
             if (item.menu) {
+              const panelId = `${menuBaseId}-${item.menu}`;
+              const labelId = `${panelId}-label`;
+              const shown = menu === item.menu;
               return (
                 <div
                   key={item.label}
                   className="relative"
-                  onMouseEnter={() => setServicesOpen(true)}
-                  onMouseLeave={() => setServicesOpen(false)}
+                  onMouseEnter={() => {
+                    if (!pinned.current) setMenu(item.menu!);
+                  }}
+                  onMouseLeave={() => {
+                    if (pinned.current !== item.menu) {
+                      setMenu((current) => (current === item.menu ? null : current));
+                    }
+                  }}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      if (pinned.current === item.menu) pinned.current = null;
+                      setMenu((current) => (current === item.menu ? null : current));
+                    }
+                  }}
                 >
                   <Link
+                    id={labelId}
                     href={item.href}
-                    aria-expanded={servicesOpen}
-                    aria-haspopup="true"
                     aria-current={active ? "page" : undefined}
                     className={navLinkClass(active)}
-                    onClick={(event) => {
-                      if (!servicesOpen) {
-                        event.preventDefault();
-                        setServicesOpen(true);
-                      }
-                    }}
                   >
                     <NavLabel active={active}>{item.label}</NavLabel>
+                  </Link>
+                  <button
+                    type="button"
+                    aria-expanded={shown}
+                    aria-controls={panelId}
+                    aria-label={`${shown ? "Close" : "Open"} ${item.label} menu`}
+                    onClick={() => {
+                      if (pinned.current === item.menu) {
+                        pinned.current = null;
+                        setMenu(null);
+                        return;
+                      }
+                      pinned.current = item.menu!;
+                      setMenu(item.menu!);
+                    }}
+                    className="inline-flex h-11 w-7 cursor-pointer items-center justify-center text-ink-700 hover:text-brand-500"
+                  >
                     <ChevronDown
-                      className={cn("h-3.5 w-3.5 transition-transform duration-300", servicesOpen && "rotate-180")}
+                      className={cn("h-3.5 w-3.5 transition-transform duration-300", shown && "rotate-180")}
                       aria-hidden
                     />
-                  </Link>
-                  {servicesOpen && <ServicesMenu />}
+                  </button>
+                  {shown && (
+                    <div id={panelId}>
+                      <MenuPanel links={menus[item.menu].links} wide={menus[item.menu].wide} labelledBy={labelId} />
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -216,11 +313,11 @@ export function Navbar({
           })}
         </nav>
 
-        <div className="relative z-10 ml-auto hidden items-center lg:flex">
+        <div className="relative z-10 ml-auto hidden items-center xl:flex">
           <button
             type="button"
             onClick={openInquiry}
-            className="group inline-flex h-11 cursor-pointer items-center justify-center gap-2 bg-brand-500 px-6 text-[15px] leading-5 font-semibold text-white transition-colors duration-300 hover:bg-brand-600"
+            className="group inline-flex h-11 cursor-pointer items-center justify-center gap-2 bg-brand-500 px-5 text-[14px] leading-5 font-semibold text-white transition-colors duration-300 hover:bg-brand-600"
           >
             Start a project
             <ArrowRight
@@ -232,27 +329,26 @@ export function Navbar({
 
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((value) => !value)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
-          className="relative z-10 ml-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center text-ink-900 transition-colors duration-300 ease-out-expo hover:bg-surface-3 lg:ml-0 lg:hidden"
+          className="relative z-10 ml-auto inline-flex h-11 w-11 cursor-pointer items-center justify-center text-ink-900 transition-colors duration-300 ease-out-expo hover:bg-surface-3 xl:ml-0 xl:hidden"
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </Container>
 
-      {/* Mobile menu */}
       <div
+        inert={!open}
         className={cn(
-          "overflow-y-auto transition-[max-height] duration-300 ease-out lg:hidden",
-          open
-            ? "max-h-[80vh] border-t border-line bg-white"
-            : "max-h-0 border-t-0 border-transparent bg-transparent",
+          "overflow-y-auto transition-[max-height] duration-300 ease-out xl:hidden",
+          open ? "max-h-[80vh] border-t border-line bg-white" : "max-h-0 border-t-0 border-transparent bg-transparent",
         )}
       >
         <Container className="flex flex-col py-2">
-          {navItems.map((item) => {
+          {nav.map((item) => {
             if (item.menu) {
+              const expanded = mobileMenu === item.menu;
               return (
                 <div key={item.label} className="border-b border-line">
                   <div className="flex items-center justify-between">
@@ -264,27 +360,36 @@ export function Navbar({
                     </Link>
                     <button
                       type="button"
-                      onClick={() => setMobileServices((value) => !value)}
-                      aria-label={`${mobileServices ? "Collapse" : "Expand"} ${item.label}`}
-                      aria-expanded={mobileServices}
+                      onClick={() => setMobileMenu((current) => (current === item.menu ? null : item.menu!))}
+                      aria-label={`${expanded ? "Collapse" : "Expand"} ${item.label}`}
+                      aria-expanded={expanded}
                       className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-ink-900"
                     >
-                      <ChevronDown className={cn("h-5 w-5 transition-transform duration-300", mobileServices && "rotate-180")} />
+                      <ChevronDown className={cn("h-5 w-5 transition-transform duration-300", expanded && "rotate-180")} />
                     </button>
                   </div>
-                  <div className={cn("overflow-hidden transition-[max-height] duration-300", mobileServices ? "max-h-[800px]" : "max-h-0")}>
-                    <div className="flex flex-col gap-2 pb-4">
-                      {serviceLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className="flex items-center justify-between rounded-lg border border-[#ececec] px-4 py-3 text-sm font-medium text-ink-900"
-                        >
-                          {link.label}
-                          <ArrowUpRight className="h-4 w-4 text-muted" aria-hidden />
-                        </Link>
+                  <div
+                    inert={!expanded}
+                    className={cn("overflow-hidden transition-[max-height] duration-300", expanded ? "max-h-[920px]" : "max-h-0")}
+                  >
+                    <ul className="flex flex-col gap-1 pb-4">
+                      {menus[item.menu].links.map((link) => (
+                        <li key={link.href}>
+                          <Link
+                            href={link.href}
+                            className="flex items-start gap-3 rounded-[5px] px-2 py-2.5 hover:bg-surface-3"
+                          >
+                            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center bg-brand-50 text-brand-600">
+                              <link.icon className="h-4 w-4" aria-hidden />
+                            </span>
+                            <span>
+                              <span className="block text-sm font-semibold text-ink-900">{link.title}</span>
+                              <span className="mt-0.5 block text-xs leading-5 text-muted">{link.description}</span>
+                            </span>
+                          </Link>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
                 </div>
               );
@@ -318,31 +423,5 @@ export function Navbar({
         </Container>
       </div>
     </header>
-  );
-}
-
-function ServicesMenu() {
-  const midpoint = Math.ceil(serviceLinks.length / 2);
-  const columns = [serviceLinks.slice(0, midpoint), serviceLinks.slice(midpoint)];
-
-  return (
-    <div className="absolute left-1/2 top-full z-50 w-[640px] -translate-x-1/2 pt-3">
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#ececec] bg-white p-3 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)]">
-        {columns.map((column, index) => (
-          <div key={index} className="flex flex-col gap-2">
-            {column.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-[#ececec] bg-white px-4 py-3 text-sm font-medium text-[#1c1c1c] transition-colors duration-300 hover:border-brand-200 hover:text-brand-600"
-              >
-                <span>{link.label}</span>
-                <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
-              </Link>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

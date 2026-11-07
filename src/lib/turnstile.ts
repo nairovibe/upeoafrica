@@ -1,6 +1,13 @@
 const ACTIONS = ["login", "signup", "recovery", "contact", "inquiry", "checkout", "ticket"] as const;
 export type TurnstileAction = (typeof ACTIONS)[number];
 
+function remoteIp(ip: string) {
+  const value = ip.trim();
+  const v4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(value);
+  const v6 = value.includes(":") && /^[0-9a-fA-F:]+$/.test(value);
+  return v4 || v6 ? value : undefined;
+}
+
 function allowedHostnames() {
   const fromEnv = process.env.TURNSTILE_HOSTNAMES;
   if (fromEnv) {
@@ -37,15 +44,14 @@ export async function verifyTurnstile(
   if (expectedHostnames.size === 0) return false;
 
   try {
+    const body = new URLSearchParams({ secret, response: token });
+    const visitor = remoteIp(ip);
+    if (visitor) body.set("remoteip", visitor);
     const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       signal: AbortSignal.timeout(10_000),
-      body: new URLSearchParams({
-        secret,
-        response: token,
-        remoteip: ip,
-      }),
+      body,
     });
     if (!res.ok) return false;
     const result = (await res.json()) as {

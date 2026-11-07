@@ -3,7 +3,7 @@ import { ArrowUpRight, Mail, Phone, MapPin } from "lucide-react";
 import { FaGithub, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
 import { Logo } from "@/components/brand/Logo";
 import { Container } from "@/components/ui/Container";
-import { company, nav, services, legalNav } from "@/lib/content";
+import { company, companyNav, services, legalNav } from "@/lib/content";
 
 export function Footer({
   linkedin,
@@ -48,7 +48,7 @@ export function Footer({
             )}
           </div>
 
-          <FooterCol title="Company" links={nav} />
+          <FooterCol title="Company" links={companyNav} />
 
           <div className="min-w-0">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">

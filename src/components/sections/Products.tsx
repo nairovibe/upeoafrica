@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, CreditCard } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/Section";
@@ -48,14 +49,15 @@ export function Products() {
           intro="We build and run our own products alongside client work. Apps, plugins, and point-of-sale systems, with the payment rails already in them."
         />
 
-        {/* Products: clean bordered grid, hairline dividers. The cards are not
-            links, so hover stays a warming of the surface rather than a lift:
-            the hairline gaps are drawn by the grid background and any transform
-            would tear them open. */}
+        {/* Hairline gaps come from the grid background. Cards link through, and
+            they do not lift, because a transform would tear those gaps open. */}
         <div className="mt-14 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p, i) => (
             <Reveal key={p.title} delay={stagger(i, 3)} className="flex">
-              <div className="group flex w-full flex-col bg-ink-950 p-8 transition-colors duration-300 ease-out-expo hover:bg-ink-900">
+              <Link
+                href={p.href}
+                className="group flex w-full flex-col bg-ink-950 p-8 transition-colors duration-300 ease-out-expo hover:bg-ink-900"
+              >
                 <p.icon className="h-7 w-7 text-brand-500 transition-[color,transform] duration-300 ease-out-expo group-hover:scale-110 group-hover:text-brand-400" />
                 <h3 className="mt-6 text-lg font-semibold text-white">{p.title}</h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-white/60 transition-colors duration-300 ease-out-expo group-hover:text-white/75">
@@ -64,7 +66,7 @@ export function Products() {
                 <p className="mt-6 text-xs font-medium uppercase tracking-wide text-white/35 transition-colors duration-300 ease-out-expo group-hover:text-white/55">
                   {p.tags.join("  ·  ")}
                 </p>
-              </div>
+              </Link>
             </Reveal>
           ))}
         </div>
