@@ -14,7 +14,7 @@ import { Reveal } from "@/components/ui/Reveal";
  *
  * `image` turns the header into a photographic hero: photo, a left-to-right
  * scrim so copy always sits on ink, and a bottom fade into the section that
- * follows. The studio shot behind "How we work" is the default until a page
+ * follows. The photograph behind "How we work" is the default until a page
  * has its own photograph.
  */
 const DEFAULT_HERO_IMAGE = "/how-we-work-bg.jpg";
@@ -24,7 +24,7 @@ export function PageHeader({
   intro,
   meta,
   image = DEFAULT_HERO_IMAGE,
-  imageAlt = "The Upeo Africa Technologies studio",
+  imageAlt = "Upeo Africa Technologies, Mombasa",
   breadcrumb,
 }: {
   title: React.ReactNode;

@@ -15,7 +15,7 @@ import {
 } from "@/components/events/utils";
 
 const intro =
-  "Talks, workshops, bootcamps and online sessions run by the Upeo Africa studio in Mombasa. Book a free seat or pay for your ticket with M-Pesa.";
+  "Talks, workshops, bootcamps and online sessions run by Upeo Africa Technologies in Mombasa. Book a free seat or pay for your ticket with M-Pesa.";
 
 export const metadata: Metadata = {
   title: "Events",

@@ -44,6 +44,13 @@ export const LEAD_STATUSES = ["new", "contacted", "qualified", "won", "lost"] as
 
 export const PRODUCT_TYPES = ["plugin", "download", "saas"] as const;
 
+export const EXPERT_DISCIPLINES = [
+  { value: "leadership", label: "Leadership" },
+  { value: "engineering", label: "Engineering" },
+  { value: "design", label: "Design" },
+  { value: "marketing", label: "Marketing" },
+] as const;
+
 export const PARTNER_RELATIONSHIPS = [
   { value: "official_dev_partner", label: "Official development partner" },
   { value: "technology", label: "Technology" },

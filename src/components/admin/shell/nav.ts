@@ -10,6 +10,7 @@ import {
   ImageIcon,
   ImageUp,
   Users,
+  UserRound,
   SlidersHorizontal,
   LayoutGrid,
   Clapperboard,
@@ -43,7 +44,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Studio",
+    label: "Content",
     items: [
       { href: "/console/work", label: "Work", icon: Briefcase },
       { href: "/console/insights", label: "Blog", icon: Newspaper },
@@ -57,6 +58,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/console/clients", label: "Clients", icon: Building2 },
       { href: "/console/partners", label: "Partners", icon: Handshake },
       { href: "/console/team", label: "Team", icon: Users },
+      { href: "/console/experts", label: "Experts", icon: UserRound },
       { href: "/console/settings", label: "Settings", icon: SlidersHorizontal },
     ],
   },
@@ -100,6 +102,7 @@ export const SHORTCUTS: Shortcut[] = [
   { id: "new-work", title: "Case study", subtitle: "Show the work", href: "/console/work/new", icon: Briefcase, create: true },
   { id: "clients", title: "Clients", subtitle: "Accounts", href: "/console/clients", icon: Building2 },
   { id: "team", title: "Team", subtitle: "Roles", href: "/console/team", icon: Users },
+  { id: "experts", title: "Experts", subtitle: "Public team", href: "/console/experts", icon: UserRound },
   { id: "settings", title: "Settings", subtitle: "Company and billing", href: "/console/settings", icon: SlidersHorizontal },
   { id: "site", title: "Website", subtitle: "Open the live site", href: "/", icon: Globe, external: true },
 ];

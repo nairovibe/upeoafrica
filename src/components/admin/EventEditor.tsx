@@ -300,7 +300,7 @@ export function EventEditor({
               <input
                 className={inputClass}
                 value={venue}
-                placeholder={mode === "online" ? "Google Meet" : "Upeo Africa studio, Moi Avenue, Mombasa"}
+                placeholder={mode === "online" ? "Google Meet" : "Upeo Africa Technologies, Moi Avenue, Mombasa"}
                 onChange={(e) => setVenue(e.target.value)}
               />
             </Field>

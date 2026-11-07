@@ -35,5 +35,5 @@ export const pageImages = {
   servicesHeader: "/pages/services-header.jpg",
   aboutHeader: "/pages/about-header.jpg",
   contactHeader: "/pages/contact-header.jpg",
-  aboutTeam: "/pages/about-team.jpg",
+  aboutTeam: "/hero/software.jpg",
 } as const;

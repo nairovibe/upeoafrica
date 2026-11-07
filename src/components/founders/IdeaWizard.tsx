@@ -143,7 +143,7 @@ function sharePrompt(stage: StageId | "", share: ShareId) {
       label: "The problem, and who it is for. Leave the method out.",
       help:
         stage === "idea"
-          ? "This is enough for us to say if we are the right studio. Do not describe how it works."
+          ? "This is enough for us to say if we are the right team. Do not describe how it works."
           : "Describe the job it does for people. Do not describe how it works.",
       placeholder: "Clinic owners in Mombasa still reconcile payments in a notebook…",
     };
@@ -316,7 +316,7 @@ export function IdeaWizard() {
 
   function validate(index: number) {
     if (index === 0 && !a.stage) return "Choose where the company is.";
-    if (index === 1 && !a.ask) return "Choose what you want from the studio.";
+    if (index === 1 && !a.ask) return "Choose what you want from us.";
     if (index === 2 && !detailReady(a)) return "Answer the questions for this path. They decide how we reply.";
     if (index === 3 && !shareReady(a)) {
       return a.share === "note"
@@ -412,7 +412,7 @@ export function IdeaWizard() {
           <CheckCircle2 className="h-6 w-6" aria-hidden />
         </span>
         <h3 ref={headingRef} tabIndex={-1} className="mt-5 font-display text-2xl font-semibold text-ink-900 outline-none">
-          It is with the studio.
+          It is with the team.
         </h3>
         <p className="mt-3 max-w-xl text-lg leading-relaxed text-body">{follow}</p>
         <p className="mt-3 text-lg leading-relaxed text-body">
@@ -657,7 +657,7 @@ export function IdeaWizard() {
               )}
             </div>
             <p className="mt-4 text-sm leading-relaxed text-body">
-              This is what the studio receives. Go back if a line is wrong. Nothing else is attached.
+              This is what we receive. Go back if a line is wrong. Nothing else is attached.
             </p>
             <div className="mt-6">
               <TurnstileField action="inquiry" onToken={setCaptcha} resetSignal={captchaReset} />

@@ -9,7 +9,7 @@ export function LoginShell({ children }: { children: React.ReactNode }) {
           <LogoMark size={96} priority />
           <div>
             <p className="font-display text-3xl font-semibold leading-tight">
-              The studio desk.
+              The company desk.
             </p>
           </div>
         </div>

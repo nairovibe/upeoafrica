@@ -346,7 +346,7 @@ export const services: Service[] = [
       "If a person cannot finish the task in the first minute, they leave. Our designers test the interface with real users before our developers write the build, so more people complete what they came to do.",
     features: ["Product design", "Design systems", "Prototyping", "Usability testing"],
     image: "/services/product-design.jpg",
-    imageAlt: "A designer reviewing interface sketches and wireframes pinned across a studio wall",
+    imageAlt: "A designer reviewing interface sketches and wireframes pinned across a wall",
     detail: {
       lead:
         "If a person cannot finish the task in the first minute, they leave. The designers at Upeo Africa Technologies carry out UI and UX work for businesses in Kenya and across Africa: research, wireframes, a design system, and a prototype tested with real users before our developers write the build.",
@@ -434,7 +434,7 @@ export const services: Service[] = [
       "A buyer decides whether you look capable before anyone picks up the phone. Our designers build the identity, then write the rules that keep it consistent once your team and suppliers start using it.",
     features: ["Logo & identity", "Brand guidelines", "Graphics & assets", "Pitch decks"],
     image: "/services/branding-creative.jpg",
-    imageAlt: "Colour swatches on a studio desk while a brand identity is being specified",
+    imageAlt: "Colour swatches on a desk while a brand identity is being specified",
     detail: {
       lead:
         "A buyer decides whether you look capable before anyone picks up the phone. The designers at Upeo Africa Technologies build brand identities for businesses in Kenya and across Africa: logo, colour, typography, and written guidelines your team and suppliers can follow.",

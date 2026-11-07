@@ -15,7 +15,7 @@ const ACTIVITY_TITLE: Record<string, string> = {
 };
 
 const MAIL_TITLE: Record<string, string> = {
-  lead_studio: "Studio alert sent",
+  lead_studio: "Team alert sent",
   lead_ack: "Auto-reply sent",
   lead_reply: "Reply sent",
 };

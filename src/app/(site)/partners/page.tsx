@@ -63,7 +63,7 @@ export default async function PartnersPage() {
 
       <section className="bg-[#edf3f8] py-24 lg:py-32">
         <Container>
-          <SectionHeading title="The list" intro="Organisations the studio has a real engagement with." />
+          <SectionHeading title="The list" intro="Organisations we have a real engagement with." />
           {partners.length === 0 ? (
             <p className="mt-10 max-w-2xl text-lg leading-relaxed text-body">
               Averis Systems Ltd is the official development partner. Other names are added here only after a project has shipped.

@@ -6,6 +6,7 @@ export type SiteSettings = Tables<"site_settings">;
 export type CaseStudy = Tables<"case_studies">;
 export type Article = Tables<"articles">;
 export type Partner = Tables<"partners">;
+export type Expert = Tables<"experts">;
 export type Client = Tables<"clients">;
 export type Product = Tables<"products">;
 export type Lead = Tables<"leads">;
@@ -222,6 +223,19 @@ export const getWorkBySlug = publicRead("cms:getWorkBySlug", _getWorkBySlug);
 export const getPublishedArticles = publicRead("cms:getPublishedArticles", _getPublishedArticles);
 export const getArticleBySlug = publicRead("cms:getArticleBySlug", _getArticleBySlug);
 export const getPartners = publicRead("cms:getPartners", _getPartners);
+
+async function _getExperts() {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("experts")
+    .select("*")
+    .eq("published", true)
+    .order("sort_order")
+    .order("name");
+  return data ?? [];
+}
+
+export const getExperts = publicRead("cms:getExperts", _getExperts);
 export const getFeaturedClients = publicRead("cms:getFeaturedClients", _getFeaturedClients);
 export const getPublishedProducts = publicRead("cms:getPublishedProducts", _getPublishedProducts);
 export const getProductBySlug = publicRead("cms:getProductBySlug", _getProductBySlug);

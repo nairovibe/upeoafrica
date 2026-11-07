@@ -10,7 +10,7 @@ const PAGE_NOTES: Record<string, string> = {
   "/process": "How a project runs from the brief to launch.",
   "/events": "Talks, workshops and ticketed sessions, with M-Pesa checkout.",
   "/blogs": "Articles on software, payments, design and growth.",
-  "/contact": "Start a project with the studio.",
+  "/contact": "Start a project with the company.",
 };
 
 function line(path: string, label: string, note: string) {
@@ -27,11 +27,11 @@ export async function GET() {
   ]);
 
   const pages = [
-    line("/", "Home", "Software, design and marketing studio in Mombasa."),
+    line("/", "Home", "Software, design and marketing company in Mombasa."),
     ...nav
       .filter((item) => item.href !== "/")
       .map((item) => line(item.href, item.label, PAGE_NOTES[item.href] ?? "Main page.")),
-    line("/about", "About", "The studio, since 2019."),
+    line("/about", "About", "The company, since 2019."),
     line("/products", "Products", "Plugins, downloads and plans for sale."),
     line("/founders", "For founders", "How we work with founders."),
     line("/partners", "Partners", "Technology and delivery partners."),
@@ -70,7 +70,7 @@ export async function GET() {
     "",
     "## Events",
     ...(events.length
-      ? events.map((item) => line(`/events/${item.slug}`, item.title, item.summary || "Studio event."))
+      ? events.map((item) => line(`/events/${item.slug}`, item.title, item.summary || "Company event."))
       : ["- None published yet."]),
     "",
   ].join("\n");

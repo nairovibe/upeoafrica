@@ -50,6 +50,7 @@ export const company = {
   // Replace with your exact Google Business "share" link (g.page/r/…) for the direct review flow.
   googleReviewUrl:
     "https://www.google.com/maps/search/?api=1&query=Upeo+Africa+Technologies+Ltd+Mombasa",
+  bookingUrl: "https://cal.com/upeoafricatechnologies",
   domain: "https://upeoafricatechnologies.co.ke",
   social: {
     facebook: "https://www.facebook.com/upeoafrica",
@@ -341,7 +342,7 @@ export const productMenu = [
   {
     href: "/products?type=saas",
     title: "Apps & SaaS",
-    description: "Products the studio runs and keeps improving.",
+    description: "Products we run and keep improving.",
     icon: AppWindow,
   },
 ];
@@ -361,8 +362,8 @@ export const processMenu = [
   },
   {
     href: "/about",
-    title: "About the studio",
-    description: "The team on Moi Avenue, since 2019.",
+    title: "About us",
+    description: "How we close the gap between the build and the people who use it.",
     icon: Building2,
   },
   {

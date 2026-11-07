@@ -19,7 +19,7 @@ const LINE_COPY: Record<ProductLine, { title: string; intro: string }> = {
   },
   saas: {
     title: "Apps & SaaS",
-    intro: "Products the studio designs, launches, and keeps running.",
+    intro: "Products we design, launch, and keep running.",
   },
 };
 
@@ -126,7 +126,7 @@ export default async function ProductsPage({
                   ? "Nothing in this line is on sale yet. Tell us what you need and we will scope it."
                   : "The catalogue is empty until a product is published. Custom software still starts with a conversation."}{" "}
                 <Link href="/contact" className="font-medium text-brand-600 hover:underline">
-                  Contact the studio
+                  Contact us
                 </Link>
                 .
               </p>

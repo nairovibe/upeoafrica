@@ -18,7 +18,7 @@ const guards = [
   {
     icon: MessageSquareText,
     title: "Start with the problem",
-    body: "Tell us who it is for and what is hard. The method can wait. That is enough for us to say if we are the right studio.",
+    body: "Tell us who it is for and what is hard. The method can wait. That is enough for us to say if we are the right team.",
   },
   {
     icon: FileLock,
@@ -94,7 +94,7 @@ export default async function FoundersPage() {
       <section className="bg-[#edf3f8] py-24 lg:py-32">
         <Container>
           <SectionHeading
-            title="What the studio takes on"
+            title="What we take on"
             intro="One team holds design, the product, payments, and the work of being found. You pick the piece that matters now. The wizard asks only what that piece needs."
           />
           <div className="mt-14 grid gap-5 sm:grid-cols-2">

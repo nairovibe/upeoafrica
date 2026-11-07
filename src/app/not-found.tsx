@@ -35,7 +35,7 @@ export default function NotFound() {
                 This page is off the map.
               </h1>
               <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-white/70">
-                The address may be old, or the page was never published. The studio is still here:
+                The address may be old, or the page was never published. We are still here:
                 services, products, and a team that answers.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -55,7 +55,7 @@ export default function NotFound() {
                   variant="outline"
                   className="border-white/20 bg-transparent text-white hover:border-white hover:bg-white hover:text-ink-950"
                 >
-                  Contact the studio
+                  Contact us
                 </Button>
               </div>
               <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">

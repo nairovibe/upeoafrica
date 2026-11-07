@@ -3,7 +3,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Studio sign in",
+  title: "Console sign in",
   robots: { index: false, follow: false },
 };
 
