@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { TicketCheckoutForm, type TicketOption } from "@/components/site/TicketCheckoutForm";
-import { getEventBySlug, getTicketHolds, getTicketTypes } from "@/lib/cms";
+import { getEventBySlug, getPublishedEventSlugs, getTicketHolds, getTicketTypes } from "@/lib/cms";
 import { company } from "@/lib/content";
 import { publicMediaUrl } from "@/lib/constants";
 import {
@@ -23,6 +23,13 @@ import {
 } from "@/components/events/utils";
 
 type Props = { params: Promise<{ slug: string }> };
+
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const events = await getPublishedEventSlugs();
+  return events.map((event) => ({ slug: event.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

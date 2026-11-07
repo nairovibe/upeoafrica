@@ -121,6 +121,17 @@ async function _getLiveArticles(opts: { category?: string; q?: string; page?: nu
   return { posts: (data ?? []) as ArticleCard[], total: count ?? 0, page, pages: Math.max(1, Math.ceil((count ?? 0) / BLOG_PAGE_SIZE)) };
 }
 
+async function _getAllLiveArticleCards() {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("articles")
+    .select(CARD_COLUMNS)
+    .not("published_at", "is", null)
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false });
+  return (data ?? []) as ArticleCard[];
+}
+
 async function _getFeaturedArticle() {
   const supabase = createPublicClient();
   const now = new Date().toISOString();
@@ -215,6 +226,7 @@ export function formatBlogDate(iso: string | null | undefined) {
 }
 
 export const getLiveArticles = publicRead("blog:getLiveArticles", _getLiveArticles);
+export const getAllLiveArticleCards = publicRead("blog:getAllLiveArticleCards", _getAllLiveArticleCards);
 export const getFeaturedArticle = publicRead("blog:getFeaturedArticle", _getFeaturedArticle);
 export const getBlogCategories = publicRead("blog:getBlogCategories", _getBlogCategories);
 export const getLiveArticleBySlug = publicRead("blog:getLiveArticleBySlug", _getLiveArticleBySlug);

@@ -17,6 +17,9 @@ import {
 const intro =
   "Talks, workshops, bootcamps and online sessions run by Upeo Africa Technologies in Mombasa. Book a free seat or pay for your ticket with M-Pesa.";
 
+/** Seat counts can change. Refresh this page on its own, not with the rest of the site. */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Events",
   description: intro,

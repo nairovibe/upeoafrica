@@ -4,6 +4,8 @@ import { getSitemapArticles } from "@/lib/blog";
 
 const base = company.domain;
 
+export const revalidate = 43200;
+
 const PAGE_NOTES: Record<string, string> = {
   "/services": "Software, design and marketing, delivered by one team.",
   "/work": "Portfolio of client projects.",

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { company } from "@/lib/content";
 
 const hidden = ["/console", "/api/", "/invoice"];
@@ -19,7 +20,12 @@ const heavy = [
   "serpstatbot",
 ];
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const host = (await headers()).get("host") ?? "";
+  if (host.toLowerCase().startsWith("console.")) {
+    return { rules: [{ userAgent: "*", disallow: "/" }] };
+  }
+
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: hidden },

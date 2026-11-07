@@ -8,6 +8,8 @@ import { invoiceViewModel } from "@/lib/invoice";
 import { InvoiceDocument } from "@/components/invoice/InvoiceDocument";
 import { Container } from "@/components/ui/Container";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Invoice",
   robots: { index: false, follow: false },

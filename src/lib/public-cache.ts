@@ -1,7 +1,11 @@
 import { unstable_cache } from "next/cache";
 
-/** Seconds a public read is reused before the next visitor triggers a fresh query. */
-export const PUBLIC_TTL = 60;
+/**
+ * How long a public read is reused. Publishing from the console invalidates
+ * this immediately. A short window rewrites the cache for every crawler and
+ * burns the hosting CPU and cache-write allowance.
+ */
+export const PUBLIC_TTL = 60 * 60 * 12;
 export const PUBLIC_TAG = "site";
 
 /**

@@ -265,7 +265,7 @@ export function ArticleEditor({
   const previewHref = initial
     ? savedStatus === "live"
       ? `/blogs/${initial.slug}`
-      : `/blogs/${initial.slug}?preview=1`
+      : `/blogs/${initial.slug}/preview`
     : null;
 
   return (

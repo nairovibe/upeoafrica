@@ -4,8 +4,15 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { CheckoutForm } from "@/components/site/CheckoutForm";
-import { getProductBySlug } from "@/lib/cms";
+import { getProductBySlug, getPublishedProducts } from "@/lib/cms";
 import { formatKes } from "@/lib/constants";
+
+export const revalidate = 43200;
+
+export async function generateStaticParams() {
+  const products = await getPublishedProducts();
+  return products.map((product) => ({ slug: product.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

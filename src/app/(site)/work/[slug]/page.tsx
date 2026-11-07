@@ -13,6 +13,13 @@ import { company } from "@/lib/content";
 
 type Params = Promise<{ slug: string }>;
 
+export const revalidate = 43200;
+
+export async function generateStaticParams() {
+  const work = await getPublishedWork();
+  return work.map((item) => ({ slug: item.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   const item = await getWorkBySlug(slug);

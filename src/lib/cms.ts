@@ -1,4 +1,4 @@
-import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient, createServiceClient } from "@/lib/supabase/server";
 import { publicRead } from "@/lib/public-cache";
 import type { Tables } from "@/lib/database.types";
 
@@ -208,7 +208,8 @@ export type TicketHolds = { byTicket: Map<string, number>; byEvent: Map<string, 
 export async function getTicketHolds(eventIds: string[]): Promise<TicketHolds | null> {
   const holds: TicketHolds = { byTicket: new Map(), byEvent: new Map() };
   if (eventIds.length === 0) return holds;
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
+  if (!supabase) return null;
   const { data, error } = await supabase.rpc("ticket_holds", { p_event_ids: eventIds });
   if (error || !data) return null;
   for (const row of data) {

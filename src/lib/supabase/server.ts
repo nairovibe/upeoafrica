@@ -38,21 +38,14 @@ export function createPublicClient() {
   );
 }
 
+/** Service-role client with no request cookies, so it does not force a page to render on every visit. */
 export async function createServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) return null;
 
-  const cookieStore = await cookies();
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     key,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {},
-      },
-    },
+    { cookies: { getAll: () => [], setAll() {} } },
   );
 }

@@ -8,6 +8,9 @@ import { getPublicSettings } from "@/lib/cms";
 
 const siteUrl = "https://upeoafricatechnologies.co.ke";
 
+/** Serve public pages from cache. Console publishes call revalidate and refresh them. */
+export const revalidate = 43200;
+
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getPublicSettings();
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID || settings?.gtm_id || "";

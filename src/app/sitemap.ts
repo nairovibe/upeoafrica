@@ -5,6 +5,8 @@ import { getSitemapArticles } from "@/lib/blog";
 
 const base = company.domain;
 
+export const revalidate = 43200;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [work, articles, products, events] = await Promise.all([
     getPublishedWork(),

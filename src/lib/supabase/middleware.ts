@@ -13,8 +13,25 @@ function redirectWithSession(url: URL, sessionResponse: NextResponse) {
   return redirect;
 }
 
+function hasAuthCookie(request: NextRequest) {
+  return request.cookies.getAll().some((cookie) => cookie.name.includes("-auth-token"));
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+
+  const path = request.nextUrl.pathname;
+  const isLogin = path === "/console/login";
+  const isAdmin = path === "/console" || path.startsWith("/console/");
+
+  if (isAdmin && !isLogin && !hasAuthCookie(request)) {
+    const redirect = request.nextUrl.clone();
+    redirect.pathname = "/console/login";
+    redirect.searchParams.set("next", path);
+    return NextResponse.redirect(redirect);
+  }
+
+  if (isLogin && !hasAuthCookie(request)) return supabaseResponse;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -48,10 +65,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-  const isLogin = path === "/console/login";
-  const isAdmin = path.startsWith("/console");
 
   if (isAdmin && !isLogin && !user) {
     const redirect = request.nextUrl.clone();
