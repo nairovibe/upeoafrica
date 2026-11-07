@@ -8,6 +8,7 @@ import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { answer, captureLeadContext, leadContext } from "@/lib/lead-context";
+import { goToThanks } from "@/lib/thanks";
 
 export const OPEN_INQUIRY_EVENT = "open-inquiry";
 
@@ -158,8 +159,7 @@ export function InquiryModal() {
       setCaptchaReset((n) => n + 1);
       return setErr(json.error || "Could not send. Try again, or email us.");
     }
-    setDir(1);
-    setStep(TOTAL);
+    goToThanks("enquiry");
   };
 
   const progress = Math.round((Math.min(step, TOTAL) / TOTAL) * 100);

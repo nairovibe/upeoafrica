@@ -1240,9 +1240,15 @@ export type Database = {
           autoresponder_subject: string | null
           cal_com_embed_url: string | null
           github_url: string | null
+          baidu_site_verification: string | null
+          bing_site_verification: string | null
+          facebook_domain_verification: string | null
+          google_ads_id: string | null
           google_review_url: string | null
+          google_site_verification: string | null
           gtm_id: string | null
           id: number
+          meta_pixel_id: string | null
           invoice_next_number: number
           invoice_prefix: string
           kra_pin: string | null
@@ -1254,10 +1260,12 @@ export type Database = {
           phone: string | null
           public_email: string | null
           social_publish_webhook_url: string | null
+          thank_you_note: string | null
           trading_name: string | null
           updated_at: string
           vat_percent: number | null
           x_url: string | null
+          yandex_site_verification: string | null
         }
         Insert: {
           address_line?: string | null
@@ -1267,9 +1275,15 @@ export type Database = {
           autoresponder_subject?: string | null
           cal_com_embed_url?: string | null
           github_url?: string | null
+          baidu_site_verification?: string | null
+          bing_site_verification?: string | null
+          facebook_domain_verification?: string | null
+          google_ads_id?: string | null
           google_review_url?: string | null
+          google_site_verification?: string | null
           gtm_id?: string | null
           id?: number
+          meta_pixel_id?: string | null
           invoice_next_number?: number
           invoice_prefix?: string
           kra_pin?: string | null
@@ -1281,10 +1295,12 @@ export type Database = {
           phone?: string | null
           public_email?: string | null
           social_publish_webhook_url?: string | null
+          thank_you_note?: string | null
           trading_name?: string | null
           updated_at?: string
           vat_percent?: number | null
           x_url?: string | null
+          yandex_site_verification?: string | null
         }
         Update: {
           address_line?: string | null
@@ -1294,9 +1310,15 @@ export type Database = {
           autoresponder_subject?: string | null
           cal_com_embed_url?: string | null
           github_url?: string | null
+          baidu_site_verification?: string | null
+          bing_site_verification?: string | null
+          facebook_domain_verification?: string | null
+          google_ads_id?: string | null
           google_review_url?: string | null
+          google_site_verification?: string | null
           gtm_id?: string | null
           id?: number
+          meta_pixel_id?: string | null
           invoice_next_number?: number
           invoice_prefix?: string
           kra_pin?: string | null
@@ -1308,10 +1330,12 @@ export type Database = {
           phone?: string | null
           public_email?: string | null
           social_publish_webhook_url?: string | null
+          thank_you_note?: string | null
           trading_name?: string | null
           updated_at?: string
           vat_percent?: number | null
           x_url?: string | null
+          yandex_site_verification?: string | null
         }
         Relationships: []
       }

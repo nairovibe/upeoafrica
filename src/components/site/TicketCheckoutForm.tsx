@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { goToThanks } from "@/lib/thanks";
 import { CalendarPlus, Check, Loader2, Minus, Plus, Smartphone } from "lucide-react";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { formatKes } from "@/lib/constants";
@@ -65,6 +66,7 @@ export function TicketCheckoutForm({
   const [code, setCode] = useState<string | null>(null);
   const [pollRound, setPollRound] = useState(0);
   const tries = useRef(0);
+  const confirmed = useRef(false);
 
   const selected = tickets.find((t) => t.id === ticketTypeId);
   const free = (selected?.price_kes ?? 0) <= 0;
@@ -74,6 +76,15 @@ export function TicketCheckoutForm({
   );
   const qty = Math.min(quantity, maxQty);
   const total = (selected?.price_kes ?? 0) * qty;
+
+  useEffect(() => {
+    if (phase !== "paid" || confirmed.current) return;
+    confirmed.current = true;
+    goToThanks("ticket", {
+      value: total,
+      ticket: { code, qty, email, eventSlug },
+    });
+  }, [phase, total, code, qty, email, eventSlug]);
 
   useEffect(() => {
     if (phase !== "waiting" || !orderId) return;

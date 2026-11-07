@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Globe, MailCheck, ReceiptText, type LucideIcon } from "lucide-react";
+import { Building2, Globe, MailCheck, ReceiptText, Search, type LucideIcon } from "lucide-react";
 import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
 import { FileField } from "@/components/admin/FileField";
 import { Notice, Toggle } from "@/components/admin/studio/controls";
@@ -10,10 +10,12 @@ import { createClient } from "@/lib/supabase/client";
 import type { SiteSettings } from "@/lib/cms";
 import type { TablesUpdate } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
+import { refreshSite } from "@/lib/refresh-site";
+import { metaContent, VERIFY } from "@/lib/search-presence";
 
 type Form = ReturnType<typeof toForm>;
 type Key = keyof Form;
-type SectionId = "company" | "invoicing" | "autoresponder" | "website";
+type SectionId = "company" | "invoicing" | "autoresponder" | "website" | "search";
 
 const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; keys: Key[] }[] = [
   {
@@ -40,12 +42,27 @@ const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; keys: Key[] }[
     icon: Globe,
     keys: [
       "cal_com_embed_url",
-      "gtm_id",
       "social_publish_webhook_url",
       "linkedin_url",
       "x_url",
       "github_url",
       "google_review_url",
+    ],
+  },
+  {
+    id: "search",
+    label: "Search and ads",
+    icon: Search,
+    keys: [
+      "google_site_verification",
+      "bing_site_verification",
+      "baidu_site_verification",
+      "yandex_site_verification",
+      "facebook_domain_verification",
+      "gtm_id",
+      "meta_pixel_id",
+      "google_ads_id",
+      "thank_you_note",
     ],
   },
 ];
@@ -73,6 +90,14 @@ function toForm(s: SiteSettings) {
     google_review_url: s.google_review_url ?? "",
     cal_com_embed_url: s.cal_com_embed_url ?? "",
     gtm_id: s.gtm_id ?? "",
+    google_site_verification: s.google_site_verification ?? "",
+    bing_site_verification: s.bing_site_verification ?? "",
+    baidu_site_verification: s.baidu_site_verification ?? "",
+    yandex_site_verification: s.yandex_site_verification ?? "",
+    facebook_domain_verification: s.facebook_domain_verification ?? "",
+    meta_pixel_id: s.meta_pixel_id ?? "",
+    google_ads_id: s.google_ads_id ?? "",
+    thank_you_note: s.thank_you_note ?? "",
     social_publish_webhook_url: s.social_publish_webhook_url ?? "",
   };
 }
@@ -93,6 +118,23 @@ function validate(form: Form, keys: Key[]): string | null {
   if (keys.includes("gtm_id") && form.gtm_id.trim() && !/^GTM-[A-Z0-9]+$/i.test(form.gtm_id.trim())) {
     return "GTM ID looks like GTM-XXXXXXX.";
   }
+  const tokens: [Key, RegExp, string][] = [
+    ["google_site_verification", VERIFY.google, "Google verification is the content value from the meta tag."],
+    ["bing_site_verification", VERIFY.bing, "Bing verification is the content value from the meta tag."],
+    ["baidu_site_verification", VERIFY.baidu, "Baidu verification is the content value from the meta tag."],
+    ["yandex_site_verification", VERIFY.yandex, "Yandex verification is the content value from the meta tag."],
+    ["facebook_domain_verification", VERIFY.facebook, "Meta domain verification is the content value from the meta tag."],
+    ["meta_pixel_id", VERIFY.pixel, "Meta pixel ID is the number from Events Manager."],
+    ["google_ads_id", VERIFY.ads, "Google Ads ID looks like AW-123456789 or AW-123456789/label."],
+  ];
+  for (const [key, pattern, message] of tokens) {
+    if (!keys.includes(key)) continue;
+    const value = metaContent(String(form[key]));
+    if (value && !pattern.test(value)) return message;
+  }
+  if (keys.includes("thank_you_note") && form.thank_you_note.trim().length > 280) {
+    return "The thank-you note stays under 280 characters.";
+  }
   return null;
 }
 
@@ -105,6 +147,16 @@ function toUpdate(form: Form, keys: Key[]): TablesUpdate<"site_settings"> {
     else if (key === "vat_percent") out[key] = value.trim() ? Number(value) : null;
     else if (key === "invoice_prefix") out[key] = value.trim().toUpperCase() || "UAT";
     else if (key === "gtm_id" || key === "kra_pin") out[key] = value.trim().toUpperCase() || null;
+    else if (
+      key === "google_site_verification" ||
+      key === "bing_site_verification" ||
+      key === "baidu_site_verification" ||
+      key === "yandex_site_verification" ||
+      key === "facebook_domain_verification" ||
+      key === "meta_pixel_id" ||
+      key === "google_ads_id"
+    )
+      out[key] = metaContent(value) || null;
     else out[key] = value.trim() || null;
   }
   return out as TablesUpdate<"site_settings">;
@@ -159,6 +211,7 @@ export function SettingsForm({
       return next;
     });
     setMsg({ tone: "ok", text: "Saved." });
+    refreshSite();
     router.refresh();
   }
 
@@ -306,10 +359,7 @@ export function SettingsForm({
           <>
             <Panel title="Website and integrations">
               <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Cal.com booking URL">{text("cal_com_embed_url", { placeholder: "https://cal.com/upeo/intro" })}</Field>
-                  <Field label="Google Tag Manager ID">{text("gtm_id", { placeholder: "GTM-XXXXXXX" })}</Field>
-                </div>
+                <Field label="Cal.com booking URL">{text("cal_com_embed_url", { placeholder: "https://cal.com/upeo/intro" })}</Field>
                 <Field label="Social publish webhook">{text("social_publish_webhook_url", { placeholder: "https://" })}</Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="LinkedIn">{text("linkedin_url", { placeholder: "https://linkedin.com/company/…" })}</Field>
@@ -343,6 +393,45 @@ export function SettingsForm({
               </dl>
             </Panel>
           </>
+        ) : null}
+
+        {section === "search" ? (
+          <Panel title="Search and ads" meta="Verification tags and conversion tracking">
+            <div className="space-y-4">
+              <p className="text-sm leading-relaxed text-body">
+                Paste the content value, or the whole meta tag. Google is already on the homepage. Bing, Baidu, Yandex and Meta domain checks appear as soon as a value is saved.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Google Search Console">{text("google_site_verification", { placeholder: "google-site-verification content" })}</Field>
+                <Field label="Bing Webmaster">{text("bing_site_verification", { placeholder: "msvalidate.01 content" })}</Field>
+                <Field label="Baidu">{text("baidu_site_verification", { placeholder: "baidu-site-verification content" })}</Field>
+                <Field label="Yandex">{text("yandex_site_verification", { placeholder: "yandex-verification content" })}</Field>
+                <Field label="Meta domain verification">{text("facebook_domain_verification", { placeholder: "facebook-domain-verification content" })}</Field>
+                <Field label="Google Tag Manager">{text("gtm_id", { placeholder: "GTM-XXXXXXX" })}</Field>
+                <Field label="Meta pixel ID" hint="Leave empty when the pixel already lives in Tag Manager.">
+                  {text("meta_pixel_id", { placeholder: "1234567890", inputMode: "numeric" })}
+                </Field>
+                <Field label="Google Ads ID" hint="AW-123456789 or AW-123456789/label. Leave empty when the tag already lives in Tag Manager.">
+                  {text("google_ads_id", { placeholder: "AW-123456789/label" })}
+                </Field>
+              </div>
+              <Field label="Thank-you note" hint="Shown under the confirmation on /thank-you. Enquiry, list, ticket and product payments each keep their own heading.">
+                <textarea
+                  className={inputClass}
+                  rows={3}
+                  maxLength={280}
+                  value={form.thank_you_note}
+                  disabled={ro}
+                  placeholder="A short line for everyone who reaches the confirmation page."
+                  onChange={(e) => set("thank_you_note", e.target.value)}
+                />
+              </Field>
+              <p className="text-xs leading-relaxed text-muted">
+                Confirmation pages are /thank-you?for=enquiry, subscribe, ticket or order. Each one sends a conversion event named conversion, with conversion_kind set to that value. Use that event in Tag Manager for Google Ads, Meta and any other pixel. The page is not in the sitemap and is marked noindex.
+              </p>
+              {footer}
+            </div>
+          </Panel>
         ) : null}
       </div>
     </div>

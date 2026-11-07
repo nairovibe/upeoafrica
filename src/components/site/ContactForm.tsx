@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Send } from "lucide-react";
+import { Send } from "lucide-react";
+import { goToThanks } from "@/lib/thanks";
 import { Button } from "@/components/ui/Button";
-import { company, services } from "@/lib/content";
+import { services } from "@/lib/content";
 import { BUDGET_BANDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
@@ -52,7 +53,6 @@ const budgets = [...BUDGET_BANDS];
 export function ContactForm() {
   const [values, setValues] = useState<Fields>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
-  const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [captcha, setCaptcha] = useState("");
   const [captchaReset, setCaptchaReset] = useState(0);
@@ -126,40 +126,7 @@ export function ContactForm() {
       setCaptchaReset((n) => n + 1);
       return;
     }
-    setSent(true);
-  }
-
-  if (sent) {
-    return (
-      <div className="flex flex-col items-center justify-center border border-line bg-white p-10 text-center">
-        <span className="inline-flex h-14 w-14 items-center justify-center bg-brand-50 text-brand-600">
-          <CheckCircle2 className="h-7 w-7" />
-        </span>
-        <h3 className="mt-5 text-xl font-semibold text-ink-900">Thank you!</h3>
-        <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-body">
-          Your message is with the team. We usually reply within one business day.
-          You can also reach us directly at{" "}
-          <a
-            href={`mailto:${company.email}`}
-            className="font-medium text-brand-600 underline decoration-transparent underline-offset-4 transition-[text-decoration-color] duration-300 ease-out-expo hover:decoration-brand-500"
-          >
-            {company.email}
-          </a>
-          .
-        </p>
-        <Button
-          onClick={() => {
-            setValues(empty);
-            setSent(false);
-          }}
-          variant="outline"
-          withArrow
-          className="mt-6"
-        >
-          Send another message
-        </Button>
-      </div>
-    );
+    goToThanks("enquiry");
   }
 
   const inputBase =

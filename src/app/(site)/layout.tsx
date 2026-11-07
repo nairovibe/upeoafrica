@@ -1,23 +1,43 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { InquiryModal } from "@/components/site/InquiryModal";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { GtmSnippet } from "@/components/site/GtmSnippet";
+import { TrackingTags } from "@/components/site/TrackingTags";
 import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
+import { GOOGLE_VERIFICATION_FALLBACK, matchToken, VERIFY } from "@/lib/search-presence";
 
 const siteUrl = "https://upeoafricatechnologies.co.ke";
 
 /** Serve public pages from cache. Console publishes call revalidate and refresh them. */
 export const revalidate = 43200;
 
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSettings();
+  const google = matchToken(settings?.google_site_verification, VERIFY.google) || GOOGLE_VERIFICATION_FALLBACK;
+  const other: Record<string, string> = {};
+  const bing = matchToken(settings?.bing_site_verification, VERIFY.bing);
+  const baidu = matchToken(settings?.baidu_site_verification, VERIFY.baidu);
+  const yandex = matchToken(settings?.yandex_site_verification, VERIFY.yandex);
+  const facebook = matchToken(settings?.facebook_domain_verification, VERIFY.facebook);
+  if (bing) other["msvalidate.01"] = bing;
+  if (baidu) other["baidu-site-verification"] = baidu;
+  if (yandex) other["yandex-verification"] = yandex;
+  if (facebook) other["facebook-domain-verification"] = facebook;
+  return { verification: { google, other: Object.keys(other).length ? other : undefined } };
+}
+
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getPublicSettings();
-  const gtmId = process.env.NEXT_PUBLIC_GTM_ID || settings?.gtm_id || "";
+  const gtmRaw = process.env.NEXT_PUBLIC_GTM_ID || settings?.gtm_id || "";
+  const gtmId = /^GTM-[A-Z0-9]+$/i.test(gtmRaw) ? gtmRaw : "";
 
   return (
     <>
       {gtmId ? <GtmSnippet id={gtmId} /> : null}
+      <TrackingTags pixelId={settings?.meta_pixel_id} adsId={settings?.google_ads_id} />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

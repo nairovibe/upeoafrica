@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { Button } from "@/components/ui/Button";
+import { goToThanks } from "@/lib/thanks";
 
 type Notice = { tone: "ok" | "error"; text: string };
 
@@ -38,10 +39,11 @@ export function NewsletterForm() {
       }
       setEmail("");
       setResetSignal((value) => value + 1);
-      setNotice({
-        tone: "ok",
-        text: data?.already ? "This address is already on the list." : "You are on the list.",
-      });
+      if (data?.already) {
+        setNotice({ tone: "ok", text: "This address is already on the list." });
+        return;
+      }
+      goToThanks("subscribe");
     } catch {
       setNotice({ tone: "error", text: "Could not save your email." });
     } finally {
