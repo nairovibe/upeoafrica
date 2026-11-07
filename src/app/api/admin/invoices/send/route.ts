@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `This invoice is ${invoice.status}.` }, { status: 409 });
   }
   const origin = process.env.NEXT_PUBLIC_SITE_URL || company.domain;
-  await sendInvoiceEmail({
+  const sent = await sendInvoiceEmail({
     to: invoice.bill_email,
     name: invoice.bill_name,
     number: invoice.number,
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     invoiceId: invoice.id,
     url: `${origin}/invoice/${invoice.id}`,
   });
+  if (!sent.ok) return NextResponse.json({ error: sent.error }, { status: 502 });
   await supabase.from("invoices").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", invoice.id);
   return NextResponse.json({ ok: true });
 }

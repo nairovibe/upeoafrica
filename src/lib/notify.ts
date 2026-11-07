@@ -69,27 +69,33 @@ async function sendHtml(opts: {
   buttonLabel?: string;
   buttonUrl?: string;
   replyNote?: string;
-}) {
+}): Promise<{ id: string | null; error: string | null }> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  const resend = new Resend(key);
-  const result = await resend.emails.send({
-    from: RESEND_FROM,
-    to: opts.to,
-    replyTo: opts.replyTo,
-    subject: opts.subject,
-    text: opts.body.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, ""),
-    html: brandedEmailHtml({
-      preview: opts.preview,
-      heading: opts.heading,
-      body: opts.body,
-      buttonLabel: opts.buttonLabel,
-      buttonUrl: opts.buttonUrl,
-      sentTo: opts.to,
-      replyNote: opts.replyNote,
-    }),
-  });
-  return result.data?.id ?? null;
+  if (!key) return { id: null, error: "Email is not configured on this deployment." };
+  try {
+    const resend = new Resend(key);
+    const result = await resend.emails.send({
+      from: RESEND_FROM,
+      to: opts.to,
+      replyTo: opts.replyTo,
+      subject: opts.subject,
+      text: opts.body.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, ""),
+      html: brandedEmailHtml({
+        preview: opts.preview,
+        heading: opts.heading,
+        body: opts.body,
+        buttonLabel: opts.buttonLabel,
+        buttonUrl: opts.buttonUrl,
+        sentTo: opts.to,
+        replyNote: opts.replyNote,
+      }),
+    });
+    if (result.error) return { id: null, error: result.error.message };
+    if (!result.data?.id) return { id: null, error: "The email service did not accept the message." };
+    return { id: result.data.id, error: null };
+  } catch (err) {
+    return { id: null, error: err instanceof Error ? err.message : "Could not reach the email service." };
+  }
 }
 
 export async function notifyLead(payload: {
@@ -119,7 +125,7 @@ export async function notifyLead(payload: {
   const bodyTpl =
     settings?.autoresponder_body ||
     "Thank you for writing in. We have your brief, and the same team will be in touch within {hours} hours to agree the next step.";
-  const ack = fill(bodyTpl, { first_name: first, hours, name: payload.name });
+  const ackBody = fill(bodyTpl, { first_name: first, hours, name: payload.name });
 
   await pushDeskEvent({
     type: "lead",
@@ -129,7 +135,7 @@ export async function notifyLead(payload: {
   }).catch(() => {});
 
   const inbox = settings?.public_email || company.email;
-  const studioId = await sendHtml({
+  const studio = await sendHtml({
     to: inbox,
     replyTo: payload.email,
     subject: `New ${kind}: ${payload.name}`,
@@ -141,28 +147,28 @@ export async function notifyLead(payload: {
   await logOutboundEmail({
     to: inbox,
     template: "lead_studio",
-    subject: `New ${kind}: ${payload.name}`,
+    subject: studio.error ? `Not delivered: ${studio.error}` : `New ${kind}: ${payload.name}`,
     leadId: payload.leadId,
-    resendId: studioId,
+    resendId: studio.id,
   }).catch(() => {});
 
   if (!enabled) return;
 
-  const ackId = await sendHtml({
+  const ack = await sendHtml({
     to: payload.email,
     replyTo: inbox,
     subject,
     preview: `We have your brief and will be in touch within ${hours} hours.`,
     heading: `Hello, ${escapeHtml(first)}.`,
-    body: html(ack),
+    body: html(ackBody),
     replyNote: "Reply to this email and it reaches the team.",
   });
   await logOutboundEmail({
     to: payload.email,
     template: "lead_ack",
-    subject,
+    subject: ack.error ? `Not delivered: ${ack.error}` : subject,
     leadId: payload.leadId,
-    resendId: ackId,
+    resendId: ack.id,
   }).catch(() => {});
 }
 
@@ -174,7 +180,7 @@ export async function sendLeadReply(opts: {
 }) {
   const first = opts.name.split(" ")[0] || opts.name;
   const subject = `Upeo Africa Technologies`;
-  const id = await sendHtml({
+  const sent = await sendHtml({
     to: opts.to,
     replyTo: company.email,
     subject,
@@ -186,11 +192,11 @@ export async function sendLeadReply(opts: {
   await logOutboundEmail({
     to: opts.to,
     template: "lead_reply",
-    subject,
+    subject: sent.error ? `Not delivered: ${sent.error}` : subject,
     leadId: opts.leadId,
-    resendId: id,
+    resendId: sent.id,
   }).catch(() => {});
-  return Boolean(id || !process.env.RESEND_API_KEY);
+  return sent.error ? { ok: false as const, error: sent.error } : { ok: true as const };
 }
 
 export async function notifyBuyerReceipt(opts: {
@@ -213,7 +219,7 @@ export async function notifyBuyerReceipt(opts: {
     : opts.kind === "ticket"
       ? ` Show this email at the door, or keep it on your phone.`
       : "";
-  const id = await sendHtml({
+  const sent = await sendHtml({
     to: opts.email,
     subject,
     preview: `KES ${opts.amount.toLocaleString("en-KE")} · ${opts.title}`,
@@ -225,10 +231,10 @@ export async function notifyBuyerReceipt(opts: {
   await logOutboundEmail({
     to: opts.email,
     template: "order_receipt",
-    subject,
+    subject: sent.error ? `Not delivered: ${sent.error}` : subject,
     orderId: opts.orderId,
     invoiceId: opts.invoiceId,
-    resendId: id,
+    resendId: sent.id,
   }).catch(() => {});
   await pushDeskEvent({
     type: "order",
@@ -247,7 +253,7 @@ export async function sendInvoiceEmail(opts: {
   url: string;
 }) {
   const subject = `Invoice ${opts.number} from Upeo Africa Technologies`;
-  const id = await sendHtml({
+  const sent = await sendHtml({
     to: opts.to,
     replyTo: company.email,
     subject,
@@ -261,10 +267,11 @@ export async function sendInvoiceEmail(opts: {
   await logOutboundEmail({
     to: opts.to,
     template: "invoice_send",
-    subject,
+    subject: sent.error ? `Not delivered: ${sent.error}` : subject,
     invoiceId: opts.invoiceId,
-    resendId: id,
+    resendId: sent.id,
   }).catch(() => {});
+  return sent.error ? { ok: false as const, error: sent.error } : { ok: true as const };
 }
 
 export async function firePublishWebhook(body: {

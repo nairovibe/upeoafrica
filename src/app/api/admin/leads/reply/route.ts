@@ -18,8 +18,11 @@ export async function POST(request: Request) {
   const { data: lead } = await supabase.from("leads").select("*").eq("id", body.leadId).maybeSingle();
   if (!lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 });
 
-  const sent = await sendLeadReply({ to: lead.email, name: lead.name, body: text, leadId: lead.id }).catch(() => false);
-  if (!sent) return NextResponse.json({ error: "Could not send the email. Try again." }, { status: 502 });
+  const sent = await sendLeadReply({ to: lead.email, name: lead.name, body: text, leadId: lead.id }).catch(() => ({
+    ok: false as const,
+    error: "Could not send the email. Try again.",
+  }));
+  if (!sent.ok) return NextResponse.json({ error: sent.error }, { status: 502 });
 
   const moved = lead.status === "new";
   await supabase

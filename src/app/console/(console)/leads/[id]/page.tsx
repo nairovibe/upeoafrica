@@ -20,6 +20,12 @@ const MAIL_TITLE: Record<string, string> = {
   lead_reply: "Reply sent",
 };
 
+const MAIL_FAILED: Record<string, string> = {
+  lead_studio: "Team alert not delivered",
+  lead_ack: "Auto-reply not delivered",
+  lead_reply: "Reply not delivered",
+};
+
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -58,8 +64,10 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       .map((log) => ({
         id: log.id,
         kind: "mail",
-        title: MAIL_TITLE[log.template] ?? log.template,
-        body: `${log.subject} · ${log.to_email}`,
+        title: log.resend_id ? (MAIL_TITLE[log.template] ?? log.template) : (MAIL_FAILED[log.template] ?? "Email not delivered"),
+        body: log.resend_id
+          ? `${log.subject} · ${log.to_email}`
+          : `${log.subject.replace(/^Not delivered: /, "")} · ${log.to_email}. The message was recorded here and was not delivered.`,
         who: null,
         at: log.created_at,
         when: fullDate(log.created_at),
