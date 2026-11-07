@@ -36,7 +36,7 @@ function text(value: unknown, max: number) {
 }
 
 function readDetails(raw: unknown, source: Source): LeadDetails | "invalid" {
-  const fallback = source === "contact_form" ? "Contact form" : source === "founders" ? "Founders Zone" : "Project wizard";
+  const fallback = source === "contact_form" ? "Contact form" : source === "founders" ? "Founder Zone" : "Project wizard";
   if (raw == null) return { form: fallback, answers: [] };
   if (typeof raw !== "object" || Array.isArray(raw)) return "invalid";
   const { form, answers } = raw as { form?: unknown; answers?: unknown };

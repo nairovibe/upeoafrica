@@ -33,7 +33,7 @@ export async function GET() {
       .map((item) => line(item.href, item.label, PAGE_NOTES[item.href] ?? "Main page.")),
     line("/about", "About", "The company, since 2019."),
     line("/products", "Products", "Plugins, downloads and plans for sale."),
-    line("/founders", "For founders", "How we work with founders."),
+    line("/founders", "Founder Zone", "For startup founders bringing an idea to a product people use."),
     line("/partners", "Partners", "Technology and delivery partners."),
     ...legalNav.map((item) => line(item.href, item.label, "Legal page.")),
   ];

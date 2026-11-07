@@ -47,7 +47,7 @@ export function ProcessTimeline({ steps }: { steps: ProcessStep[] }) {
                   {" "}
                   Founders who prefer to start here can use the{" "}
                   <Link href="/founders#share" className="font-medium text-brand-600 hover:underline">
-                    Founders Zone
+                    Founder Zone
                   </Link>
                   .
                 </>

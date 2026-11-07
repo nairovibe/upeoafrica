@@ -79,7 +79,7 @@ export const companyNav = [
   { label: "Products", href: "/products" },
   { label: "Our Work", href: "/work" },
   { label: "Our Process", href: "/process" },
-  { label: "Founders Zone", href: "/founders" },
+  { label: "Founder Zone", href: "/founders" },
   { label: "Partners", href: "/partners" },
   { label: "Events", href: "/events" },
   { label: "Blogs", href: "/blogs" },
@@ -356,7 +356,7 @@ export const processMenu = [
   },
   {
     href: "/founders",
-    title: "Founders Zone",
+    title: "Founder Zone",
     description: "Share an idea while it is still private.",
     icon: LockKeyhole,
   },

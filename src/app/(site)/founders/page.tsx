@@ -8,27 +8,29 @@ import { CTA } from "@/components/sections/CTA";
 import { IdeaWizard } from "@/components/founders/IdeaWizard";
 import { getPublishedArticles, getPublishedWork } from "@/lib/cms";
 
+const FOUNDERS_DESCRIPTION =
+  "Are you a startup founder? You came to the right place. Bring the idea while it is still being shaped. One team takes it from a private brief through the build, the launch, and the campaigns that get people using it.";
+
 export const metadata: Metadata = {
-  title: "Founders Zone",
-  description:
-    "At Upeo Africa Technologies, we build for startups and founders who need an idea held in confidence while it is still being shaped. Share the problem without the mechanism, ask for a confidentiality note before any detail, and keep the product and the code.",
+  title: "Founder Zone",
+  description: FOUNDERS_DESCRIPTION,
 };
 
 const guards = [
   {
     icon: MessageSquareText,
     title: "Start with the problem",
-    body: "Tell us who it is for and what is hard. The method can wait. That is enough for us to say if we are the right team.",
+    body: "Tell us who it is for and what is hard. The method can wait. That is enough for us to say whether we are the right team.",
   },
   {
     icon: FileLock,
     title: "A note before the detail",
-    body: "If you want a confidentiality note before anything specific, the wizard records that. The first reply is the note, not a request for the mechanism.",
+    body: "Ask for a confidentiality note before anything specific. The first reply is that note.",
   },
   {
     icon: LockKeyhole,
     title: "The work stays yours",
-    body: "We do not take an idea from one conversation and build it for someone else. On a project, the product, the repositories, and the intellectual property are yours.",
+    body: "On a project, the product, the repositories, and the intellectual property are yours. An idea shared here is not built for someone else.",
   },
 ];
 
@@ -68,16 +70,16 @@ export default async function FoundersPage() {
   return (
     <>
       <PageHeader
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "About", href: "/about" }, { label: "Founders" }]}
-        title="We build for startups and founders"
-        intro="At Upeo Africa Technologies, we build for startups and founders who need an idea held in confidence while it is still being shaped. Share the problem without the mechanism, ask for a confidentiality note before any detail, and keep the product and the code."
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "About", href: "/about" }, { label: "Founder Zone" }]}
+        title="Founder Zone"
+        intro={FOUNDERS_DESCRIPTION}
       />
 
       <section className="bg-white py-24 lg:py-32">
         <Container>
           <SectionHeading
-            title="You can hold the idea back"
-            intro="Most people who write to us are founders. A lot of them stop at the first sentence because they think the idea will be taken. The conversation is built so you do not have to hand it over."
+            title="The idea stays with you"
+            intro="Share the problem without the mechanism. If you want a confidentiality note before any detail, say so. The product and the code remain yours."
           />
           <div className="mt-14 grid gap-5 lg:grid-cols-3">
             {guards.map((item) => (
@@ -94,8 +96,8 @@ export default async function FoundersPage() {
       <section className="bg-[#edf3f8] py-24 lg:py-32">
         <Container>
           <SectionHeading
-            title="What we take on"
-            intro="One team holds design, the product, payments, and the work of being found. You pick the piece that matters now. The wizard asks only what that piece needs."
+            title="What the team takes on"
+            intro="Design, the product, payments, and the work of being found. You pick the piece that matters now. The same team stays through launch."
           />
           <div className="mt-14 grid gap-5 sm:grid-cols-2">
             {paths.map((item) => (
@@ -113,7 +115,7 @@ export default async function FoundersPage() {
           <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
             <SectionHeading
               title="Share an idea"
-              intro="Seven short steps. The questions change with what you select, and the note we receive is written from those answers. You choose how much of the idea is in it."
+              intro="A short set of questions. You choose how much of the idea is in the note we receive."
             />
             <IdeaWizard />
           </div>
@@ -139,8 +141,8 @@ export default async function FoundersPage() {
       )}
 
       <CTA
-        title="Not ready to write it down?"
-        intro="Use the project form when you would rather talk in the open. Use the wizard above when the idea should stay narrow."
+        title="Prefer to talk it through?"
+        intro="Use the project form when the conversation can be open. Use the steps above when the idea should stay narrow."
       />
     </>
   );

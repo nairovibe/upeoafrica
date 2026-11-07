@@ -11,7 +11,7 @@ const waysBack = [
   { href: "/services", label: "Services" },
   { href: "/products", label: "Products" },
   { href: "/work", label: "Our work" },
-  { href: "/founders", label: "Founders Zone" },
+  { href: "/founders", label: "Founder Zone" },
   { href: "/events", label: "Events" },
   { href: "/blogs", label: "Blogs" },
 ];

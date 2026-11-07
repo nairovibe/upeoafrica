@@ -366,7 +366,7 @@ export function IdeaWizard() {
         timeline: a.timeline,
         budget: a.budget,
         message: linesFor(a).join("\n"),
-        details: { form: "Founders Zone", answers: answersFor(a) },
+        details: { form: "Founder Zone", answers: answersFor(a) },
         ...leadContext(),
         turnstileToken: captcha,
       }),

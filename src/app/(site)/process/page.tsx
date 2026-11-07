@@ -7,7 +7,7 @@ import { ProcessTimeline } from "@/components/process/ProcessTimeline";
 import { pageImages } from "@/lib/images";
 
 const intro =
-  "At Upeo Africa Technologies, we follow a structured, end-to-end onboarding and delivery framework for software projects. The framework aligns each engagement with organizational goals, keeps scope, timeline, and investment transparent, and delivers secure, scalable systems for businesses across Africa.";
+  "One team takes a project from the first call through launch and the support that follows. Scope, timeline, and investment stay visible, and the product stays yours.";
 
 const steps: { n: string; title: string; body: string }[] = [
   {
@@ -78,7 +78,7 @@ const steps: { n: string; title: string; body: string }[] = [
 ];
 
 export const metadata: Metadata = {
-  title: "Our Client Onboarding & Delivery Framework",
+  title: "Our Process",
   description: intro,
 };
 
@@ -102,7 +102,7 @@ export default function ProcessPage() {
               </ol>
             </nav>
             <h1 className="max-w-xl text-3xl font-bold leading-[1.08] text-ink-900 sm:text-4xl md:text-[2.75rem]">
-              Our Client Onboarding &amp; Delivery Framework
+              Our Process
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-body">{intro}</p>
           </div>

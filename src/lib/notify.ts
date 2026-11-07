@@ -102,7 +102,7 @@ export async function notifyLead(payload: {
     payload.source === "inquiry"
       ? "project enquiry"
       : payload.source === "founders"
-        ? "Founders Zone enquiry"
+        ? "Founder Zone enquiry"
         : payload.source === "event"
           ? "event enquiry"
           : "contact";
