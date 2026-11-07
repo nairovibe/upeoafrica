@@ -68,6 +68,7 @@ async function sendHtml(opts: {
   replyTo?: string;
   buttonLabel?: string;
   buttonUrl?: string;
+  replyNote?: string;
 }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
@@ -85,6 +86,7 @@ async function sendHtml(opts: {
       buttonLabel: opts.buttonLabel,
       buttonUrl: opts.buttonUrl,
       sentTo: opts.to,
+      replyNote: opts.replyNote,
     }),
   });
   return result.data?.id ?? null;
@@ -116,7 +118,7 @@ export async function notifyLead(payload: {
     settings?.autoresponder_subject || "We have your message. Upeo Africa Technologies";
   const bodyTpl =
     settings?.autoresponder_body ||
-    "Thank you for writing to Upeo Africa Technologies. We have your message, and someone from the team will get in touch within {hours} hours.";
+    "Thank you for writing in. We have your brief, and the same team will be in touch within {hours} hours to agree the next step.";
   const ack = fill(bodyTpl, { first_name: first, hours, name: payload.name });
 
   await pushDeskEvent({
@@ -126,16 +128,18 @@ export async function notifyLead(payload: {
     href: payload.leadId ? `/console/leads/${payload.leadId}` : "/console/leads",
   }).catch(() => {});
 
+  const inbox = settings?.public_email || company.email;
   const studioId = await sendHtml({
-    to: settings?.public_email || company.email,
+    to: inbox,
     replyTo: payload.email,
     subject: `New ${kind}: ${payload.name}`,
     preview: `New ${kind} from ${payload.name}.`,
     heading: `New ${kind}`,
     body: html(payload.summary),
+    replyNote: "Reply to this email to write back to them.",
   });
   await logOutboundEmail({
-    to: settings?.public_email || company.email,
+    to: inbox,
     template: "lead_studio",
     subject: `New ${kind}: ${payload.name}`,
     leadId: payload.leadId,
@@ -146,10 +150,12 @@ export async function notifyLead(payload: {
 
   const ackId = await sendHtml({
     to: payload.email,
+    replyTo: inbox,
     subject,
-    preview: `We have your message and will get in touch within ${hours} hours.`,
+    preview: `We have your brief and will be in touch within ${hours} hours.`,
     heading: `Hello, ${escapeHtml(first)}.`,
     body: html(ack),
+    replyNote: "Reply to this email and it reaches the team.",
   });
   await logOutboundEmail({
     to: payload.email,
@@ -175,6 +181,7 @@ export async function sendLeadReply(opts: {
     preview: opts.body.slice(0, 80),
     heading: `Hello, ${escapeHtml(first)}.`,
     body: escapeHtml(opts.body).replace(/\n/g, "<br />"),
+    replyNote: "Reply to this email and it reaches the team.",
   });
   await logOutboundEmail({
     to: opts.to,
@@ -249,6 +256,7 @@ export async function sendInvoiceEmail(opts: {
     body: `Hello, ${escapeHtml(opts.name.split(" ")[0] || opts.name)}. Please find invoice ${opts.number} for KES ${opts.total.toLocaleString("en-KE")}. You can view or print it from the link below.`,
     buttonLabel: "View invoice",
     buttonUrl: opts.url,
+    replyNote: "Reply to this email and it reaches the team.",
   });
   await logOutboundEmail({
     to: opts.to,

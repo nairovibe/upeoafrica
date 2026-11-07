@@ -5,7 +5,7 @@ const FONT = "Arial,Helvetica,sans-serif";
 export const EMAIL_OTP_MINUTES = 60;
 export const EMAIL_FOOTER_ADDRESS = "88225 Moi Avenue, Mombasa 80100";
 
-export function emailFooterHtml(sentTo?: string) {
+export function emailFooterHtml(sentTo?: string, replyNote = "Please do not reply.") {
   const recipient = sentTo
     ? `This message was sent to ${sentTo}. If you did not request it, you can ignore this email.`
     : "If you did not request this email, you can ignore it.";
@@ -16,7 +16,7 @@ export function emailFooterHtml(sentTo?: string) {
       <p style="margin:0 0 6px;font-family:${FONT};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b7583">Upeo Africa Technologies Ltd</p>
       <p style="margin:0 0 14px;font-family:Georgia,'Times New Roman',Times,serif;font-size:11px;letter-spacing:0.02em;line-height:1.6;color:#8a93a0">${EMAIL_FOOTER_ADDRESS}</p>
       <p style="margin:0 0 8px;font-family:${FONT};font-size:11px;line-height:1.7;color:#8a93a0">${recipient}</p>
-      <p style="margin:0;font-family:${FONT};font-size:11px;line-height:1.7;color:#8a93a0">Please do not reply. &copy; 2026 · <a href="${company.domain}" style="color:#8a93a0;text-decoration:none">${company.domain.replace("https://", "")}</a></p>`;
+      <p style="margin:0;font-family:${FONT};font-size:11px;line-height:1.7;color:#8a93a0">${replyNote} &copy; 2026 · <a href="${company.domain}" style="color:#8a93a0;text-decoration:none">${company.domain.replace("https://", "")}</a></p>`;
 }
 
 export function brandedEmailHtml(opts: {
@@ -27,6 +27,8 @@ export function brandedEmailHtml(opts: {
   buttonLabel?: string;
   buttonUrl?: string;
   sentTo?: string;
+  /** Shown in place of "Please do not reply." when a person should answer this message. */
+  replyNote?: string;
 }) {
   const codeBlock = opts.code
     ? `<p style="margin:28px 0 8px;font-family:Georgia,Times,serif;font-size:32px;line-height:1.2;letter-spacing:0.22em;color:#0b0e14;font-weight:700">${opts.code}</p>
@@ -67,7 +69,7 @@ export function brandedEmailHtml(opts: {
       </td>
     </tr>
     <tr>
-      <td align="center" style="background:#ffffff;padding:28px 6% 40px">${emailFooterHtml(opts.sentTo)}</td>
+      <td align="center" style="background:#ffffff;padding:28px 6% 40px">${emailFooterHtml(opts.sentTo, opts.replyNote)}</td>
     </tr>
   </table>
 </body>

@@ -1,4 +1,5 @@
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { telHref, whatsappHref } from "@/components/admin/leads/data";
 
 const linkClass =
@@ -21,7 +22,7 @@ export function QuickContact({ email, phone }: { email: string; phone: string | 
       ) : null}
       {wa ? (
         <a href={wa} target="_blank" rel="noreferrer noopener" className={linkClass}>
-          <MessageCircle className="h-3.5 w-3.5 text-muted" aria-hidden />
+          <FaWhatsapp className="h-3.5 w-3.5 text-[#25D366]" aria-hidden />
           WhatsApp
         </a>
       ) : null}
