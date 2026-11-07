@@ -157,6 +157,7 @@ export type SeoInput = {
   keywords: string[];
   html: string;
   domain: string;
+  hasCover?: boolean;
 };
 
 export type SeoCheck = {
@@ -241,12 +242,30 @@ export function analyzeSeo(input: SeoInput): SeoReport {
   add("links-ext", "At least 1 external link", 5, yes(external >= 1), `${external} found`);
 
   const missingAlt = imgs.filter((i) => !i.alt).length;
+  const pictured = imgs.length + (input.hasCover ? 1 : 0);
   add(
     "alt",
-    "Every image has alt text",
+    "Image alt text",
     6,
-    yes(missingAlt === 0),
-    imgs.length === 0 ? "No images" : missingAlt ? `${missingAlt} missing` : `${imgs.length} images`,
+    pictured === 0 ? "fail" : yes(missingAlt === 0),
+    pictured === 0 ? "Add a cover or an image in the article" : missingAlt ? `${missingAlt} missing` : `${pictured} described`,
+  );
+
+  const questions = headings.filter((h) => (h.level === 2 || h.level === 3) && h.text.trim().endsWith("?"));
+  add(
+    "aeo-question",
+    "A question people would ask",
+    5,
+    questions.length >= 1 ? "pass" : "fail",
+    questions.length ? `${questions.length} found` : "Add an H2 that ends with a question mark",
+  );
+  const opener = paras[0] ? countWords(paras[0]) : 0;
+  add(
+    "aeo-answer",
+    "A direct answer in the opening",
+    5,
+    opener >= 40 ? "pass" : opener >= 20 ? "warn" : "fail",
+    opener ? `${opener} words in the first paragraph` : "Open with the answer, then explain it",
   );
 
   const tLen = effectiveTitle.length;
@@ -277,6 +296,20 @@ export function analyzeSeo(input: SeoInput): SeoReport {
 
   const score = Math.min(100, checks.reduce((sum, c) => sum + c.points, 0));
   return { score, checks, words, minutes: readingMinutes(words) };
+}
+
+/** Question headings and the copy under them, for FAQ markup that answer engines can cite. */
+export function extractFaq(html: string) {
+  const out: { question: string; answer: string }[] = [];
+  const re = /<h([23])\b[^>]*>([\s\S]*?)<\/h\1>([\s\S]*?)(?=<h[1-6]\b|$)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const question = stripTags(m[2]).trim();
+    if (!question.endsWith("?")) continue;
+    const answer = stripTags(m[3]).replace(/\s+/g, " ").trim();
+    if (answer) out.push({ question, answer: answer.slice(0, 600) });
+  }
+  return out;
 }
 
 export function seoTone(score: number | null | undefined) {

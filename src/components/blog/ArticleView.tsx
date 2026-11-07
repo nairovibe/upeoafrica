@@ -6,7 +6,7 @@ import { CTA } from "@/components/sections/CTA";
 import { PostCard } from "@/components/blog/PostCard";
 import { ShareLinks } from "@/components/blog/ShareLinks";
 import { TableOfContents } from "@/components/blog/TableOfContents";
-import { countWords, formatBlogDate, getRelatedArticles, htmlToText, readingMinutes, renderArticleBody } from "@/lib/blog";
+import { countWords, extractFaq, formatBlogDate, getRelatedArticles, htmlToText, readingMinutes, renderArticleBody } from "@/lib/blog";
 import { publicMediaUrl } from "@/lib/constants";
 import { company } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
@@ -21,6 +21,7 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
   const author = a.author_name || company.name;
   const updated = a.published_at && new Date(a.updated_at).getTime() - new Date(a.published_at).getTime() > 86_400_000;
   const related = preview ? [] : await getRelatedArticles(a);
+  const faq = extractFaq(html);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -53,6 +54,18 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
           { "@type": "ListItem", position: 3, name: a.title, item: pageUrl },
         ],
       },
+      ...(faq.length
+        ? [
+            {
+              "@type": "FAQPage",
+              mainEntity: faq.map((item) => ({
+                "@type": "Question",
+                name: item.question,
+                acceptedAnswer: { "@type": "Answer", text: item.answer },
+              })),
+            },
+          ]
+        : []),
     ],
   };
 

@@ -4,7 +4,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Editor } from "@tiptap/react";
-import { ArrowLeft, ArrowRight, ExternalLink, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, ImagePlus, Search, X } from "lucide-react";
 import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
 import { createClient } from "@/lib/supabase/client";
 import { publicMediaUrl, slugify } from "@/lib/constants";
@@ -105,8 +105,9 @@ export function ArticleEditor({
         keywords: form.keywords,
         html: deferredBody,
         domain: company.domain,
+        hasCover: Boolean(form.cover_path),
       }),
-    [form.title, form.slug, form.meta_title, form.meta_description, form.excerpt, form.focus_keyword, form.keywords, deferredBody],
+    [form.title, form.slug, form.meta_title, form.meta_description, form.excerpt, form.focus_keyword, form.keywords, form.cover_path, deferredBody],
   );
 
   // Offer a newer local draft than what the database holds.
@@ -282,18 +283,38 @@ export function ArticleEditor({
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
-          <textarea
-            className="block w-full resize-none rounded-[5px] border border-line bg-white px-6 py-5 font-display text-3xl font-semibold leading-tight text-ink-900 outline-none placeholder:text-muted/60 focus:border-brand-500 sm:px-10"
-            rows={2}
-            placeholder="Article title"
-            value={form.title}
-            onChange={(e) => {
-              const title = e.target.value.replace(/\n/g, " ");
-              setForm((f) => ({ ...f, title, slug: slugTouched ? f.slug : slugify(title) }));
-            }}
-          />
+          <div className="rounded-[5px] border border-line bg-white p-5">
+            <label className="block">
+              <span className="text-[13px] font-medium text-ink-900">Title</span>
+              <input
+                className="mt-1.5 block w-full rounded-[5px] border border-line bg-surface-2 px-3 py-2.5 text-[15px] text-ink-900 outline-none placeholder:text-muted focus:border-brand-500"
+                placeholder="Add the article title"
+                value={form.title}
+                onChange={(e) => {
+                  const title = e.target.value.replace(/\n/g, " ");
+                  setForm((f) => ({ ...f, title, slug: slugTouched ? f.slug : slugify(title) }));
+                }}
+              />
+            </label>
+            <div className="mt-3 flex items-center gap-2 text-[13px] text-muted">
+              <span className="shrink-0">Permalink: /blogs/</span>
+              <input
+                className={cn("min-w-0 flex-1 rounded-[5px] border border-line bg-white px-2.5 py-1.5 text-[13px] text-ink-900 outline-none focus:border-brand-500", slugTaken && "border-red-400")}
+                value={form.slug}
+                placeholder="auto-generated-from-title"
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  set("slug", slugify(e.target.value));
+                }}
+              />
+            </div>
+            {slugTaken ? <p className="mt-1 text-xs text-red-600">Already used by another article.</p> : null}
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[13px] font-medium text-ink-900">Body</p>
           <RichEditor
             initialHtml={form.body}
             onChange={(html) => set("body", html)}
@@ -308,25 +329,59 @@ export function ArticleEditor({
               </>
             }
           />
+          </div>
+
+          <details open className="rounded-[5px] border border-line bg-white">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 font-display text-[15px] font-semibold text-ink-900">
+              <Search className="h-4 w-4 text-muted" />
+              SEO and search appearance
+            </summary>
+            <div className="space-y-4 border-t border-line px-5 py-4">
+              <Field label="SEO title">
+                <input className={inputClass} value={form.meta_title} placeholder="Defaults to the article title" onChange={(e) => set("meta_title", e.target.value)} />
+                <span className="mt-1 block text-xs text-muted">Pre-filled from the title. Override it when the search result should read differently.</span>
+                <span className="mt-1 block text-right text-xs"><Meter value={(form.meta_title || form.title).length} max={60} min={30} /></span>
+              </Field>
+              <Field label="Meta description">
+                <textarea className={inputClass} rows={3} value={form.meta_description} placeholder="Shown in Google results and social shares." onChange={(e) => set("meta_description", e.target.value)} />
+                <span className="mt-1 block text-right text-xs"><Meter value={(form.meta_description || form.excerpt).length} max={160} min={70} /></span>
+              </Field>
+              <Field label="Focus keyword">
+                <input className={inputClass} value={form.focus_keyword} placeholder="e.g. M-Pesa checkout for shops" onChange={(e) => set("focus_keyword", e.target.value)} />
+                <span className="mt-1 block text-xs text-muted">The main phrase this page should rank for.</span>
+              </Field>
+              <div>
+                <span className="mb-1.5 block text-[13px] font-medium text-ink-900">Supporting keywords ({form.keywords.length}/5)</span>
+                <ChipsInput value={form.keywords.slice(0, 5)} onChange={(v) => set("keywords", v.slice(0, 5))} placeholder="Type and press Enter" />
+                <span className="mt-1 block text-xs text-muted">Related phrases. Use them in the article so the page can be cited for more than one query.</span>
+              </div>
+              <Field label="Canonical URL">
+                <input className={inputClass} value={form.canonical_url} placeholder={`${company.domain}/blogs/${form.slug || "slug"}`} onChange={(e) => set("canonical_url", e.target.value)} />
+              </Field>
+              <label className="flex items-center justify-between gap-2 text-sm text-ink-900">
+                Hide from search engines
+                <Toggle checked={form.noindex} onChange={(v) => set("noindex", v)} />
+              </label>
+              <GooglePreview title={form.title} metaTitle={form.meta_title} description={form.meta_description || form.excerpt} slug={form.slug} />
+            </div>
+          </details>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 xl:sticky xl:top-4">
+          <SeoScore
+            report={report}
+            titleLength={(form.meta_title || form.title).length}
+            metaLength={(form.meta_description || form.excerpt).length}
+          />
+
           <Panel title="Publish" action={<Pill tone={savedStatus === "live" ? "success" : savedStatus === "scheduled" ? "warning" : "neutral"}>{STATUS_LABEL[savedStatus]}</Pill>}>
-            <div className="grid grid-cols-3 gap-1 rounded-[5px] bg-surface-3 p-1">
-              {(["draft", "scheduled", "live"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => set("status", s)}
-                  className={cn(
-                    "rounded-[4px] py-1.5 text-[12px] font-medium",
-                    form.status === s ? "bg-white text-brand-600 shadow-sm" : "text-body hover:text-ink-900",
-                  )}
-                >
-                  {STATUS_LABEL[s]}
-                </button>
-              ))}
-            </div>
+            <Field label="Status">
+              <select className={inputClass} value={form.status} onChange={(e) => set("status", e.target.value as FormState["status"])}>
+                <option value="draft">Draft</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="live">Live</option>
+              </select>
+            </Field>
             {form.status === "scheduled" ? (
               <div className="mt-3">
                 <Field label="Publish on">
@@ -340,82 +395,66 @@ export function ArticleEditor({
                 </Field>
               </div>
             ) : null}
-            <label className="mt-3 flex items-center justify-between gap-2 text-sm text-ink-900">
-              Featured on the blog
-              <Toggle checked={form.featured} onChange={(v) => set("featured", v)} />
+            <label className="mt-3 flex items-start gap-2 text-sm text-ink-900">
+              <input type="checkbox" className="mt-1 accent-brand-500" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} />
+              <span>
+                Featured on the blog
+                <span className="mt-0.5 block text-xs font-normal text-muted">Shown ahead of the latest posts.</span>
+              </span>
             </label>
             {err ? <p className="mt-3 text-sm text-red-600">{err}</p> : null}
             {notice && !dirty ? <p className="mt-3 text-sm text-emerald-600">{notice}</p> : null}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {form.status === "live" ? (
-                <AdminBtn onClick={() => save("live")} disabled={busy} pending={saving === "live"}>
-                  {saving === "live" ? (savedStatus === "live" ? "Saving..." : "Publishing...") : savedStatus === "live" ? "Update" : "Publish"}
-                </AdminBtn>
-              ) : (
-                <>
-                  <AdminBtn variant="ghost" onClick={() => save()} disabled={busy} pending={saving === "save"}>
-                    {saving === "save" ? (form.status === "scheduled" ? "Scheduling..." : "Saving...") : form.status === "scheduled" ? "Schedule" : "Save draft"}
-                  </AdminBtn>
-                  <AdminBtn onClick={() => save("live")} disabled={busy} pending={saving === "live"}>
-                    {saving === "live" ? "Publishing..." : "Publish now"}
-                  </AdminBtn>
-                </>
-              )}
-              {previewHref ? (
-                <a href={previewHref} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:underline">
-                  Preview <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              ) : null}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <AdminBtn variant="ghost" onClick={() => save(form.status)} disabled={busy} pending={saving === "save"}>
+                {saving === "save" ? "Saving..." : form.status === "scheduled" ? "Schedule" : form.status === "live" ? "Save" : "Save draft"}
+              </AdminBtn>
+              <AdminBtn variant="ink" onClick={() => save("live")} disabled={busy} pending={saving === "live"}>
+                {saving === "live" ? "Publishing..." : savedStatus === "live" ? "Update" : "Publish"}
+              </AdminBtn>
             </div>
+            {previewHref ? (
+              <a href={previewHref} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:underline">
+                Preview <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : null}
           </Panel>
 
-          <Panel title="Details">
-            <div className="space-y-3">
-              <Field label="Slug">
-                <input
-                  className={cn(inputClass, slugTaken && "border-red-400")}
-                  value={form.slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    set("slug", slugify(e.target.value));
-                  }}
-                />
-                {slugTaken ? <span className="mt-1 block text-xs text-red-600">Already used by another article.</span> : null}
-              </Field>
-              <Field label="Excerpt">
-                <textarea className={inputClass} rows={3} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} />
-                <span className="mt-1 block text-right text-xs"><Meter value={form.excerpt.length} max={160} min={70} /></span>
-              </Field>
-              <Field label="Category">
-                <input className={inputClass} list="article-categories" value={form.category} onChange={(e) => set("category", e.target.value)} />
-                <datalist id="article-categories">
-                  {categories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-              </Field>
-              <div>
-                <span className="mb-1.5 block text-[13px] font-medium text-ink-900">Tags</span>
-                <ChipsInput value={form.tags} onChange={(v) => set("tags", v)} placeholder="Type and press Enter" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Audience">
-                  <select className={inputClass} value={form.audience} onChange={(e) => set("audience", e.target.value)}>
-                    <option value="general">General</option>
-                    <option value="founders">Founders</option>
-                  </select>
-                </Field>
-                <Field label="Author">
-                  <input className={inputClass} value={form.author_name} onChange={(e) => set("author_name", e.target.value)} />
-                </Field>
-              </div>
-            </div>
-          </Panel>
-
-          <Panel title="Images">
+          <Panel title="Featured image" meta="Used as the cover and the social share image.">
             <div className="space-y-4">
-              <ImageSlot label="Cover" value={form.cover_path} onChange={(v) => set("cover_path", v)} />
+              <ImageSlot label="Image" value={form.cover_path} onChange={(v) => set("cover_path", v)} />
               <ImageSlot label="Open Graph image" value={form.og_image_path} onChange={(v) => set("og_image_path", v)} aspect="aspect-[1200/630]" />
+            </div>
+          </Panel>
+
+          <Panel title="Category">
+            <input className={inputClass} list="article-categories" value={form.category} placeholder="Add a category" onChange={(e) => set("category", e.target.value)} />
+            <datalist id="article-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </Panel>
+
+          <Panel title="Tags">
+            <ChipsInput value={form.tags} onChange={(v) => set("tags", v)} placeholder="Type and press Enter" />
+          </Panel>
+
+          <Panel title="Excerpt" meta="Short summary on listing cards and in search results.">
+            <textarea className={inputClass} rows={4} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} />
+            <span className="mt-1 block text-right text-xs"><Meter value={form.excerpt.length} max={160} min={70} /></span>
+          </Panel>
+
+          <Panel title="Byline">
+            <div className="grid gap-3">
+              <Field label="Author">
+                <input className={inputClass} value={form.author_name} onChange={(e) => set("author_name", e.target.value)} />
+              </Field>
+              <Field label="Audience">
+                <select className={inputClass} value={form.audience} onChange={(e) => set("audience", e.target.value)}>
+                  <option value="general">General</option>
+                  <option value="founders">Founders</option>
+                </select>
+              </Field>
             </div>
           </Panel>
 
@@ -462,35 +501,6 @@ export function ArticleEditor({
             />
           </Panel>
 
-          <Panel title="SEO">
-            <div className="space-y-3">
-              <Field label="Focus keyword">
-                <input className={inputClass} value={form.focus_keyword} onChange={(e) => set("focus_keyword", e.target.value)} />
-              </Field>
-              <div>
-                <span className="mb-1.5 block text-[13px] font-medium text-ink-900">Additional keywords</span>
-                <ChipsInput value={form.keywords} onChange={(v) => set("keywords", v)} placeholder="Type and press Enter" />
-              </div>
-              <Field label="Meta title">
-                <input className={inputClass} value={form.meta_title} placeholder={form.title} onChange={(e) => set("meta_title", e.target.value)} />
-                <span className="mt-1 block text-right text-xs"><Meter value={(form.meta_title || form.title).length} max={60} min={30} /></span>
-              </Field>
-              <Field label="Meta description">
-                <textarea className={inputClass} rows={3} value={form.meta_description} placeholder={form.excerpt} onChange={(e) => set("meta_description", e.target.value)} />
-                <span className="mt-1 block text-right text-xs"><Meter value={(form.meta_description || form.excerpt).length} max={160} min={70} /></span>
-              </Field>
-              <Field label="Canonical URL">
-                <input className={inputClass} value={form.canonical_url} placeholder={`${company.domain}/blogs/${form.slug}`} onChange={(e) => set("canonical_url", e.target.value)} />
-              </Field>
-              <label className="flex items-center justify-between gap-2 text-sm text-ink-900">
-                Hide from search engines
-                <Toggle checked={form.noindex} onChange={(v) => set("noindex", v)} />
-              </label>
-              <GooglePreview title={form.title} metaTitle={form.meta_title} description={form.meta_description || form.excerpt} slug={form.slug} />
-            </div>
-          </Panel>
-
-          <SeoScore report={report} />
         </aside>
       </div>
     </div>

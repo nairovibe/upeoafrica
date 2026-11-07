@@ -1,7 +1,5 @@
 "use client";
 
-import { Check, Minus, X } from "lucide-react";
-import { Panel } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
 import { company } from "@/lib/content";
 import type { SeoReport } from "@/components/blog/analysis";
@@ -42,35 +40,54 @@ export function GooglePreview({
   );
 }
 
-export function SeoScore({ report }: { report: SeoReport }) {
+export function SeoScore({
+  report,
+  titleLength,
+  metaLength,
+}: {
+  report: SeoReport;
+  titleLength: number;
+  metaLength: number;
+}) {
   const tone = report.score >= 80 ? "text-emerald-600" : report.score >= 50 ? "text-amber-600" : "text-red-600";
-  const bar = report.score >= 80 ? "bg-emerald-500" : report.score >= 50 ? "bg-amber-500" : "bg-red-500";
   return (
-    <Panel
-      title="SEO score"
-      action={<span className={cn("font-display text-xl font-semibold tabular-nums", tone)}>{report.score}</span>}
-    >
-      <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-surface-3">
-        <div className={cn("h-full transition-[width] duration-300", bar)} style={{ width: `${report.score}%` }} />
+    <section className="rounded-[5px] border border-line bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">SEO readiness</p>
+      <p className="mt-1 text-xs leading-relaxed text-body">Search, answer engines, and AI citations all read the same page.</p>
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted">Overall score</p>
+        <p className={cn("font-display text-4xl font-semibold tabular-nums leading-none", tone)}>{report.score}%</p>
       </div>
-      <ul className="space-y-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {[
+          ["Title", titleLength],
+          ["Meta", metaLength],
+          ["Words", report.words],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-[5px] border border-line px-2 py-2 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">{label}</p>
+            <p className="mt-1 font-display text-lg font-semibold tabular-nums text-ink-900">{value}</p>
+          </div>
+        ))}
+      </div>
+      <ul className="mt-4 space-y-2.5">
         {report.checks.map((c) => (
-          <li key={c.id} className="flex items-start gap-2 text-[13px]">
+          <li key={c.id} className="flex items-start gap-2 text-[13px] leading-snug">
             <span
               className={cn(
-                "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
-                c.state === "pass" && "bg-emerald-50 text-emerald-600",
-                c.state === "warn" && "bg-amber-50 text-amber-600",
-                c.state === "fail" && "bg-red-50 text-red-600",
+                "mt-1 h-2 w-2 shrink-0 rounded-full",
+                c.state === "pass" && "bg-emerald-500",
+                c.state === "warn" && "bg-amber-500",
+                c.state === "fail" && "bg-red-500",
               )}
-            >
-              {c.state === "pass" ? <Check className="h-3 w-3" /> : c.state === "warn" ? <Minus className="h-3 w-3" /> : <X className="h-3 w-3" />}
+            />
+            <span className={cn("min-w-0", c.state === "pass" ? "text-ink-900" : c.state === "warn" ? "text-amber-700" : "text-red-600")}>
+              <span className="font-medium">{c.label}</span>
+              {c.detail ? <span className="font-normal text-body"> — {c.detail}</span> : null}
             </span>
-            <span className="min-w-0 flex-1 text-ink-900">{c.label}</span>
-            {c.detail ? <span className="shrink-0 text-xs text-muted">{c.detail}</span> : null}
           </li>
         ))}
       </ul>
-    </Panel>
+    </section>
   );
 }

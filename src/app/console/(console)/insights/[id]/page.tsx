@@ -15,7 +15,7 @@ export default async function EditInsightPage({ params }: { params: Promise<{ id
   ]);
   if (!data) notFound();
   return (
-    <AdminPage title="Edit article" action={<AdminBtn variant="ghost" href="/console/insights">All articles</AdminBtn>}>
+    <AdminPage title="Edit article" hint="The score on the right is what search and answer engines can actually use." action={<AdminBtn variant="ghost" href="/console/insights">All articles</AdminBtn>}>
       <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} categories={categories} />
     </AdminPage>
   );
