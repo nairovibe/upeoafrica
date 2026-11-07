@@ -54,7 +54,7 @@ export function NewsletterForm() {
       <label htmlFor="newsletter-email" className="text-sm font-medium text-white">
         Email address
       </label>
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row">
         <input
           id="newsletter-email"
           name="email"
@@ -66,9 +66,9 @@ export function NewsletterForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.co.ke"
-          className="h-11 min-w-0 flex-1 rounded-[5px] border border-white/15 bg-white/5 px-3 text-sm text-white outline-none transition-[border-color] duration-200 placeholder:text-white/40 focus:border-brand-500"
+          className="h-14 w-full min-w-0 rounded-[5px] border border-white/25 bg-white/5 px-4 text-base text-white outline-none transition-[border-color] duration-200 placeholder:text-white/40 focus:border-brand-500 sm:h-11 sm:flex-1 sm:text-sm"
         />
-        <Button type="submit" disabled={pending} className="rounded-[5px] sm:shrink-0">
+        <Button type="submit" disabled={pending} className="w-full rounded-[5px] sm:w-auto sm:shrink-0">
           {pending ? "Subscribing" : "Subscribe"}
         </Button>
       </div>

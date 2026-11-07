@@ -157,7 +157,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
                         onPointerMove={() => setActive(i)}
                         onClick={() => open(entry)}
                         className={cn(
-                          "mx-2 flex cursor-pointer items-center gap-3 rounded-[5px] px-2.5 py-2",
+                          "mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-[5px] px-2.5 py-2",
                           selected ? "bg-surface-2" : "",
                         )}
                       >

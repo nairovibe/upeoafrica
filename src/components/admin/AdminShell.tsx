@@ -186,7 +186,7 @@ export function AdminShell({
               href={item.href}
               aria-current={isActive(pathname, item.href) ? "page" : undefined}
               className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-[5px] px-3 py-1.5 text-[12px] font-medium",
+                "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[5px] px-3 text-[13px] font-medium",
                 isActive(pathname, item.href) ? "bg-brand-500 text-white" : "text-body hover:bg-surface-2",
               )}
             >
@@ -197,7 +197,7 @@ export function AdminShell({
           <button
             type="button"
             onClick={openPalette}
-            className="shrink-0 cursor-pointer rounded-[5px] px-3 py-1.5 text-[12px] font-medium text-body hover:bg-surface-2"
+            className="inline-flex h-11 shrink-0 cursor-pointer items-center rounded-[5px] px-3 text-[13px] font-medium text-body hover:bg-surface-2"
           >
             More
           </button>

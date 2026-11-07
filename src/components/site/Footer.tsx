@@ -108,7 +108,7 @@ export function Footer({
           </ul>
 
           <p className="mt-8 text-sm text-white/55">
-            © {year} {company.legalName}. All rights reserved.
+            © {year} {company.name}. All rights reserved.
           </p>
           <p className="mt-2 text-xs text-white/40">
             A subsidiary of{" "}
