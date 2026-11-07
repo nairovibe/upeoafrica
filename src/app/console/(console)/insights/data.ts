@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function getEditorTaxonomy() {
   const supabase = await createClient();
-  const { data } = await supabase.from("articles").select("category, tags");
+  const { data } = await supabase.from("articles").select("category, tags").is("deleted_at", null);
   const categories = new Set<string>();
   const tags = new Set<string>();
   for (const row of data ?? []) {

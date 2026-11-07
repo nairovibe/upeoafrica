@@ -292,7 +292,7 @@ export function ArticleEditor({
   const savedStatus = articleStatus(savedPublishedAt);
   const previewHref = initial
     ? savedStatus === "live"
-      ? `/blogs/${initial.slug}`
+      ? `${company.domain}/blogs/${initial.slug}`
       : `/blogs/${initial.slug}/preview`
     : null;
 
@@ -441,7 +441,7 @@ export function ArticleEditor({
             </div>
             {previewHref ? (
               <a href={previewHref} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-brand-600 hover:underline">
-                Preview <ExternalLink className="h-3.5 w-3.5" />
+                {savedStatus === "live" ? "View" : "Preview"} <ExternalLink className="h-3.5 w-3.5" />
               </a>
             ) : null}
           </Panel>

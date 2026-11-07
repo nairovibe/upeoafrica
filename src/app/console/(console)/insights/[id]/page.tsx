@@ -15,7 +15,12 @@ export default async function EditInsightPage({ params }: { params: Promise<{ id
   ]);
   if (!data) notFound();
   return (
-    <AdminPage title="Edit article" hint="The score on the right is what search and answer engines can actually use." action={<AdminBtn variant="ghost" href="/console/insights">All articles</AdminBtn>}>
+    <AdminPage title="Edit article" hint="The score on the right is what search and answer engines can actually use." action={<AdminBtn variant="ghost" href={data.deleted_at ? "/console/insights?status=trash" : "/console/insights"}>All articles</AdminBtn>}>
+      {data.deleted_at ? (
+        <p className="mb-4 rounded-[5px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-ink-900">
+          This article is in the trash. Restore it from the blog list before it can go live again.
+        </p>
+      ) : null}
       <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
     </AdminPage>
   );

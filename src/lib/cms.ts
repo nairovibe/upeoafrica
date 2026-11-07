@@ -77,6 +77,7 @@ async function _getPublishedArticles(opts?: { audience?: string; limit?: number 
   let q = supabase
     .from("articles")
     .select("*")
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .order("published_at", { ascending: false });
   if (opts?.audience) q = q.eq("audience", opts.audience);
@@ -91,6 +92,7 @@ async function _getArticleBySlug(slug: string) {
     .from("articles")
     .select("*")
     .eq("slug", slug)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .maybeSingle();
   return data;

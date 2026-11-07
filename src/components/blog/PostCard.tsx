@@ -17,8 +17,9 @@ export function PostMeta({ post }: { post: Pick<ArticleCard, "published_at" | "r
   );
 }
 
-export function PostCard({ post }: { post: ArticleCard }) {
+export function PostCard({ post, heading = "h2" }: { post: ArticleCard; heading?: "h2" | "h3" }) {
   const cover = publicMediaUrl(post.cover_path);
+  const Title = heading;
   return (
     <Link
       href={`/blogs/${post.slug}`}
@@ -32,14 +33,15 @@ export function PostCard({ post }: { post: ArticleCard }) {
             fill
             className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.03]"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized
           />
         ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
         {post.category ? <p className="text-xs font-semibold text-brand-600">{post.category}</p> : null}
-        <h2 className="mt-1.5 font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-brand-600">
+        <Title className="mt-1.5 font-display text-lg font-semibold leading-snug text-ink-900 group-hover:text-brand-600">
           {post.title}
-        </h2>
+        </Title>
         {post.excerpt ? <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-body">{post.excerpt}</p> : null}
         <div className="mt-auto pt-4">
           <PostMeta post={post} />

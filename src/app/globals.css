@@ -352,6 +352,11 @@
   .article-body h3 + *,
   .article-body h4 + * { margin-top: 0.6em; }
   .article-body > :first-child { margin-top: 0; }
+  .article-body > p:first-of-type {
+    font-size: 1.1875rem;
+    line-height: 1.7;
+    color: var(--color-ink-900);
+  }
   .article-body a {
     color: var(--color-brand-600);
     text-decoration: underline;

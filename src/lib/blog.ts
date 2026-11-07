@@ -113,6 +113,7 @@ async function _getLiveArticles(opts: { category?: string; q?: string; page?: nu
   let q = supabase
     .from("articles")
     .select(CARD_COLUMNS, { count: "exact" })
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
@@ -130,6 +131,7 @@ async function _getAllLiveArticleCards() {
   const { data } = await supabase
     .from("articles")
     .select(CARD_COLUMNS)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false });
@@ -142,6 +144,7 @@ async function _getFeaturedArticle() {
   const { data } = await supabase
     .from("articles")
     .select(CARD_COLUMNS)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", now)
     .order("featured", { ascending: false })
@@ -156,6 +159,7 @@ async function _getBlogCategories() {
   const { data } = await supabase
     .from("articles")
     .select("category")
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .not("category", "is", null);
@@ -173,6 +177,7 @@ async function _getLiveArticleBySlug(slug: string) {
     .from("articles")
     .select("*")
     .eq("slug", slug)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .maybeSingle();
@@ -184,7 +189,7 @@ export async function getPreviewArticleBySlug(slug: string) {
   const staff = await getStaff();
   if (!staff) return null;
   const supabase = await createClient();
-  const { data } = await supabase.from("articles").select("*").eq("slug", slug).maybeSingle();
+  const { data } = await supabase.from("articles").select("*").eq("slug", slug).is("deleted_at", null).maybeSingle();
   return data;
 }
 
@@ -193,6 +198,7 @@ async function _getRelatedArticles(article: { id: string; category: string | nul
   const { data } = await supabase
     .from("articles")
     .select(CARD_COLUMNS)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .neq("id", article.id)
@@ -217,6 +223,7 @@ async function _getSitemapArticles() {
   const { data } = await supabase
     .from("articles")
     .select("slug, title, updated_at, published_at, cover_path")
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .lte("published_at", new Date().toISOString())
     .eq("noindex", false)

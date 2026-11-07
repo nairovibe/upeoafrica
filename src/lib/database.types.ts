@@ -24,6 +24,7 @@ export type Database = {
           cover_path: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           excerpt: string
           featured: boolean
           focus_keyword: string | null
@@ -52,6 +53,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           excerpt?: string
           featured?: boolean
           focus_keyword?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           excerpt?: string
           featured?: boolean
           focus_keyword?: string | null

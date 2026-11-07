@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
-import { CTA } from "@/components/sections/CTA";
 import { PostCard } from "@/components/blog/PostCard";
 import { ShareLinks } from "@/components/blog/ShareLinks";
 import { TableOfContents } from "@/components/blog/TableOfContents";
@@ -22,6 +20,13 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
   const updated = a.published_at && new Date(a.updated_at).getTime() - new Date(a.published_at).getTime() > 86_400_000;
   const related = preview ? [] : await getRelatedArticles(a);
   const faq = extractFaq(html);
+  const showToc = toc.length > 1;
+  const initials = author
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -79,96 +84,139 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
       {preview ? null : (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       )}
-      <PageHeader
-        breadcrumb={[
-          { label: "Home", href: "/" },
-          { label: "Blog", href: "/blogs" },
-          ...(a.category ? [{ label: a.category, href: `/blogs?category=${encodeURIComponent(a.category)}` }] : []),
-          { label: a.title },
-        ]}
-        title={a.title}
-        intro={a.excerpt || undefined}
-        image={cover || undefined}
-        imageAlt={cover ? a.title : undefined}
-        meta={
-          <>
-            By {author}
-            {a.published_at ? <> · <time dateTime={a.published_at}>{formatBlogDate(a.published_at)}</time></> : null}
-            {updated ? <> · Updated <time dateTime={a.updated_at}>{formatBlogDate(a.updated_at)}</time></> : null}
-            {" "}· {minutes} min read
-          </>
-        }
-      />
 
-      {preview ? (
-        <div className="bg-brand-50 py-3 text-center text-sm font-medium text-brand-700">
-          Preview. This article is not live yet.
-        </div>
-      ) : null}
+      <article className="bg-white pb-16 pt-32 md:pt-36">
+        {preview ? (
+          <p className="mb-8 bg-brand-50 py-2.5 text-center text-sm font-medium text-brand-700">Preview. This article is not live yet.</p>
+        ) : null}
 
-      <section className="bg-white py-14 lg:py-20">
-        <Container>
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-16">
-            <article className="min-w-0">
-              <div className="article-body" dangerouslySetInnerHTML={{ __html: html }} />
-
-              {a.gallery.length ? (
-                <div className="mt-12 grid max-w-[68ch] grid-cols-2 gap-3 sm:grid-cols-3">
-                  {a.gallery.map((path, i) => {
-                    const src = publicMediaUrl(path);
-                    return src ? (
-                      <a key={`${path}-${i}`} href={src} target="_blank" rel="noopener noreferrer" className="relative block aspect-[4/3] overflow-hidden rounded-[5px] border border-line bg-surface-3">
-                        <Image src={src} alt={`${a.title}, image ${i + 1}`} fill className="object-cover transition-transform duration-500 hover:scale-[1.03]" sizes="(max-width: 640px) 50vw, 300px" />
-                      </a>
-                    ) : null;
-                  })}
-                </div>
+        <header className="mx-auto max-w-3xl px-5 sm:px-8">
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+              <li>
+                <Link href="/" className="hover:text-ink-900">Home</Link>
+              </li>
+              <li aria-hidden>/</li>
+              <li>
+                <Link href="/blogs" className="hover:text-ink-900">Blog</Link>
+              </li>
+              {a.category ? (
+                <>
+                  <li aria-hidden>/</li>
+                  <li>
+                    <Link href={`/blogs?category=${encodeURIComponent(a.category)}`} className="text-ink-900 hover:text-brand-600">
+                      {a.category}
+                    </Link>
+                  </li>
+                </>
               ) : null}
+            </ol>
+          </nav>
 
-              <div className="mt-12 max-w-[68ch] space-y-6 border-t border-line pt-8">
-                {a.tags.length ? (
-                  <ul className="flex flex-wrap gap-2" aria-label="Tags">
-                    {a.tags.map((tag) => (
-                      <li key={tag}>
-                        <Link
-                          href={`/blogs?q=${encodeURIComponent(tag)}`}
-                          className="inline-flex rounded-[5px] bg-surface-3 px-2.5 py-1 text-[13px] text-body hover:text-brand-600"
-                        >
-                          {tag}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+          {a.category ? (
+            <Link
+              href={`/blogs?category=${encodeURIComponent(a.category)}`}
+              className="mt-6 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-brand-700 hover:bg-brand-100"
+            >
+              {a.category}
+            </Link>
+          ) : null}
+
+          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.12] text-ink-900 md:text-5xl">{a.title}</h1>
+
+          <div className="mt-6 flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white" aria-hidden>
+              {initials || "U"}
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-ink-900">{author}</p>
+              <p className="text-xs text-muted">
+                {a.published_at ? <time dateTime={a.published_at}>{formatBlogDate(a.published_at)}</time> : null}
+                {updated ? (
+                  <>
+                    {a.published_at ? " · " : null}
+                    Updated <time dateTime={a.updated_at}>{formatBlogDate(a.updated_at)}</time>
+                  </>
                 ) : null}
-                <ShareLinks url={pageUrl} title={a.title} />
-              </div>
-            </article>
+                {" · "}
+                {minutes} min read
+              </p>
+            </div>
+          </div>
 
-            {toc.length > 1 ? (
-              <aside className="hidden lg:block">
-                <div className="sticky top-28">
-                  <TableOfContents items={toc} />
-                </div>
-              </aside>
+          <div className="mt-6 lg:hidden">
+            <ShareLinks url={pageUrl} title={a.title} />
+          </div>
+        </header>
+
+        {cover ? (
+          <div className="mx-auto mt-8 max-w-5xl px-5 sm:px-8">
+            <div className="relative h-64 overflow-hidden rounded-[5px] bg-surface-3 sm:h-80 md:h-[28rem]">
+              <Image src={cover} alt={a.title} fill priority unoptimized className="object-cover" sizes="(max-width: 1024px) 100vw, 1024px" />
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mx-auto mt-10 grid max-w-6xl gap-10 px-5 sm:px-8 lg:mt-14 lg:grid-cols-[14rem_minmax(0,42rem)] lg:justify-center lg:gap-16">
+          <aside className={showToc ? "lg:sticky lg:top-24 lg:self-start" : "hidden lg:sticky lg:top-24 lg:block lg:self-start"}>
+            <div className={showToc ? "mb-8 hidden lg:block" : undefined}>
+              <ShareLinks url={pageUrl} title={a.title} stacked />
+            </div>
+            {showToc ? <TableOfContents items={toc} /> : null}
+          </aside>
+
+          <div className="min-w-0">
+            {a.excerpt ? <p className="mb-8 text-xl leading-relaxed text-ink-900">{a.excerpt}</p> : null}
+            <div className="article-body" dangerouslySetInnerHTML={{ __html: html }} />
+
+            {a.gallery.length ? (
+              <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {a.gallery.map((path, i) => {
+                  const src = publicMediaUrl(path);
+                  return src ? (
+                    <a key={`${path}-${i}`} href={src} target="_blank" rel="noopener noreferrer" className="relative block aspect-[4/3] overflow-hidden rounded-[5px] border border-line bg-surface-3">
+                      <Image src={src} alt={`${a.title}, image ${i + 1}`} fill unoptimized className="object-cover transition-transform duration-500 hover:scale-[1.03]" sizes="(max-width: 640px) 50vw, 280px" />
+                    </a>
+                  ) : null;
+                })}
+              </div>
+            ) : null}
+
+            {a.tags.length ? (
+              <div className="mt-12 border-t border-line pt-8">
+                <p className="text-sm font-semibold text-ink-900">Tags</p>
+                <ul className="mt-3 flex flex-wrap gap-2" aria-label="Tags">
+                  {a.tags.map((tag) => (
+                    <li key={tag}>
+                      <Link href={`/blogs?q=${encodeURIComponent(tag)}`} className="inline-flex rounded-full bg-surface-3 px-3 py-1 text-[13px] text-body hover:text-brand-600">
+                        {tag}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
           </div>
-        </Container>
-      </section>
+        </div>
+      </article>
 
       {related.length ? (
         <section className="border-t border-line bg-surface-2 py-16 lg:py-20">
           <Container>
-            <h2 className="text-2xl font-bold text-ink-900 sm:text-3xl">Keep reading</h2>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-display text-2xl font-bold text-ink-900 sm:text-3xl">Keep reading</h2>
+              <Link href="/blogs" className="text-sm font-semibold text-brand-600 hover:underline">
+                All articles
+              </Link>
+            </div>
+            <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard key={post.id} post={post} heading="h3" />
               ))}
             </div>
           </Container>
         </section>
       ) : null}
-
-      <CTA />
     </>
   );
 }

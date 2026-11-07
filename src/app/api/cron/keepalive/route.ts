@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
   const now = new Date().toISOString();
   const [articles, work, products, events] = await Promise.all([
-    db.from("articles").select("slug").gte("published_at", since).lte("published_at", now).eq("noindex", false),
+    db.from("articles").select("slug").is("deleted_at", null).gte("published_at", since).lte("published_at", now).eq("noindex", false),
     db.from("case_studies").select("slug").gte("published_at", since).lte("published_at", now),
     db.from("products").select("slug").eq("published", true).gte("updated_at", since),
     db.from("events").select("slug").gte("published_at", since).lte("published_at", now),
