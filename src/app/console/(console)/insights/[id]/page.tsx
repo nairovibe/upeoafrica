@@ -3,20 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminBtn, AdminPage } from "@/components/admin/ui";
 import { ArticleEditor } from "@/components/admin/ArticleEditor";
 import { getStaff } from "@/lib/cms";
-import { getEditorCategories } from "@/app/console/(console)/insights/data";
+import { getEditorTaxonomy } from "@/app/console/(console)/insights/data";
 
 export default async function EditInsightPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data }, staff, categories] = await Promise.all([
+  const [{ data }, staff, taxonomy] = await Promise.all([
     supabase.from("articles").select("*").eq("id", id).maybeSingle(),
     getStaff(),
-    getEditorCategories(),
+    getEditorTaxonomy(),
   ]);
   if (!data) notFound();
   return (
     <AdminPage title="Edit article" hint="The score on the right is what search and answer engines can actually use." action={<AdminBtn variant="ghost" href="/console/insights">All articles</AdminBtn>}>
-      <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} categories={categories} />
+      <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
     </AdminPage>
   );
 }

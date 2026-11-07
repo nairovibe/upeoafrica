@@ -1,9 +1,32 @@
 "use client";
 
 import { Node, mergeAttributes, ReactNodeViewRenderer } from "@tiptap/react";
-import { FigureView, GalleryView } from "@/components/admin/blog/NodeViews";
+import { EmbedView, FigureView, GalleryView } from "@/components/admin/blog/NodeViews";
 
-export type GalleryImage = { src: string; alt: string };
+export type GalleryImage = { src: string; alt: string; title?: string; caption?: string; id?: string };
+
+function readGallery(el: HTMLElement): GalleryImage[] {
+  const figures = Array.from(el.querySelectorAll(":scope > figure"));
+  if (figures.length) {
+    return figures.flatMap((fig) => {
+      const img = fig.querySelector("img");
+      const src = img?.getAttribute("src") ?? "";
+      if (!src) return [];
+      return [{
+        id: fig.getAttribute("data-media-id") ?? "",
+        src,
+        alt: img?.getAttribute("alt") ?? "",
+        title: img?.getAttribute("title") ?? "",
+        caption: fig.querySelector("figcaption")?.textContent ?? "",
+      }];
+    });
+  }
+  return Array.from(el.querySelectorAll("img")).flatMap((img) => {
+    const src = img.getAttribute("src") ?? "";
+    if (!src) return [];
+    return [{ src, alt: img.getAttribute("alt") ?? "", title: img.getAttribute("title") ?? "", caption: "", id: "" }];
+  });
+}
 
 /** Fired on the editor DOM by the gallery node view; RichEditor answers with the media picker. */
 export const PICK_IMAGES_EVENT = "blog:pick-images";
@@ -20,7 +43,9 @@ export const Figure = Node.create({
     return {
       src: { default: "" },
       alt: { default: "" },
+      title: { default: "" },
       caption: { default: "" },
+      mediaId: { default: "" },
     };
   },
 
@@ -34,7 +59,9 @@ export const Figure = Node.create({
           return {
             src: img.getAttribute("src") ?? "",
             alt: img.getAttribute("alt") ?? "",
+            title: img.getAttribute("title") ?? "",
             caption: el.querySelector("figcaption")?.textContent ?? "",
+            mediaId: el.getAttribute("data-media-id") ?? "",
           };
         },
       },
@@ -42,11 +69,15 @@ export const Figure = Node.create({
   },
 
   renderHTML({ node }) {
-    const { src, alt, caption } = node.attrs as { src: string; alt: string; caption: string };
-    const img = ["img", { src, alt, loading: "lazy" }] as const;
+    const { src, alt, title, caption, mediaId } = node.attrs as { src: string; alt: string; title: string; caption: string; mediaId: string };
+    const imgAttrs: Record<string, string> = { src, alt, loading: "lazy" };
+    if (title) imgAttrs.title = title;
+    const figureAttrs: Record<string, string> = { "data-figure": "" };
+    if (mediaId) figureAttrs["data-media-id"] = mediaId;
+    const img = ["img", imgAttrs];
     return caption
-      ? ["figure", { "data-figure": "" }, img, ["figcaption", {}, caption]]
-      : ["figure", { "data-figure": "" }, img];
+      ? ["figure", figureAttrs, img, ["figcaption", {}, caption]]
+      : ["figure", figureAttrs, img];
   },
 
   addNodeView() {
@@ -64,26 +95,30 @@ export const Gallery = Node.create({
     return {
       images: {
         default: [] as GalleryImage[],
-        parseHTML: (el) =>
-          Array.from(el.querySelectorAll("img")).map((img) => ({
-            src: img.getAttribute("src") ?? "",
-            alt: img.getAttribute("alt") ?? "",
-          })),
+        parseHTML: (el) => readGallery(el),
         renderHTML: () => ({}),
       },
     };
   },
 
   parseHTML() {
-    return [{ tag: "figure[data-gallery]" }];
+    return [{ tag: "div[data-gallery]" }, { tag: "figure[data-gallery]" }];
   },
 
   renderHTML({ node, HTMLAttributes }) {
     const images = (node.attrs.images ?? []) as GalleryImage[];
     return [
-      "figure",
+      "div",
       mergeAttributes(HTMLAttributes, { "data-gallery": "", "data-count": String(images.length) }),
-      ...images.map((img) => ["img", { src: img.src, alt: img.alt, loading: "lazy" }]),
+      ...images.map((img) => {
+        const imgAttrs: Record<string, string> = { src: img.src, alt: img.alt, loading: "lazy" };
+        if (img.title) imgAttrs.title = img.title;
+        const figureAttrs: Record<string, string> = {};
+        if (img.id) figureAttrs["data-media-id"] = img.id;
+        const figure = ["figure", figureAttrs, ["img", imgAttrs]];
+        if (img.caption) figure.push(["figcaption", {}, img.caption]);
+        return figure;
+      }),
     ];
   },
 
@@ -138,5 +173,61 @@ export const Vimeo = Node.create({
         },
       ],
     ];
+  },
+});
+
+export const Embed = Node.create({
+  name: "embed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      src: { default: "" },
+      title: { default: "Embedded content" },
+      layout: { default: "video" },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "div[data-embed]",
+        getAttrs: (el) => {
+          const src = el.querySelector("iframe")?.getAttribute("src");
+          if (!src) return false;
+          const layout = el.getAttribute("data-layout");
+          return {
+            src,
+            title: el.querySelector("iframe")?.getAttribute("title") ?? "Embedded content",
+            layout: layout === "tall" || layout === "compact" || layout === "panel" ? layout : "video",
+          };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ node }) {
+    const { src, title, layout } = node.attrs as { src: string; title: string; layout: string };
+    return [
+      "div",
+      { "data-embed": "", "data-layout": layout || "video" },
+      [
+        "iframe",
+        {
+          src,
+          title: title || "Embedded content",
+          loading: "lazy",
+          frameborder: "0",
+          allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+          allowfullscreen: "true",
+        },
+      ],
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(EmbedView);
   },
 });

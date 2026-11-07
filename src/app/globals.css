@@ -333,6 +333,7 @@
     line-height: 1.8;
     color: var(--color-body);
     overflow-wrap: break-word;
+    overflow-x: auto;
   }
   .article-body > * + * { margin-top: 1.25em; }
   .article-body h2,
@@ -392,21 +393,46 @@
   .article-body img { max-width: 100%; height: auto; border-radius: 5px; }
   .article-body figure { margin-top: 2em; margin-bottom: 2em; }
   .article-body figcaption { margin-top: 0.6em; font-size: 0.875rem; color: var(--color-muted); text-align: center; }
-  .article-body figure[data-gallery] {
+  .article-body figure[data-gallery],
+  .article-body div[data-gallery] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.6rem;
   }
   @media (min-width: 640px) {
-    .article-body figure[data-gallery] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .article-body figure[data-gallery],
+    .article-body div[data-gallery] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .article-body figure[data-gallery][data-count="2"],
-    .article-body figure[data-gallery][data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .article-body figure[data-gallery][data-count="4"],
+    .article-body div[data-gallery][data-count="2"],
+    .article-body div[data-gallery][data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
-  .article-body figure[data-gallery] img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0; }
+  .article-body figure[data-gallery] img,
+  .article-body div[data-gallery] img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0; }
+  .article-body div[data-gallery] figure { margin: 0; }
+  .article-body div[data-gallery] figcaption { margin-top: 0.35em; text-align: left; font-size: 0.75rem; }
+  .article-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .article-body th,
+  .article-body td {
+    border: 1px solid var(--color-line);
+    padding: 0.55rem 0.75rem;
+    vertical-align: top;
+    text-align: left;
+  }
+  .article-body th { background: var(--color-surface-3); color: var(--color-ink-900); font-weight: 600; }
+  .article-body td > p,
+  .article-body th > p { margin: 0; }
   .article-body [data-youtube-video],
-  .article-body [data-vimeo-video] { margin-top: 2em; margin-bottom: 2em; }
+  .article-body [data-vimeo-video],
+  .article-body [data-embed] { margin-top: 2em; margin-bottom: 2em; }
   .article-body [data-youtube-video] iframe,
-  .article-body [data-vimeo-video] iframe {
+  .article-body [data-vimeo-video] iframe,
+  .article-body [data-embed] iframe {
     display: block;
     width: 100%;
     height: auto;
@@ -415,9 +441,41 @@
     border-radius: 5px;
     background: var(--color-ink-900);
   }
+  .article-body [data-embed][data-layout="tall"] iframe { aspect-ratio: 4 / 3; }
+  .article-body [data-embed][data-layout="compact"] iframe { aspect-ratio: auto; height: 152px; }
+  .article-body [data-embed][data-layout="panel"] iframe { aspect-ratio: auto; height: 380px; }
 
-  .article-editor { max-width: none; }
+  .article-editor { max-width: none; overflow-x: auto; }
   .article-editor > * { max-width: 68ch; margin-left: auto; margin-right: auto; }
+  .article-editor > .tableWrapper,
+  .article-editor > figure,
+  .article-editor > [data-embed],
+  .article-editor > [data-youtube-video],
+  .article-editor > [data-vimeo-video],
+  .article-editor > [data-gallery] { max-width: none; }
+  .article-editor figure[data-gallery],
+  .article-editor div[data-gallery] { display: block; }
+  .article-editor .tableWrapper { overflow-x: auto; }
+  .article-editor table { border-collapse: collapse; }
+  .article-editor td,
+  .article-editor th { position: relative; min-width: 5rem; }
+  .article-editor .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-brand-500) 14%, transparent);
+    pointer-events: none;
+  }
+  .article-editor .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-brand-500);
+    pointer-events: none;
+  }
+  .article-editor.resize-cursor { cursor: col-resize; }
   .article-editor p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;

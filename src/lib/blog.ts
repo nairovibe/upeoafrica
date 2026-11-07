@@ -2,40 +2,44 @@ import sanitizeHtml from "sanitize-html";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { publicRead } from "@/lib/public-cache";
 import { getStaff } from "@/lib/cms";
+import { IFRAME_HOSTS } from "@/lib/embeds";
 import { headingId, stripTags, toHtml } from "@/components/blog/analysis";
 
 export * from "@/components/blog/analysis";
 
 export const BLOG_PAGE_SIZE = 9;
 
-const IFRAME_HOSTS = [
-  "www.youtube.com",
-  "youtube.com",
-  "www.youtube-nocookie.com",
-  "youtube-nocookie.com",
-  "player.vimeo.com",
-];
-
 const SANITIZE: sanitizeHtml.IOptions = {
   allowedTags: [
     "h2", "h3", "h4", "h5", "h6", "p", "br", "ul", "ol", "li", "a", "img", "figure", "figcaption",
     "blockquote", "pre", "code", "hr", "strong", "b", "em", "i", "u", "s", "del", "div", "iframe",
+    "table", "thead", "tbody", "tr", "th", "td", "colgroup", "col",
   ],
   allowedAttributes: {
     a: ["href", "target", "rel", "title"],
     img: ["src", "alt", "loading", "width", "height", "title"],
-    figure: ["data-gallery", "data-figure", "data-count"],
-    div: ["data-youtube-video", "data-vimeo-video"],
+    figure: ["data-gallery", "data-figure", "data-count", "data-media-id"],
+    div: ["data-youtube-video", "data-vimeo-video", "data-embed", "data-layout", "data-gallery", "data-count"],
     iframe: ["src", "width", "height", "allow", "allowfullscreen", "frameborder", "title", "loading"],
+    table: ["style"],
+    col: ["style"],
+    th: ["colspan", "rowspan", "colwidth", "style"],
+    td: ["colspan", "rowspan", "colwidth", "style"],
     h2: ["id"],
     h3: ["id"],
     h4: ["id"],
     code: ["class"],
   },
+  allowedStyles: {
+    table: { "min-width": [/^\d+px$/], width: [/^\d+px$/] },
+    col: { "min-width": [/^\d+px$/], width: [/^\d+px$/] },
+    th: { "text-align": [/^(left|center|right)$/] },
+    td: { "text-align": [/^(left|center|right)$/] },
+  },
   allowedClasses: { code: ["language-*"] },
   allowedSchemes: ["http", "https", "mailto", "tel"],
   allowedSchemesByTag: { img: ["http", "https"], iframe: ["https"] },
-  allowedIframeHostnames: IFRAME_HOSTS,
+  allowedIframeHostnames: [...IFRAME_HOSTS],
   allowIframeRelativeUrls: false,
   transformTags: {
     h1: "h2",

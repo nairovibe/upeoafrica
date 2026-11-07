@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import Youtube, { isValidYoutubeUrl } from "@tiptap/extension-youtube";
+import Youtube from "@tiptap/extension-youtube";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import {
+  AppWindow,
   Bold,
   Code,
   Heading2,
@@ -24,17 +26,18 @@ import {
   Redo2,
   SquareCode,
   Strikethrough,
+  Table as TableIcon,
   Underline,
   Undo2,
-  Video,
 } from "lucide-react";
 import { AdminBtn, Field, inputClass } from "@/components/admin/ui";
+import { parseEmbed, type EmbedSpec } from "@/lib/embeds";
 import {
+  Embed,
   Figure,
   Gallery,
   PICK_IMAGES_EVENT,
   Vimeo,
-  vimeoEmbedUrl,
   type GalleryImage,
   type PickImagesDetail,
 } from "@/components/admin/blog/extensions";
@@ -42,6 +45,29 @@ import { LinkDialog, type LinkValue } from "@/components/admin/blog/LinkDialog";
 import { MediaPicker, type PickedMedia } from "@/components/admin/blog/MediaPicker";
 import { Modal } from "@/components/admin/blog/Modal";
 import { cn } from "@/lib/utils";
+
+const colwidth = {
+  default: null as number[] | null,
+  parseHTML: (element: HTMLElement) => {
+    const raw = element.getAttribute("colwidth");
+    if (!raw) return null;
+    const nums = raw.split(",").map((n) => Number.parseInt(n, 10)).filter((n) => Number.isFinite(n) && n > 0);
+    return nums.length ? nums : null;
+  },
+  renderHTML: (attributes: { colwidth?: number[] | null }) => (attributes.colwidth?.length ? { colwidth: attributes.colwidth.join(",") } : {}),
+};
+
+const SizedCell = TableCell.extend({
+  addAttributes() {
+    return { ...this.parent?.(), colwidth };
+  },
+});
+
+const SizedHeader = TableHeader.extend({
+  addAttributes() {
+    return { ...this.parent?.(), colwidth };
+  },
+});
 
 type PickerState =
   | { kind: "image" }
@@ -62,8 +88,9 @@ export function RichEditor({
 }) {
   const [picker, setPicker] = useState<PickerState>(null);
   const [linkOpen, setLinkOpen] = useState(false);
-  const [videoOpen, setVideoOpen] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
   const onChangeRef = useRef(onChange);
+  const editorRef = useRef<Editor | null>(null);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -84,20 +111,35 @@ export function RichEditor({
       Image.configure({ HTMLAttributes: { loading: "lazy" } }),
       Youtube.configure({ nocookie: true, width: 640, height: 360, modestBranding: true }),
       Placeholder.configure({ placeholder: "Start writing…" }),
+      Table.configure({ resizable: true, cellMinWidth: 80 }),
+      TableRow,
+      SizedHeader,
+      SizedCell,
       Figure,
       Gallery,
       Vimeo,
+      Embed,
     ],
     content: initialHtml,
     editorProps: {
       attributes: {
         class: "article-body article-editor min-h-[60vh] px-6 py-8 outline-none sm:px-10",
       },
+      handlePaste: (_view, event) => {
+        const text = event.clipboardData?.getData("text/plain") ?? "";
+        const html = event.clipboardData?.getData("text/html") ?? "";
+        const embed = parseEmbed(text) || parseEmbed(html);
+        const ed = editorRef.current;
+        if (!embed || !ed) return false;
+        ed.chain().focus().insertContent({ type: "embed", attrs: embed }).run();
+        return true;
+      },
     },
     onUpdate: ({ editor }) => onChangeRef.current(editor.getHTML()),
   });
 
   useEffect(() => {
+    editorRef.current = editor;
     if (editor && onEditor) onEditor(editor);
   }, [editor, onEditor]);
 
@@ -116,17 +158,14 @@ export function RichEditor({
     const current = picker;
     setPicker(null);
     if (!editor || !current) return;
-    if (current.kind === "request") return current.resolve(items.map((i) => ({ src: i.url, alt: i.alt })));
-    if (!items.length) return;
+    const images: GalleryImage[] = items.map((i) => ({ src: i.url, alt: i.alt, title: i.title, caption: i.caption, id: i.id }));
+    if (current.kind === "request") return current.resolve(images);
+    if (!images.length) return;
     if (current.kind === "image") {
-      const [img] = items;
-      editor.chain().focus().insertContent({ type: "figure", attrs: { src: img.url, alt: img.alt, caption: img.caption ?? "" } }).run();
+      const [img] = images;
+      editor.chain().focus().insertContent({ type: "figure", attrs: { src: img.src, alt: img.alt, title: img.title ?? "", caption: img.caption ?? "", mediaId: img.id ?? "" } }).run();
     } else {
-      editor
-        .chain()
-        .focus()
-        .insertContent({ type: "gallery", attrs: { images: items.map((i) => ({ src: i.url, alt: i.alt })) } })
-        .run();
+      editor.chain().focus().insertContent({ type: "gallery", attrs: { images } }).run();
     }
   }
 
@@ -164,7 +203,7 @@ export function RichEditor({
         onLink={() => setLinkOpen(true)}
         onImage={() => setPicker({ kind: "image" })}
         onGallery={() => setPicker({ kind: "gallery" })}
-        onVideo={() => setVideoOpen(true)}
+        onEmbed={() => setEmbedOpen(true)}
       />
       <EditorContent editor={editor} />
       {footer ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2 text-xs text-muted">{footer}</div> : null}
@@ -186,23 +225,17 @@ export function RichEditor({
         open={picker !== null}
         title={picker?.kind === "image" ? "Insert image" : "Add gallery images"}
         multiple={picker?.kind === "gallery" || (picker?.kind === "request" && picker.multiple)}
-        details={picker?.kind === "image"}
+        details
         onClose={closePicker}
         onPick={onPicked}
       />
 
-      {videoOpen ? (
-        <VideoDialog
-          onClose={() => setVideoOpen(false)}
-          onInsert={(url) => {
-            setVideoOpen(false);
-            if (!editor) return;
-            if (isValidYoutubeUrl(url)) {
-              editor.chain().focus().setYoutubeVideo({ src: url }).run();
-            } else {
-              const src = vimeoEmbedUrl(url);
-              if (src) editor.chain().focus().insertContent({ type: "vimeo", attrs: { src } }).run();
-            }
+      {embedOpen ? (
+        <EmbedDialog
+          onClose={() => setEmbedOpen(false)}
+          onInsert={(embed) => {
+            setEmbedOpen(false);
+            editor?.chain().focus().insertContent({ type: "embed", attrs: embed }).run();
           }}
         />
       ) : null}
@@ -210,25 +243,40 @@ export function RichEditor({
   );
 }
 
-function VideoDialog({ onClose, onInsert }: { onClose: () => void; onInsert: (url: string) => void }) {
-  const [url, setUrl] = useState("");
-  const ok = Boolean(isValidYoutubeUrl(url.trim()) || vimeoEmbedUrl(url.trim()));
+function EmbedDialog({ onClose, onInsert }: { onClose: () => void; onInsert: (embed: EmbedSpec) => void }) {
+  const [code, setCode] = useState("");
+  const embed = parseEmbed(code);
   return (
     <Modal
       open
-      title="Embed video"
+      title="Embed"
       onClose={onClose}
-      footer={<AdminBtn disabled={!ok} onClick={() => onInsert(url.trim())}>Insert</AdminBtn>}
+      wide
+      footer={<AdminBtn disabled={!embed} onClick={() => embed && onInsert(embed)}>Insert</AdminBtn>}
     >
-      <Field label="YouTube or Vimeo URL">
-        <input
+      <Field label="URL or embed code">
+        <textarea
           className={inputClass}
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=…"
+          rows={5}
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Paste a YouTube, Vimeo, Maps, Spotify, or Loom link, or the embed code"
           autoFocus
         />
       </Field>
+      <div className="mt-4">
+        {embed ? (
+          <div className="article-body overflow-hidden rounded-[5px] border border-line">
+            <div data-embed="" data-layout={embed.layout}>
+              <iframe src={embed.src} title={embed.title} className="w-full border-0 bg-ink-900" loading="lazy" allowFullScreen />
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-[5px] border border-dashed border-line px-4 py-8 text-center text-sm text-muted">
+            {code.trim() ? "That paste does not have a preview yet. Use the provider’s embed code or a video link." : "The preview appears here as soon as the paste is recognised."}
+          </p>
+        )}
+      </div>
     </Modal>
   );
 }
@@ -238,13 +286,13 @@ function Toolbar({
   onLink,
   onImage,
   onGallery,
-  onVideo,
+  onEmbed,
 }: {
   editor: Editor | null;
   onLink: () => void;
   onImage: () => void;
   onGallery: () => void;
-  onVideo: () => void;
+  onEmbed: () => void;
 }) {
   const s = useEditorState({
     editor,
@@ -265,6 +313,7 @@ function Toolbar({
             quote: e.isActive("blockquote"),
             codeBlock: e.isActive("codeBlock"),
             link: e.isActive("link"),
+            table: e.isActive("table"),
             canUndo: e.can().undo(),
             canRedo: e.can().redo(),
           }
@@ -296,11 +345,84 @@ function Toolbar({
       <Btn label="Link" active={s.link} onClick={onLink} icon={Link2} />
       <Btn label="Image" onClick={onImage} icon={ImageIcon} />
       <Btn label="Gallery" onClick={onGallery} icon={Images} />
-      <Btn label="Video" onClick={onVideo} icon={Video} />
+      <Btn label="Embed" onClick={onEmbed} icon={AppWindow} />
+      <TableButton editor={editor} />
       <Sep />
       <Btn label="Undo" disabled={!s.canUndo} onClick={() => c().undo().run()} icon={Undo2} />
       <Btn label="Redo" disabled={!s.canRedo} onClick={() => c().redo().run()} icon={Redo2} />
+      {s.table ? <TableBar editor={editor} /> : null}
     </div>
+  );
+}
+
+function TableButton({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState(3);
+  const [cols, setCols] = useState(3);
+  const [header, setHeader] = useState(true);
+  const clamp = (n: number) => Math.min(10, Math.max(1, n || 1));
+
+  return (
+    <div className="relative">
+      <Btn label="Table" active={open} onClick={() => setOpen((v) => !v)} icon={TableIcon} />
+      {open ? (
+        <div className="absolute left-0 top-full z-30 mt-1 w-60 rounded-[5px] border border-line bg-white p-3 shadow-lg">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Rows">
+              <input className={inputClass} type="number" min={1} max={10} value={rows} onChange={(e) => setRows(clamp(Number(e.target.value)))} />
+            </Field>
+            <Field label="Columns">
+              <input className={inputClass} type="number" min={1} max={10} value={cols} onChange={(e) => setCols(clamp(Number(e.target.value)))} />
+            </Field>
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm text-ink-900">
+            <input type="checkbox" className="accent-brand-500" checked={header} onChange={(e) => setHeader(e.target.checked)} />
+            Header row
+          </label>
+          <AdminBtn
+            className="mt-3 w-full"
+            onClick={() => {
+              editor.chain().focus().insertTable({ rows, cols, withHeaderRow: header }).run();
+              setOpen(false);
+            }}
+          >
+            Insert table
+          </AdminBtn>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TableBar({ editor }: { editor: Editor }) {
+  const run = (command: "addRowBefore" | "addRowAfter" | "deleteRow" | "addColumnBefore" | "addColumnAfter" | "deleteColumn" | "deleteTable") => {
+    editor.chain().focus()[command]().run();
+  };
+  return (
+    <div className="flex w-full flex-wrap items-center gap-1 border-t border-line px-1 pt-1">
+      <TextBtn label="Row above" onClick={() => run("addRowBefore")} />
+      <TextBtn label="Row below" onClick={() => run("addRowAfter")} />
+      <TextBtn label="Delete row" onClick={() => run("deleteRow")} />
+      <span className="mx-1 h-4 w-px bg-line" aria-hidden />
+      <TextBtn label="Column before" onClick={() => run("addColumnBefore")} />
+      <TextBtn label="Column after" onClick={() => run("addColumnAfter")} />
+      <TextBtn label="Delete column" onClick={() => run("deleteColumn")} />
+      <span className="mx-1 h-4 w-px bg-line" aria-hidden />
+      <TextBtn label="Delete table" danger onClick={() => run("deleteTable")} />
+    </div>
+  );
+}
+
+function TextBtn({ label, onClick, danger }: { label: string; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className={cn("rounded-[5px] px-2 py-1 text-xs font-medium", danger ? "text-red-600 hover:bg-red-50" : "text-ink-900 hover:bg-surface-3")}
+    >
+      {label}
+    </button>
   );
 }
 

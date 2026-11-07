@@ -7,11 +7,13 @@ export function ChipsInput({
   value,
   onChange,
   placeholder,
+  suggestions = [],
   max = 20,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
+  suggestions?: string[];
   max?: number;
 }) {
   const [draft, setDraft] = useState("");
@@ -31,39 +33,63 @@ export function ChipsInput({
     setDraft("");
   }
 
+  const unused = suggestions.filter((name) => !value.some((chip) => chip.toLowerCase() === name.toLowerCase()));
+
   return (
-    <div className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-[5px] border border-line bg-white px-2 py-1.5 focus-within:border-brand-500">
-      {value.map((chip) => (
-        <span key={chip} className="inline-flex items-center gap-1 rounded-[5px] bg-surface-3 px-2 py-0.5 text-xs text-ink-900">
-          {chip}
-          <button
-            type="button"
-            aria-label={`Remove ${chip}`}
-            onClick={() => onChange(value.filter((v) => v !== chip))}
-            className="text-muted hover:text-red-600"
-          >
-            <X className="h-3 w-3" />
+    <div>
+      <div className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-[5px] border border-line bg-white px-2 py-1.5 focus-within:border-brand-500">
+        {value.map((chip) => (
+          <span key={chip} className="inline-flex items-center gap-1 rounded-[5px] bg-surface-3 px-2 py-0.5 text-xs text-ink-900">
+            {chip}
+            <button
+              type="button"
+              aria-label={`Remove ${chip}`}
+              onClick={() => onChange(value.filter((v) => v !== chip))}
+              className="text-muted hover:text-red-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        <input
+          className="min-w-[6rem] flex-1 bg-transparent px-1 py-1 text-sm text-ink-900 outline-none"
+          value={draft}
+          placeholder={value.length ? "" : placeholder}
+          onChange={(e) => {
+            if (e.target.value.includes(",")) commit(e.target.value);
+            else setDraft(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(draft);
+            } else if (e.key === "Backspace" && !draft && value.length) {
+              onChange(value.slice(0, -1));
+            }
+          }}
+          onBlur={() => commit(draft)}
+        />
+        {draft.trim() ? (
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => commit(draft)} className="px-1 text-xs font-medium text-brand-600">
+            Add
           </button>
-        </span>
-      ))}
-      <input
-        className="min-w-[6rem] flex-1 bg-transparent px-1 py-1 text-sm text-ink-900 outline-none"
-        value={draft}
-        placeholder={value.length ? "" : placeholder}
-        onChange={(e) => {
-          if (e.target.value.includes(",")) commit(e.target.value);
-          else setDraft(e.target.value);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit(draft);
-          } else if (e.key === "Backspace" && !draft && value.length) {
-            onChange(value.slice(0, -1));
-          }
-        }}
-        onBlur={() => commit(draft)}
-      />
+        ) : null}
+      </div>
+      <p className="mt-1.5 text-xs text-muted">Type a new tag and press Enter.</p>
+      {unused.length ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {unused.slice(0, 16).map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => commit(name)}
+              className="rounded-[5px] border border-dashed border-line px-2 py-0.5 text-xs text-body hover:border-brand-300 hover:text-ink-900"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

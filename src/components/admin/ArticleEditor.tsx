@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { Article } from "@/lib/cms";
 import { analyzeSeo, articleStatus, toHtml, type ArticleStatus } from "@/components/blog/analysis";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
+import { CategoryField } from "@/components/admin/blog/CategoryField";
 import { ChipsInput } from "@/components/admin/blog/ChipsInput";
 import { ImageSlot } from "@/components/admin/blog/ImageSlot";
 import { MediaPicker } from "@/components/admin/blog/MediaPicker";
@@ -63,10 +64,12 @@ export function ArticleEditor({
   initial,
   operatorName,
   categories,
+  tags,
 }: {
   initial?: Article;
   operatorName: string;
   categories: string[];
+  tags: string[];
 }) {
   const router = useRouter();
   const draftKey = `upeo:article-draft:${initial?.id ?? "new"}`;
@@ -77,6 +80,12 @@ export function ArticleEditor({
   const [slugTaken, setSlugTaken] = useState(false);
   const [restore, setRestore] = useState<StoredDraft | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState(() => {
+    const seed = [...categories];
+    const current = initial?.category?.trim();
+    if (current && !seed.some((name) => name.toLowerCase() === current.toLowerCase())) seed.push(current);
+    return seed.sort((a, b) => a.localeCompare(b));
+  });
   const [saving, setSaving] = useState<"save" | "live" | null>(null);
   const [navigating, startNav] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -91,6 +100,13 @@ export function ArticleEditor({
   const set = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
   }, []);
+
+  function chooseCategory(name: string) {
+    const clean = name.trim();
+    set("category", clean);
+    if (!clean) return;
+    setCategoryOptions((list) => (list.some((item) => item.toLowerCase() === clean.toLowerCase()) ? list : [...list, clean].sort((a, b) => a.localeCompare(b))));
+  }
 
   const deferredBody = useDeferredValue(form.body);
   const report = useMemo(
@@ -438,16 +454,11 @@ export function ArticleEditor({
           </Panel>
 
           <Panel title="Category">
-            <input className={inputClass} list="article-categories" value={form.category} placeholder="Add a category" onChange={(e) => set("category", e.target.value)} />
-            <datalist id="article-categories">
-              {categories.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
+            <CategoryField value={form.category} options={categoryOptions} onChange={chooseCategory} />
           </Panel>
 
           <Panel title="Tags">
-            <ChipsInput value={form.tags} onChange={(v) => set("tags", v)} placeholder="Type and press Enter" />
+            <ChipsInput value={form.tags} suggestions={tags} onChange={(v) => set("tags", v)} placeholder="Add a tag" />
           </Panel>
 
           <Panel title="Excerpt" meta="Short summary on listing cards and in search results.">

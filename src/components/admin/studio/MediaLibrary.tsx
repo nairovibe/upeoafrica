@@ -21,7 +21,9 @@ export function MediaLibrary({ items, canEdit }: { items: MediaItem[]; canEdit: 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return items;
-    return items.filter((m) => m.alt.toLowerCase().includes(needle) || m.storage_path.toLowerCase().includes(needle));
+    return items.filter((m) =>
+      [m.title, m.alt, m.caption, m.description, m.storage_path].some((value) => value.toLowerCase().includes(needle)),
+    );
   }, [items, query]);
 
   const open = items.find((m) => m.id === openId) ?? null;
@@ -32,7 +34,7 @@ export function MediaLibrary({ items, canEdit }: { items: MediaItem[]; canEdit: 
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
         <input
           className={cn(inputClass, "pl-9")}
-          placeholder="Search alt text or file name"
+          placeholder="Search title, alt text, or file name"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -65,7 +67,7 @@ export function MediaLibrary({ items, canEdit }: { items: MediaItem[]; canEdit: 
                   className="aspect-[4/3] w-full border-0"
                 />
                 <span className="mt-2 block truncate text-[13px] font-medium text-ink-900">
-                  {m.alt || fileName(m.storage_path)}
+                  {m.title || m.alt || fileName(m.storage_path)}
                 </span>
                 <span className="block text-xs capitalize text-muted">
                   {m.kind} · {formatDay(m.created_at)}
@@ -87,6 +89,9 @@ function MediaDetail({ item, canEdit, onClose }: { item: MediaItem; canEdit: boo
   const router = useRouter();
   const url = publicMediaUrl(item.storage_path);
   const [alt, setAlt] = useState(item.alt);
+  const [title, setTitle] = useState(item.title);
+  const [caption, setCaption] = useState(item.caption);
+  const [description, setDescription] = useState(item.description);
   const [meta, setMeta] = useState<{ size?: number; type?: string } | null>(null);
   const [working, setWorking] = useState<"save" | "delete" | null>(null);
   const [refreshing, startRefresh] = useTransition();
@@ -113,7 +118,10 @@ function MediaDetail({ item, canEdit, onClose }: { item: MediaItem; canEdit: boo
   async function saveAlt() {
     setWorking("save");
     setMsg(null);
-    const { error } = await createClient().from("media").update({ alt: alt.trim() }).eq("id", item.id);
+    const { error } = await createClient()
+      .from("media")
+      .update({ alt: alt.trim(), title: title.trim(), caption: caption.trim(), description: description.trim() })
+      .eq("id", item.id);
     setWorking(null);
     if (error) return setMsg({ tone: "error", text: error.message });
     setMsg({ tone: "ok", text: "Alt text saved." });
@@ -165,7 +173,11 @@ function MediaDetail({ item, canEdit, onClose }: { item: MediaItem; canEdit: boo
               <DangerBtn onClick={() => setConfirming(true)} disabled={busy}>
                 Delete
               </DangerBtn>
-              <AdminBtn onClick={saveAlt} disabled={busy || alt.trim() === item.alt} pending={working === "save"}>
+              <AdminBtn
+                onClick={saveAlt}
+                disabled={busy || (alt.trim() === item.alt && title.trim() === item.title && caption.trim() === item.caption && description.trim() === item.description)}
+                pending={working === "save"}
+              >
                 {working === "save" ? "Saving..." : "Save"}
               </AdminBtn>
             </>
@@ -186,6 +198,9 @@ function MediaDetail({ item, canEdit, onClose }: { item: MediaItem; canEdit: boo
             )}
           </div>
 
+          <Field label="Title">
+            <input className={inputClass} value={title} disabled={!canEdit} placeholder="Name of this file" onChange={(e) => setTitle(e.target.value)} />
+          </Field>
           <Field label="Alt text">
             <textarea
               className={inputClass}
@@ -195,6 +210,12 @@ function MediaDetail({ item, canEdit, onClose }: { item: MediaItem; canEdit: boo
               placeholder="Describe what the image shows"
               onChange={(e) => setAlt(e.target.value)}
             />
+          </Field>
+          <Field label="Caption">
+            <input className={inputClass} value={caption} disabled={!canEdit} placeholder="Shown under the image in an article" onChange={(e) => setCaption(e.target.value)} />
+          </Field>
+          <Field label="Description">
+            <textarea className={inputClass} rows={3} value={description} disabled={!canEdit} placeholder="Kept with the file in the library" onChange={(e) => setDescription(e.target.value)} />
           </Field>
 
           {url ? (

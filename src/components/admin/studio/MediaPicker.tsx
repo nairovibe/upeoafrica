@@ -75,7 +75,9 @@ function PickerGrid({ kind, onPick }: { kind?: MediaItem["kind"]; onPick: (item:
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!items || !needle) return items ?? [];
-    return items.filter((m) => m.alt.toLowerCase().includes(needle) || m.storage_path.toLowerCase().includes(needle));
+    return items.filter((m) =>
+      [m.title, m.alt, m.caption, m.description, m.storage_path].some((value) => value.toLowerCase().includes(needle)),
+    );
   }, [items, query]);
 
   return (
@@ -84,7 +86,7 @@ function PickerGrid({ kind, onPick }: { kind?: MediaItem["kind"]; onPick: (item:
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
         <input
           className={cn(inputClass, "pl-9")}
-          placeholder="Search by alt text or file name"
+          placeholder="Search by title, alt text, or file name"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
@@ -114,7 +116,7 @@ function PickerGrid({ kind, onPick }: { kind?: MediaItem["kind"]; onPick: (item:
                 icon={m.kind === "video" ? Film : FileText}
                 className="aspect-square w-full transition-colors group-hover:border-brand-400 group-focus-visible:border-brand-500"
               />
-              <span className="mt-1 block truncate text-xs text-body">{m.alt || fileName(m.storage_path)}</span>
+              <span className="mt-1 block truncate text-xs text-body">{m.title || m.alt || fileName(m.storage_path)}</span>
             </button>
           ))}
         </div>

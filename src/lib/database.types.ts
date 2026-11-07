@@ -724,34 +724,43 @@ export type Database = {
         Row: {
           alt: string
           bucket: string
+          caption: string
           created_at: string
           created_by: string | null
+          description: string
           id: string
           kind: string
           locale: string
           storage_path: string
+          title: string
           updated_at: string
         }
         Insert: {
           alt?: string
           bucket?: string
+          caption?: string
           created_at?: string
           created_by?: string | null
+          description?: string
           id?: string
           kind: string
           locale?: string
           storage_path: string
+          title?: string
           updated_at?: string
         }
         Update: {
           alt?: string
           bucket?: string
+          caption?: string
           created_at?: string
           created_by?: string | null
+          description?: string
           id?: string
           kind?: string
           locale?: string
           storage_path?: string
+          title?: string
           updated_at?: string
         }
         Relationships: [
