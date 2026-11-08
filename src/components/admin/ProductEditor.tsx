@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { CurrencyPicker } from "@/components/admin/CurrencyPicker";
+import { Switch } from "@/components/admin/studio/controls";
 import { WizardSteps } from "@/components/admin/WizardSteps";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
 import { TierEditor } from "@/components/admin/products/TierEditor";
@@ -12,7 +14,7 @@ import { UploadField } from "@/components/admin/products/UploadField";
 import { fromNairobiInput, toNairobiInput } from "@/components/admin/events/time";
 import { toHtml } from "@/components/blog/analysis";
 import { createClient } from "@/lib/supabase/client";
-import { PRODUCT_TYPES, formatKes, slugify } from "@/lib/constants";
+import { PRODUCT_TYPES, formatMoney, priceCurrency, slugify, type PriceCurrency } from "@/lib/constants";
 import { company } from "@/lib/content";
 import { refreshSite } from "@/lib/refresh-site";
 import { currentOffer } from "@/lib/offer";
@@ -34,6 +36,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial));
   const [type, setType] = useState(initial?.type ?? "plugin");
+  const [currency, setCurrency] = useState<PriceCurrency>(priceCurrency(initial?.currency));
   const [price, setPrice] = useState(String(initial?.price_kes ?? 0));
   const [promoOn, setPromoOn] = useState(initial?.promo_price_kes != null);
   const [promoPrice, setPromoPrice] = useState(initial?.promo_price_kes != null ? String(initial.promo_price_kes) : "");
@@ -74,7 +77,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
     const e: Errors = {};
     if (!title.trim()) e.title = "Add a name.";
     if (!SLUG_RE.test(slug)) e.slug = "Use lowercase letters, numbers and single dashes.";
-    if (!tiersOn && (price.trim() === "" || !Number.isInteger(priceNum) || priceNum < 0)) e.price = "Use a whole number of shillings, 0 or more.";
+    if (!tiersOn && (price.trim() === "" || !Number.isInteger(priceNum) || priceNum < 0)) e.price = "Use a whole number, 0 or more.";
     if (tiersOn) {
       if (!tiers.length) e.price = "Add at least one tier, or switch tiers off.";
       else if (tiers.some((tier) => !tier.name.trim())) e.price = "Every tier needs a name.";
@@ -136,6 +139,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
       title: title.trim(),
       slug,
       type,
+      currency,
       price_kes: savedTiers.length ? Math.min(...savedTiers.map((tier) => tier.price_kes)) : priceNum,
       price_tiers: savedTiers,
       promo_price_kes: tiersOn || !promoOn ? null : saleNum,
@@ -187,7 +191,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="min-w-0">
           {step === 0 ? (
-            <>
+            <div className="space-y-4">
             <Panel title="Product">
               <div className="space-y-4">
                 <Field label="Name">
@@ -229,44 +233,41 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                 </div>
               </div>
             </Panel>
-            <div className="mt-4">
+            <div>
               <p className="mb-1.5 text-[13px] font-medium text-ink-900">Description</p>
               <RichEditor initialHtml={toHtml(description)} onChange={setDescription} />
             </div>
-            </>
+            </div>
           ) : null}
 
           {step === 1 ? (
             <Panel title="Price" meta="One price, or tiers for products that sell in more than one plan.">
               <div className="space-y-4">
+                <CurrencyPicker value={currency} onChange={setCurrency} />
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2.5">
                   <span>
                     <span className="block text-sm font-medium text-ink-900">Pricing tiers</span>
                     <span className="mt-0.5 block text-xs text-muted">Leave this off for a single price. Turn it on to sell Starter, Studio, and the rest.</span>
                   </span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={tiersOn}
+                  <Switch
+                    checked={tiersOn}
+                    label="Pricing tiers"
                     onClick={() => {
                       setTiersOn((on) => {
                         if (!on && tiers.length === 0) setTiers([emptyTier()]);
                         return !on;
                       });
                     }}
-                    className={cn("relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors", tiersOn ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
-                  >
-                    <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", tiersOn ? "translate-x-[18px]" : "translate-x-0.5")} />
-                  </button>
+                  />
                 </label>
                 {tiersOn ? (
                   <>
-                    <TierEditor value={tiers} onChange={setTiers} />
+                    <TierEditor value={tiers} currency={currency} onChange={setTiers} />
                     <FieldError text={errors.price} />
                   </>
                 ) : (
                 <>
-                <Field label="List price (KES)">
+                <Field label={`List price (${currency})`}>
                   <input
                     className={cn(inputClass, errors.price && "border-red-400")}
                     type="number"
@@ -281,15 +282,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                 </Field>
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2.5">
                   <span className="text-sm font-medium text-ink-900">Run a promotion</span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={promoOn}
-                    onClick={() => setPromoOn((v) => !v)}
-                    className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors", promoOn ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
-                  >
-                    <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", promoOn ? "translate-x-[18px]" : "translate-x-0.5")} />
-                  </button>
+                  <Switch checked={promoOn} label="Run a promotion" onClick={() => setPromoOn((v) => !v)} />
                 </label>
                 {promoOn ? (
                   <div className="space-y-4">
@@ -311,7 +304,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                           }}
                         />
                       </Field>
-                      <Field label="Offer price (KES)">
+                      <Field label={`Offer price (${currency})`}>
                         <input
                           className={cn(inputClass, errors.promo && "border-red-400")}
                           inputMode="numeric"
@@ -380,12 +373,12 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                 <p>
                   {tiersOn
                     ? fromPrice != null && fromPrice > 0
-                      ? `${tiers.length} tiers, from ${formatKes(fromPrice)}.`
+                      ? `${tiers.length} tiers, from ${formatMoney(fromPrice, currency)}.`
                       : `${tiers.length} tiers. Checkout stays closed until a tier has a price.`
                     : preview
-                      ? `${formatKes(preview.price)} during ${preview.label}. List price ${formatKes(preview.list)}.`
+                      ? `${formatMoney(preview.price, currency)} during ${preview.label}. List price ${formatMoney(preview.list, currency)}.`
                       : priceNum > 0
-                        ? `${formatKes(priceNum)} with no offer running.`
+                        ? `${formatMoney(priceNum, currency)} with no offer running.`
                         : "On request. The Get it now button stays hidden."}
                 </p>
                 <p>{published ? "Live on the products page." : "Hidden until you switch it on."}</p>
@@ -398,16 +391,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
           <Panel
             title={title.trim() || "New product"}
             action={
-              <button
-                type="button"
-                role="switch"
-                aria-checked={published}
-                aria-label="Live on the site"
-                onClick={() => setPublished((v) => !v)}
-                className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors duration-150", published ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
-              >
-                <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150", published ? "translate-x-[18px]" : "translate-x-0.5")} />
-              </button>
+              <Switch checked={published} label="Live on the site" onClick={() => setPublished((v) => !v)} />
             }
           >
             <div className="space-y-3">
@@ -415,12 +399,12 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
               <p className="text-[13px] text-body">
                 {tiersOn
                   ? fromPrice != null && fromPrice > 0
-                    ? `Buyers start at ${formatKes(fromPrice)}.`
+                    ? `Buyers start at ${formatMoney(fromPrice, currency)}.`
                     : "No checkout until a tier has a price."
                   : preview
-                    ? `Buyers pay ${formatKes(preview.price)} right now.`
+                    ? `Buyers pay ${formatMoney(preview.price, currency)} right now.`
                     : priceNum > 0
-                      ? `Buyers pay ${formatKes(priceNum)}.`
+                      ? `Buyers pay ${formatMoney(priceNum, currency)}.`
                       : "No checkout until a price is set."}
               </p>
               {initial?.published ? (
@@ -431,7 +415,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
               ) : null}
               {sales ? (
                 <p className="text-xs text-muted">
-                  {sales.count} {sales.count === 1 ? "sale" : "sales"} · {formatKes(sales.revenue)}
+                  {sales.count} {sales.count === 1 ? "sale" : "sales"} · {formatMoney(sales.revenue, "KES")}
                 </p>
               ) : null}
               <FieldError text={errors.form} />

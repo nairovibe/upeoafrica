@@ -8,7 +8,8 @@ import { CheckoutForm } from "@/components/site/CheckoutForm";
 import { ProductBuy } from "@/components/products/ProductBuy";
 import { stripTags } from "@/components/blog/analysis";
 import { getProductBySlug, getPublishedProducts } from "@/lib/cms";
-import { formatKes } from "@/lib/constants";
+import { formatMoney, priceCurrency } from "@/lib/constants";
+import { company } from "@/lib/content";
 import { chargeKes, currentOffer } from "@/lib/offer";
 import { parseTiers, tiersFrom } from "@/lib/tiers";
 
@@ -62,22 +63,35 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
             <aside className="border border-line p-6">
               {tiers.length ? (
-                <ProductBuy productId={item.id} tiers={tiers} />
+                <ProductBuy productId={item.id} tiers={tiers} currency={priceCurrency(item.currency)} />
               ) : (
               <>
               <p className="font-display text-2xl font-semibold text-ink-900">
-                {due > 0 ? formatKes(due) : "On request"}
+                {due > 0 ? formatMoney(due, item.currency) : "On request"}
               </p>
               {offer ? (
                 <p className="mt-1 text-sm text-muted">
-                  <span className="line-through">{formatKes(offer.list)}</span>
+                  <span className="line-through">{formatMoney(offer.list, item.currency)}</span>
                   <span className="ml-2 font-medium text-brand-600">{offer.label}</span>
                 </p>
               ) : null}
               <p className="mt-2 text-sm text-body">
-                {due > 0 ? "Get it now with M-Pesa. The file link is emailed after confirmation." : "Tell us what you need and we will scope it."}
+                {due <= 0
+                  ? "Tell us what you need and we will scope it."
+                  : priceCurrency(item.currency) === "USD"
+                    ? "This price is in US dollars. M-Pesa checkout is for Kenyan shilling prices."
+                    : "Get it now with M-Pesa. The file link is emailed after confirmation."}
               </p>
-              {due > 0 ? (
+              {due > 0 && priceCurrency(item.currency) === "USD" ? (
+                <p className="mt-4 text-sm text-body">
+                  Write to{" "}
+                  <a href={`mailto:${company.email}`} className="font-medium text-brand-600 hover:underline">
+                    {company.email}
+                  </a>{" "}
+                  and we will send the invoice.
+                </p>
+              ) : null}
+              {due > 0 && priceCurrency(item.currency) === "KES" ? (
                 <div className="mt-6">
                   <CheckoutForm productId={item.id} />
                 </div>

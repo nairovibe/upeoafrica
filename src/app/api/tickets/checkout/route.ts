@@ -6,6 +6,7 @@ import { startMpesaStk } from "@/lib/intasend";
 import { sendTicketEmail, ticketRpcError } from "@/lib/tickets";
 import { normaliseKePhone } from "@/components/events/utils";
 import { chargeKes } from "@/lib/offer";
+import { priceCurrency } from "@/lib/constants";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -59,6 +60,14 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (ticket && chargeKes(ticket) > 0 && !phone) {
     return NextResponse.json({ error: "Enter the M-Pesa number that will pay." }, { status: 400 });
+  }
+
+  const { data: pricedEvent } = await supabase.from("events").select("currency").eq("id", body.eventId).maybeSingle();
+  if (ticket && chargeKes(ticket) > 0 && priceCurrency(pricedEvent?.currency) === "USD") {
+    return NextResponse.json(
+      { error: "This event is priced in US dollars. M-Pesa pays Kenyan shilling tickets." },
+      { status: 400 },
+    );
   }
 
   const { data: rows, error } = await supabase.rpc("create_ticket_order", {

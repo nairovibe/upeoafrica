@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminBtn, AdminPage, FilterTabs } from "@/components/admin/ui";
 import { ManageTable, type DeskItem } from "@/components/admin/ManageTable";
 import { formatDay } from "@/components/admin/studio/format";
-import { formatKes } from "@/lib/constants";
+import { formatKes, formatMoney } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
 import { parseTiers, tiersFrom } from "@/lib/tiers";
 import { getStaff } from "@/lib/cms";
@@ -24,12 +24,16 @@ export default async function ProductsListPage({ searchParams }: { searchParams:
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("id, title, slug, type, price_kes, price_tiers, promo_price_kes, promo_label, promo_starts_at, promo_ends_at, version, published, updated_at, deleted_at, orders(amount_kes, status)")
+    .select("id, title, slug, type, price_kes, currency, price_tiers, promo_price_kes, promo_label, promo_starts_at, promo_ends_at, version, published, updated_at, deleted_at, orders(amount_kes, currency, status)")
     .order("title");
 
   const products = (data ?? []).map((product) => {
     const paid = (product.orders ?? []).filter((order) => order.status === "paid");
-    return { ...product, sales: paid.length, revenue: paid.reduce((sum, order) => sum + order.amount_kes, 0) };
+    return {
+      ...product,
+      sales: paid.length,
+      revenue: paid.reduce((sum, order) => sum + (order.currency === "USD" ? 0 : order.amount_kes), 0),
+    };
   });
   const activeRows = products.filter((product) => !product.deleted_at);
   const trashed = products.filter((product) => product.deleted_at);
@@ -52,11 +56,11 @@ export default async function ProductsListPage({ searchParams }: { searchParams:
       (() => {
         const tiers = parseTiers(product.price_tiers);
         const from = tiersFrom(tiers);
-        if (from != null) return from > 0 ? `From ${formatKes(from)} · ${tiers.length} tiers` : `${tiers.length} tiers`;
+        if (from != null) return from > 0 ? `From ${formatMoney(from, product.currency)} · ${tiers.length} tiers` : `${tiers.length} tiers`;
         const offer = currentOffer(product);
         const due = chargeKes(product);
         if (due <= 0) return "On request";
-        return offer ? `${formatKes(due)} · ${offer.label}` : formatKes(due);
+        return offer ? `${formatMoney(due, product.currency)} · ${offer.label}` : formatMoney(due, product.currency);
       })(),
       product.version || "-",
       String(product.sales),

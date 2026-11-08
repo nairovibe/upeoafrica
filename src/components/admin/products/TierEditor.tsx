@@ -3,11 +3,19 @@
 import { Plus } from "lucide-react";
 import { AdminBtn, Field, inputClass } from "@/components/admin/ui";
 import { moveItem, RowTools } from "@/components/admin/events/RowTools";
+import { Switch } from "@/components/admin/studio/controls";
 import { emptyTier, tierDue, type PriceTier } from "@/lib/tiers";
-import { formatKes } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { formatMoney, type PriceCurrency } from "@/lib/constants";
 
-export function TierEditor({ value, onChange }: { value: PriceTier[]; onChange: (rows: PriceTier[]) => void }) {
+export function TierEditor({
+  value,
+  currency,
+  onChange,
+}: {
+  value: PriceTier[];
+  currency: PriceCurrency;
+  onChange: (rows: PriceTier[]) => void;
+}) {
   const set = (index: number, patch: Partial<PriceTier>) =>
     onChange(value.map((row, i) => (i === index ? { ...row, ...patch } : row)));
 
@@ -22,7 +30,7 @@ export function TierEditor({ value, onChange }: { value: PriceTier[]; onChange: 
                 <Field label="Tier name">
                   <input className={inputClass} value={tier.name} placeholder="Studio" onChange={(e) => set(index, { name: e.target.value })} />
                 </Field>
-                <Field label="Price (KES)">
+                <Field label={`Price (${currency})`}>
                   <input
                     className={inputClass}
                     inputMode="numeric"
@@ -30,7 +38,7 @@ export function TierEditor({ value, onChange }: { value: PriceTier[]; onChange: 
                     onChange={(e) => set(index, { price_kes: Number(e.target.value.replace(/[^\d]/g, "") || 0) })}
                   />
                 </Field>
-                <Field label="Offer price (KES)">
+                <Field label={`Offer price (${currency})`}>
                   <input
                     className={inputClass}
                     inputMode="numeric"
@@ -72,18 +80,10 @@ export function TierEditor({ value, onChange }: { value: PriceTier[]; onChange: 
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <label className="flex cursor-pointer items-center gap-3">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={tier.popular}
-                  onClick={() => set(index, { popular: !tier.popular })}
-                  className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors", tier.popular ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
-                >
-                  <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", tier.popular ? "translate-x-[18px]" : "translate-x-0.5")} />
-                </button>
+                <Switch checked={tier.popular} label="Mark as popular" onClick={() => set(index, { popular: !tier.popular })} />
                 <span className="text-sm font-medium text-ink-900">Mark as popular</span>
               </label>
-              <p className="text-xs text-muted">{due > 0 ? `Buyers pay ${formatKes(due)}` : "On request"}</p>
+              <p className="text-xs text-muted">{due > 0 ? `Buyers pay ${formatMoney(due, currency)}` : "On request"}</p>
             </div>
           </div>
         );

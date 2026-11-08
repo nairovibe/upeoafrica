@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
+import { CurrencyPicker } from "@/components/admin/CurrencyPicker";
+import { Switch } from "@/components/admin/studio/controls";
 import { FileField } from "@/components/admin/FileField";
 import { GalleryField } from "@/components/admin/events/GalleryField";
 import { SpeakersEditor, type SpeakerDraft } from "@/components/admin/events/SpeakersEditor";
@@ -16,7 +18,7 @@ import { defaultStartInput, fromNairobiInput, toNairobiInput } from "@/component
 import { newKey } from "@/components/admin/events/RowTools";
 import { EVENT_CATEGORIES, EVENT_MODES, isEventOver, parseAgenda, parseSpeakers } from "@/components/events/utils";
 import { createClient } from "@/lib/supabase/client";
-import { formatKes, slugify } from "@/lib/constants";
+import { formatMoney, priceCurrency, slugify, type PriceCurrency } from "@/lib/constants";
 import { company } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import type { Event, TicketType } from "@/lib/cms";
@@ -63,6 +65,7 @@ export function EventEditor({
   const [mode, setMode] = useState(initial?.mode ?? "mombasa");
   const [venue, setVenue] = useState(initial?.venue ?? "");
   const [capacity, setCapacity] = useState(initial?.capacity != null ? String(initial.capacity) : "");
+  const [currency, setCurrency] = useState<PriceCurrency>(priceCurrency(initial?.currency));
   const [cover, setCover] = useState(initial?.cover_path ?? "");
   const [gallery, setGallery] = useState<string[]>(initial?.gallery ?? []);
   const [speakers, setSpeakers] = useState<SpeakerDraft[]>(() =>
@@ -191,6 +194,7 @@ export function EventEditor({
       mode,
       venue: venue.trim() || null,
       capacity: intOrNull(capacity),
+      currency,
       cover_path: cover || null,
       gallery,
       speakers: speakers
@@ -398,18 +402,21 @@ export function EventEditor({
 
         {step === 2 ? (
         <Panel title="Tickets" meta="The offer price is what Get it now charges while the promotion is open.">
-          <div className="mb-4 max-w-[200px]">
-            <Field label="Event capacity">
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                placeholder="No limit"
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value.replace(/[^\d]/g, ""))}
-              />
-            </Field>
+          <div className="mb-4 space-y-4">
+            <CurrencyPicker value={currency} onChange={setCurrency} />
+            <div className="max-w-[200px]">
+              <Field label="Event capacity">
+                <input
+                  className={inputClass}
+                  inputMode="numeric"
+                  placeholder="No limit"
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value.replace(/[^\d]/g, ""))}
+                />
+              </Field>
+            </div>
           </div>
-          <TicketsEditor value={tickets} onChange={setTickets} orderCounts={orderCounts} />
+          <TicketsEditor value={tickets} currency={currency} onChange={setTickets} orderCounts={orderCounts} />
         </Panel>
         ) : null}
 
@@ -448,23 +455,7 @@ export function EventEditor({
           <div className="space-y-4">
             <label className="flex cursor-pointer items-center justify-between gap-3">
               <span className="text-sm font-medium text-ink-900">Show on /events</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={published}
-                onClick={() => setPublished((v) => !v)}
-                className={cn(
-                  "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200",
-                  published ? "bg-brand-500" : "bg-surface-3",
-                )}
-              >
-                <span
-                  className={cn(
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200",
-                    published ? "translate-x-5" : "translate-x-0.5",
-                  )}
-                />
-              </button>
+              <Switch checked={published} label="Show on /events" onClick={() => setPublished((v) => !v)} />
             </label>
 
             {summary ? (
@@ -480,7 +471,7 @@ export function EventEditor({
                 <div>
                   <dt className="text-[11px] text-muted">Revenue</dt>
                   <dd className="truncate font-display text-base font-semibold tabular-nums text-ink-900">
-                    {formatKes(summary.revenue).replace("KES ", "")}
+                    {formatMoney(summary.revenue, "KES").replace("KES ", "")}
                   </dd>
                 </div>
               </dl>

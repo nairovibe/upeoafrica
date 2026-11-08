@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { goToThanks } from "@/lib/thanks";
 import { CalendarPlus, Check, Loader2, Minus, Plus, Smartphone } from "lucide-react";
 import { TurnstileField } from "@/components/security/TurnstileField";
-import { formatKes } from "@/lib/constants";
+import { formatMoney, type PriceCurrency } from "@/lib/constants";
+import { company as office } from "@/lib/content";
 import { cn } from "@/lib/utils";
 import { formatEventDate, normaliseKePhone, type SalesState } from "@/components/events/utils";
 
@@ -44,12 +45,14 @@ export function TicketCheckoutForm({
   eventId,
   eventSlug,
   tickets,
+  currency = "KES",
   eventSeatsLeft,
   closedMessage,
 }: {
   eventId: string;
   eventSlug: string;
   tickets: TicketOption[];
+  currency?: PriceCurrency;
   eventSeatsLeft: number | null;
   closedMessage?: string | null;
 }) {
@@ -72,6 +75,7 @@ export function TicketCheckoutForm({
 
   const selected = tickets.find((t) => t.id === ticketTypeId);
   const free = (selected?.price_kes ?? 0) <= 0;
+  const dollars = currency === "USD" && !free;
   const maxQty = Math.max(
     1,
     Math.min(selected?.max_per_order ?? 10, selected?.remaining ?? Infinity, eventSeatsLeft ?? Infinity),
@@ -231,7 +235,7 @@ export function TicketCheckoutForm({
             <>
               <h2 className="mt-4 font-display text-xl font-semibold text-ink-900">Check your phone</h2>
               <p className="mt-1 text-sm text-body">
-                Enter your M-Pesa PIN to pay {formatKes(total)}. This page updates once Safaricom confirms.
+                Enter your M-Pesa PIN to pay {formatMoney(total, currency)}. This page updates once Safaricom confirms.
               </p>
             </>
           ) : phase === "timeout" ? (
@@ -310,9 +314,9 @@ export function TicketCheckoutForm({
                 <span className="font-medium text-ink-900">{t.name}</span>
                 <span className="font-display font-semibold text-ink-900">
                   {t.list_price_kes != null && t.list_price_kes > t.price_kes ? (
-                    <span className="mr-2 text-xs font-normal text-muted line-through">{formatKes(t.list_price_kes)}</span>
+                    <span className="mr-2 text-xs font-normal text-muted line-through">{formatMoney(t.list_price_kes, currency)}</span>
                   ) : null}
-                  {t.price_kes > 0 ? formatKes(t.price_kes) : "Free"}
+                  {t.price_kes > 0 ? formatMoney(t.price_kes, currency) : "Free"}
                 </span>
               </span>
               {t.description || note ? (
@@ -329,6 +333,17 @@ export function TicketCheckoutForm({
         <p className="mt-5 rounded-[5px] bg-surface-2 px-4 py-3 text-sm text-body">
           {closedMessage || (eventSeatsLeft === 0 ? "This event is full." : "No tickets are on sale right now.")}
         </p>
+      ) : dollars ? (
+        <div className="mt-5 space-y-2">
+          <p className="font-display text-lg font-semibold text-ink-900">{formatMoney(total, currency)}</p>
+          <p className="text-sm text-body">
+            This price is in US dollars. M-Pesa pays Kenyan shilling tickets. Write to{" "}
+            <a href={`mailto:${office.email}`} className="font-medium text-brand-600 hover:underline">
+              {office.email}
+            </a>{" "}
+            and we will send the invoice.
+          </p>
+        </div>
       ) : (
         <form onSubmit={submit} className="mt-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -396,7 +411,7 @@ export function TicketCheckoutForm({
             />
           </label>
 
-          <p className="font-display text-lg font-semibold text-ink-900">{free ? "Free" : formatKes(total)}</p>
+          <p className="font-display text-lg font-semibold text-ink-900">{free ? "Free" : formatMoney(total, currency)}</p>
           <TurnstileField action="ticket" theme="light" onToken={setCaptcha} resetSignal={captchaReset} />
           {err ? (
             <p className="text-sm text-red-600" role="alert">

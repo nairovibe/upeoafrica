@@ -5,6 +5,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { startMpesaStk } from "@/lib/intasend";
 import { chargeKes } from "@/lib/offer";
 import { parseTiers, tierDue } from "@/lib/tiers";
+import { priceCurrency } from "@/lib/constants";
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -49,6 +50,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose a plan." }, { status: 400 });
   }
   const amount = tier ? tierDue(tier) : chargeKes(product);
+  if (priceCurrency(product.currency) === "USD") {
+    return NextResponse.json(
+      { error: "This product is priced in US dollars. M-Pesa checkout is for Kenyan shilling prices." },
+      { status: 400 },
+    );
+  }
   if (amount <= 0) {
     return NextResponse.json({ error: "This item is not for sale yet." }, { status: 400 });
   }
@@ -60,6 +67,7 @@ export async function POST(request: Request) {
       phone,
       product_id: product.id,
       amount_kes: amount,
+      currency: "KES",
       tier_label: tier?.name || null,
       provider: "intasend",
       status: "pending",

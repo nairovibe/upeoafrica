@@ -256,10 +256,10 @@ async function _getExpertBySlug(slug: string) {
 export const getExperts = publicRead("cms:getExperts:v3", _getExperts);
 export const getExpertBySlug = publicRead("cms:getExpertBySlug:v2", _getExpertBySlug);
 export const getFeaturedClients = publicRead("cms:getFeaturedClients:v2", _getFeaturedClients);
-export const getPublishedProducts = publicRead("cms:getPublishedProducts:v4", _getPublishedProducts);
-export const getProductBySlug = publicRead("cms:getProductBySlug:v4", _getProductBySlug);
-export const getPublishedEvents = publicRead("cms:getPublishedEvents:v2", _getPublishedEvents);
-export const getEventBySlug = publicRead("cms:getEventBySlug:v2", _getEventBySlug);
+export const getPublishedProducts = publicRead("cms:getPublishedProducts:v5", _getPublishedProducts);
+export const getProductBySlug = publicRead("cms:getProductBySlug:v5", _getProductBySlug);
+export const getPublishedEvents = publicRead("cms:getPublishedEvents:v3", _getPublishedEvents);
+export const getEventBySlug = publicRead("cms:getEventBySlug:v3", _getEventBySlug);
 export const getTicketTypes = publicRead("cms:getTicketTypes:v2", _getTicketTypes);
 export const getTicketTypesForEvents = publicRead("cms:getTicketTypesForEvents:v2", _getTicketTypesForEvents);
 export const getPublishedEventSlugs = publicRead("cms:getPublishedEventSlugs:v2", _getPublishedEventSlugs);

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
-import { formatKes } from "@/lib/constants";
+import { formatMoney } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
 import { stripTags } from "@/components/blog/analysis";
 import { parseTiers, tiersFrom } from "@/lib/tiers";
@@ -38,6 +38,7 @@ export type ProductCard = {
   promo_starts_at?: string | null;
   promo_ends_at?: string | null;
   price_tiers?: unknown;
+  currency?: string | null;
 };
 
 function lineFrom(value: string | null): ProductLine | null {
@@ -139,8 +140,8 @@ function ProductPrice({ product }: { product: ProductCard }) {
   return (
     <>
       {tiers.length > 1 ? "From " : null}
-      {offer ? <span className="mr-2 font-normal text-muted line-through">{formatKes(offer.list)}</span> : null}
-      {formatKes(due)}
+      {offer ? <span className="mr-2 font-normal text-muted line-through">{formatMoney(offer.list, product.currency)}</span> : null}
+      {formatMoney(due, product.currency)}
     </>
   );
 }

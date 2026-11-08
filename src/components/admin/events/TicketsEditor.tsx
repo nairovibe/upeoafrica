@@ -2,8 +2,9 @@
 
 import { Plus } from "lucide-react";
 import { AdminBtn, Field, inputClass } from "@/components/admin/ui";
+import { Switch } from "@/components/admin/studio/controls";
 import { moveItem, newKey, RowTools } from "@/components/admin/events/RowTools";
-import { cn } from "@/lib/utils";
+import type { PriceCurrency } from "@/lib/constants";
 
 export type TicketDraft = {
   key: string;
@@ -42,10 +43,12 @@ export function emptyTicket(name = ""): TicketDraft {
 
 export function TicketsEditor({
   value,
+  currency,
   onChange,
   orderCounts,
 }: {
   value: TicketDraft[];
+  currency: PriceCurrency;
   onChange: (rows: TicketDraft[]) => void;
   orderCounts: Record<string, number>;
 }) {
@@ -63,7 +66,7 @@ export function TicketsEditor({
                 <Field label="Name">
                   <input className={inputClass} value={t.name} placeholder="General" onChange={(e) => set(i, { name: e.target.value })} />
                 </Field>
-                <Field label="Price (KES)">
+                <Field label={`Price (${currency})`}>
                   <input
                     className={inputClass}
                     inputMode="numeric"
@@ -130,19 +133,11 @@ export function TicketsEditor({
             </div>
             <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2">
               <span className="text-sm font-medium text-ink-900">Run a promotion</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={t.promo}
-                onClick={() => set(i, { promo: !t.promo })}
-                className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors", t.promo ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
-              >
-                <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", t.promo ? "translate-x-[18px]" : "translate-x-0.5")} />
-              </button>
+              <Switch checked={t.promo} label="Run a promotion" onClick={() => set(i, { promo: !t.promo })} />
             </label>
             {t.promo ? (
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Field label="Offer price (KES)">
+                <Field label={`Offer price (${currency})`}>
                   <input
                     className={inputClass}
                     inputMode="numeric"

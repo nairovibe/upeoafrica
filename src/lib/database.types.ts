@@ -358,6 +358,7 @@ export type Database = {
           cover_path: string | null
           created_at: string
           created_by: string | null
+          currency: string
           ends_at: string | null
           gallery: string[]
           id: string
@@ -383,6 +384,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           ends_at?: string | null
           gallery?: string[]
           id?: string
@@ -408,6 +410,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           ends_at?: string | null
           gallery?: string[]
           id?: string
@@ -890,6 +893,7 @@ export type Database = {
       orders: {
         Row: {
           amount_kes: number
+          currency: string
           attendee_company: string | null
           attendee_name: string | null
           checked_in_at: string | null
@@ -913,6 +917,7 @@ export type Database = {
         }
         Insert: {
           amount_kes: number
+          currency?: string
           attendee_company?: string | null
           attendee_name?: string | null
           checked_in_at?: string | null
@@ -936,6 +941,7 @@ export type Database = {
         }
         Update: {
           amount_kes?: number
+          currency?: string
           attendee_company?: string | null
           attendee_name?: string | null
           checked_in_at?: string | null
@@ -1100,6 +1106,7 @@ export type Database = {
           cover_path: string | null
           created_at: string
           created_by: string | null
+          currency: string
           description: string
           file_path: string | null
           id: string
@@ -1122,6 +1129,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           description?: string
           file_path?: string | null
           id?: string
@@ -1144,6 +1152,7 @@ export type Database = {
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           description?: string
           file_path?: string | null
           id?: string

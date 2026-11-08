@@ -119,9 +119,10 @@ export function parseAgenda(value: Json | null | undefined): AgendaItem[] {
     .filter((a) => a.title.trim());
 }
 
-export function priceLabel(prices: number[]) {
+export function priceLabel(prices: number[], currency: "KES" | "USD" = "KES") {
   if (prices.length === 0) return null;
   const min = Math.min(...prices);
   if (min <= 0) return prices.some((p) => p > 0) ? "Free and paid" : "Free";
-  return prices.length > 1 && Math.max(...prices) > min ? `From KES ${min.toLocaleString("en-KE")}` : `KES ${min.toLocaleString("en-KE")}`;
+  const amount = currency === "USD" ? `USD ${min.toLocaleString("en-US")}` : `KES ${min.toLocaleString("en-KE")}`;
+  return prices.length > 1 && Math.max(...prices) > min ? `From ${amount}` : amount;
 }

@@ -5,6 +5,42 @@ import { X } from "lucide-react";
 import { Spinner } from "@/components/admin/pending";
 import { cn } from "@/lib/utils";
 
+export function Switch({
+  checked,
+  onClick,
+  label,
+  disabled,
+}: {
+  checked: boolean;
+  onClick: () => void;
+  label?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      dir="ltr"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "relative block h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-150 disabled:cursor-not-allowed",
+        checked ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-[left] duration-150",
+          checked ? "left-[18px]" : "left-0.5",
+        )}
+      />
+    </button>
+  );
+}
+
 export function Toggle({
   checked,
   onChange,
@@ -19,25 +55,7 @@ export function Toggle({
   return (
     <label className={cn("flex items-center justify-between gap-3 text-sm text-ink-900", disabled ? "opacity-60" : "cursor-pointer")}>
       <span>{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={cn(
-          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-150 disabled:cursor-not-allowed",
-          checked ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line",
-        )}
-      >
-        <span
-          className={cn(
-            "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150",
-            checked ? "translate-x-[18px]" : "translate-x-0.5",
-          )}
-        />
-      </button>
+      <Switch checked={checked} label={label} disabled={disabled} onClick={() => onChange(!checked)} />
     </label>
   );
 }

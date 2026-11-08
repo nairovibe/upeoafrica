@@ -75,8 +75,19 @@ export function publicMediaUrl(path: string | null | undefined) {
   return `${base}/storage/v1/object/public/public-media/${path.replace(/^\/+/, "")}`;
 }
 
+export type PriceCurrency = "KES" | "USD";
+
+export function priceCurrency(value: string | null | undefined): PriceCurrency {
+  return value === "USD" ? "USD" : "KES";
+}
+
 export function formatKes(amount: number) {
   return `KES ${amount.toLocaleString("en-KE")}`;
+}
+
+export function formatMoney(amount: number, currency: string | null | undefined = "KES") {
+  if (priceCurrency(currency) === "USD") return `USD ${amount.toLocaleString("en-US")}`;
+  return formatKes(amount);
 }
 
 export function formatKesMoney(amount: number) {

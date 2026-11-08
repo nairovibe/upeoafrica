@@ -66,7 +66,7 @@ export default async function EventsPage() {
                     event.capacity != null && taken != null ? Math.max(event.capacity - taken, 0) : null;
                   return (
                     <li key={event.id}>
-                      <UpcomingRow event={event} price={priceLabel(prices.get(event.id) ?? [])} seatsLeft={seatsLeft} />
+                      <UpcomingRow event={event} price={priceLabel(prices.get(event.id) ?? [], event.currency === "USD" ? "USD" : "KES")} seatsLeft={seatsLeft} />
                     </li>
                   );
                 })}

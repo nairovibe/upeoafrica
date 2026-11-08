@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import { CheckoutForm } from "@/components/site/CheckoutForm";
-import { formatKes } from "@/lib/constants";
+import { formatMoney, type PriceCurrency } from "@/lib/constants";
+import { company } from "@/lib/content";
 import { tierDue, tierOffer, type PriceTier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
-export function ProductBuy({ productId, tiers }: { productId: string; tiers: PriceTier[] }) {
+export function ProductBuy({
+  productId,
+  tiers,
+  currency,
+}: {
+  productId: string;
+  tiers: PriceTier[];
+  currency: PriceCurrency;
+}) {
   const [tierId, setTierId] = useState(
     () => tiers.find((tier) => tier.popular)?.id ?? tiers.find((tier) => tierDue(tier) > 0)?.id ?? tiers[0]?.id ?? "",
   );
@@ -40,8 +49,8 @@ export function ProductBuy({ productId, tiers }: { productId: string; tiers: Pri
                   ) : null}
                 </span>
                 <span className="text-right">
-                  <span className="block font-display text-lg font-semibold text-ink-900">{price > 0 ? formatKes(price) : "On request"}</span>
-                  {offer ? <span className="block text-xs text-muted line-through">{formatKes(offer.list)}</span> : null}
+                  <span className="block font-display text-lg font-semibold text-ink-900">{price > 0 ? formatMoney(price, currency) : "On request"}</span>
+                  {offer ? <span className="block text-xs text-muted line-through">{formatMoney(offer.list, currency)}</span> : null}
                 </span>
               </span>
               {offer ? <span className="mt-1 block text-xs font-medium text-brand-600">{offer.label}</span> : null}
@@ -56,11 +65,19 @@ export function ProductBuy({ productId, tiers }: { productId: string; tiers: Pri
           );
         })}
       </div>
-      {due > 0 && selected ? (
+      {due > 0 && selected && currency === "KES" ? (
         <>
           <p className="text-sm text-body">Get it now with M-Pesa. The file link is emailed after confirmation.</p>
           <CheckoutForm productId={productId} tierId={selected.id} />
         </>
+      ) : due > 0 && selected ? (
+        <p className="text-sm text-body">
+          This price is in US dollars. M-Pesa checkout is for Kenyan shilling prices. Write to{" "}
+          <a href={`mailto:${company.email}`} className="font-medium text-brand-600 hover:underline">
+            {company.email}
+          </a>{" "}
+          and we will send the invoice.
+        </p>
       ) : (
         <p className="text-sm text-body">Tell us what you need and we will scope it.</p>
       )}

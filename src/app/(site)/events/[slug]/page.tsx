@@ -125,7 +125,7 @@ export default async function EventPage({ params }: Props) {
       "@type": "Offer",
       name: t.name,
       price: t.price_kes,
-      priceCurrency: "KES",
+      priceCurrency: item.currency === "USD" ? "USD" : "KES",
       url,
       availability:
         t.remaining === 0 || seatsLeft === 0
@@ -279,6 +279,7 @@ export default async function EventPage({ params }: Props) {
                   eventId={item.id}
                   eventSlug={item.slug}
                   tickets={options}
+                  currency={item.currency === "USD" ? "USD" : "KES"}
                   eventSeatsLeft={seatsLeft}
                   closedMessage={regClosed ? "Registration has closed." : null}
                 />
