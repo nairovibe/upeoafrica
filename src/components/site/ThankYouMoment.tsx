@@ -36,10 +36,12 @@ export function ThankYouMoment({
   kind,
   nonce,
   adsSendTo,
+  gaId,
 }: {
   kind: ThanksKind;
   nonce: string;
   adsSendTo: string;
+  gaId: string;
 }) {
   const [ticket, setTicket] = useState<TicketThanks | null>(null);
 
@@ -71,7 +73,13 @@ export function ThankYouMoment({
         ...(value ? { value, currency: "KES" } : {}),
       });
     }
-  }, [adsSendTo, kind, nonce]);
+    if (typeof window.gtag === "function" && gaId) {
+      window.gtag("event", purchase ? "purchase" : "generate_lead", {
+        send_to: gaId,
+        ...(value ? { value, currency: "KES" } : {}),
+      });
+    }
+  }, [adsSendTo, gaId, kind, nonce]);
 
   if (!ticket?.code && !ticket?.eventSlug) return null;
 

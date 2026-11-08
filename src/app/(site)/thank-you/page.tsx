@@ -5,7 +5,7 @@ import { ClearProductCart } from "@/components/products/cart";
 import { ThankYouAnimation, ThankYouMoment } from "@/components/site/ThankYouMoment";
 import { getPublicSettings } from "@/lib/cms";
 import { company } from "@/lib/content";
-import { matchToken, VERIFY } from "@/lib/search-presence";
+import { matchToken, measurementId, VERIFY } from "@/lib/search-presence";
 import { isThanksKind, type ThanksKind } from "@/lib/thanks";
 
 export const metadata: Metadata = {
@@ -53,6 +53,9 @@ export default async function ThankYouPage({
   const settings = await getPublicSettings();
   const note = settings?.thank_you_note?.trim() || "";
   const adsSendTo = matchToken(settings?.google_ads_id, VERIFY.ads);
+  const gtmRaw = process.env.NEXT_PUBLIC_GTM_ID || settings?.gtm_id || "";
+  const gtmId = /^GTM-[A-Z0-9]+$/i.test(gtmRaw) ? gtmRaw : "";
+  const gaId = gtmId ? "" : measurementId(settings?.google_analytics_id);
 
   return (
     <section className="bg-white pt-32 pb-20 md:pt-40 md:pb-28">
@@ -70,7 +73,7 @@ export default async function ThankYouPage({
           </a>
           .
         </p>
-        {nonce ? <ThankYouMoment kind={kind} nonce={nonce} adsSendTo={adsSendTo} /> : null}
+        {nonce ? <ThankYouMoment kind={kind} nonce={nonce} adsSendTo={adsSendTo} gaId={gaId} /> : null}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button href="/">Back home</Button>
           <Button href="/contact" variant="outline">

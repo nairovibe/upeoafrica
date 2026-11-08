@@ -1319,6 +1319,7 @@ export type Database = {
           bing_site_verification: string | null
           facebook_domain_verification: string | null
           google_ads_id: string | null
+          google_analytics_id: string | null
           google_review_url: string | null
           google_site_verification: string | null
           gtm_id: string | null
@@ -1354,6 +1355,7 @@ export type Database = {
           bing_site_verification?: string | null
           facebook_domain_verification?: string | null
           google_ads_id?: string | null
+          google_analytics_id?: string | null
           google_review_url?: string | null
           google_site_verification?: string | null
           gtm_id?: string | null
@@ -1389,6 +1391,7 @@ export type Database = {
           bing_site_verification?: string | null
           facebook_domain_verification?: string | null
           google_ads_id?: string | null
+          google_analytics_id?: string | null
           google_review_url?: string | null
           google_site_verification?: string | null
           gtm_id?: string | null

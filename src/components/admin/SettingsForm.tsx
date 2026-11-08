@@ -13,7 +13,7 @@ import type { SiteSettings } from "@/lib/cms";
 import type { TablesUpdate } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 import { refreshSite } from "@/lib/refresh-site";
-import { metaContent, VERIFY } from "@/lib/search-presence";
+import { measurementId, metaContent, VERIFY } from "@/lib/search-presence";
 
 type Form = ReturnType<typeof toForm>;
 type Key = keyof Form;
@@ -62,6 +62,7 @@ const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; keys: Key[] }[
       "yandex_site_verification",
       "facebook_domain_verification",
       "gtm_id",
+      "google_analytics_id",
       "meta_pixel_id",
       "google_ads_id",
       "thank_you_note",
@@ -92,6 +93,7 @@ function toForm(s: SiteSettings) {
     google_review_url: s.google_review_url ?? "",
     cal_com_embed_url: s.cal_com_embed_url ?? "",
     gtm_id: s.gtm_id ?? "",
+    google_analytics_id: s.google_analytics_id ?? "",
     google_site_verification: s.google_site_verification ?? "",
     bing_site_verification: s.bing_site_verification ?? "",
     baidu_site_verification: s.baidu_site_verification ?? "",
@@ -119,6 +121,9 @@ function validate(form: Form, keys: Key[]): string | null {
   }
   if (keys.includes("gtm_id") && form.gtm_id.trim() && !/^GTM-[A-Z0-9]+$/i.test(form.gtm_id.trim())) {
     return "GTM ID looks like GTM-XXXXXXX.";
+  }
+  if (keys.includes("google_analytics_id") && form.google_analytics_id.trim() && !measurementId(form.google_analytics_id)) {
+    return "Google Analytics ID looks like G-XXXXXXXXXX.";
   }
   const tokens: [Key, RegExp, string][] = [
     ["google_site_verification", VERIFY.google, "Google verification is the content value from the meta tag."],
@@ -159,6 +164,7 @@ function toUpdate(form: Form, keys: Key[]): TablesUpdate<"site_settings"> {
       key === "google_ads_id"
     )
       out[key] = metaContent(value) || null;
+    else if (key === "google_analytics_id") out[key] = measurementId(value) || null;
     else out[key] = value.trim() || null;
   }
   return out as TablesUpdate<"site_settings">;
@@ -415,6 +421,9 @@ export function SettingsForm({
                 <Field label="Yandex">{text("yandex_site_verification", { placeholder: "yandex-verification content" })}</Field>
                 <Field label="Meta domain verification">{text("facebook_domain_verification", { placeholder: "facebook-domain-verification content" })}</Field>
                 <Field label="Google Tag Manager">{text("gtm_id", { placeholder: "GTM-XXXXXXX" })}</Field>
+                <Field label="Google Analytics" hint="Measurement ID from Admin, Data streams. Leave this empty when that property already runs inside Tag Manager, or each visit is counted twice.">
+                  {text("google_analytics_id", { placeholder: "G-XXXXXXXXXX" })}
+                </Field>
                 <Field label="Meta pixel ID" hint="Leave empty when the pixel already lives in Tag Manager.">
                   {text("meta_pixel_id", { placeholder: "1234567890", inputMode: "numeric" })}
                 </Field>
@@ -434,7 +443,7 @@ export function SettingsForm({
                 />
               </Field>
               <p className="text-xs leading-relaxed text-muted">
-                Confirmation pages are /thank-you?for=enquiry, subscribe, ticket, order or download. Each one sends a conversion event named conversion, with conversion_kind set to that value. Use that event in Tag Manager for Google Ads, Meta and any other pixel. The page is not in the sitemap and is marked noindex.
+                Confirmation pages are /thank-you?for=enquiry, subscribe, ticket, order or download. Each one sends a conversion event named conversion, with conversion_kind set to that value. A saved Analytics ID also records that visit as a lead, or as a purchase for a ticket or product. Use the same event in Tag Manager when Analytics lives there instead. The page is not in the sitemap and is marked noindex.
               </p>
               {footer}
             </div>

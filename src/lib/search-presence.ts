@@ -9,7 +9,15 @@ export const VERIFY = {
   facebook: /^[A-Za-z0-9]{8,80}$/,
   pixel: /^\d{8,20}$/,
   ads: /^AW-\d{5,20}(?:\/[A-Za-z0-9_-]{1,40})?$/i,
+  ga: /^G-[A-Z0-9]{4,20}$/i,
 } as const;
+
+/** Pulls a GA4 measurement ID from a bare ID or a pasted gtag snippet. */
+export function measurementId(raw: string | null | undefined) {
+  const value = metaContent(raw);
+  const found = value.match(/G-[A-Z0-9]{4,20}/i);
+  return found ? found[0].toUpperCase() : "";
+}
 
 /** Accepts a bare token or a pasted meta tag, and returns the content value. */
 export function metaContent(raw: string | null | undefined) {

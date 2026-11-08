@@ -8,7 +8,7 @@ import { TrackingTags } from "@/components/site/TrackingTags";
 import { ClaritySnippet } from "@/components/site/ClaritySnippet";
 import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
-import { GOOGLE_VERIFICATION_FALLBACK, matchToken, VERIFY } from "@/lib/search-presence";
+import { GOOGLE_VERIFICATION_FALLBACK, matchToken, measurementId, VERIFY } from "@/lib/search-presence";
 
 const siteUrl = company.domain;
 
@@ -38,7 +38,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <>
       {gtmId ? <GtmSnippet id={gtmId} /> : null}
-      <TrackingTags pixelId={settings?.meta_pixel_id} adsId={settings?.google_ads_id} />
+      <TrackingTags
+        pixelId={settings?.meta_pixel_id}
+        adsId={settings?.google_ads_id}
+        gaId={gtmId ? "" : measurementId(settings?.google_analytics_id)}
+      />
       <ClaritySnippet />
       <script
         type="application/ld+json"

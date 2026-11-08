@@ -206,11 +206,12 @@ export default function PrivacyPage() {
         site and are not used for advertising.
       </p>
       <p>
-        <strong>7.2</strong> We do not currently set analytics or marketing cookies on the
-        public website. If we enable Google Tag Manager or a similar measurement tool, we
-        will update this Policy and, where required by law, obtain consent before
-        non-essential cookies are placed. You may also configure your browser to refuse
-        cookies; doing so may prevent staff from signing in to the desk.
+        <strong>7.2</strong> When a measurement ID is saved in site settings, the public
+        website loads that tool. Google Analytics, Google Tag Manager, Google Ads, Meta,
+        and Microsoft Clarity may place cookies that record how the site is used and which
+        visits lead to an enquiry, a booking, or a purchase. You may refuse non-essential
+        cookies in your browser. Refusing essential cookies may prevent staff from signing
+        in to the desk.
       </p>
 
       <h2>8. Disclosure of personal data</h2>
