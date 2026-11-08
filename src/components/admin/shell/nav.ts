@@ -6,6 +6,7 @@ import {
   Package,
   PackagePlus,
   Receipt,
+  Landmark,
   Handshake,
   Building2,
   ImageIcon,
@@ -41,6 +42,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/console/orders", label: "Orders", icon: Receipt, badge: "money" },
       { href: "/console/invoices", label: "Invoices", icon: FileText, badge: "invoices" },
+      { href: "/console/billing", label: "Billing", icon: Landmark },
     ],
   },
   {
@@ -111,7 +113,8 @@ export const SHORTCUTS: Shortcut[] = [
   { id: "clients", title: "Clients", subtitle: "Accounts", href: "/console/clients", icon: Building2 },
   { id: "team", title: "Team", subtitle: "Roles", href: "/console/team", icon: Users },
   { id: "experts", title: "Experts", subtitle: "Public team", href: "/console/experts", icon: UserRound },
-  { id: "settings", title: "Settings", subtitle: "Company and billing", href: "/console/settings", icon: SlidersHorizontal },
+  { id: "settings", title: "Settings", subtitle: "Company", href: "/console/settings", icon: SlidersHorizontal },
+  { id: "billing", title: "Billing", subtitle: "How clients pay", href: "/console/billing", icon: Landmark },
   { id: "site", title: "Website", subtitle: "Open the live site", href: "/", icon: Globe, external: true },
 ];
 

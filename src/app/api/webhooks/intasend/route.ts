@@ -3,6 +3,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { notifyBuyerReceipt, pushDeskEvent } from "@/lib/notify";
 import { company } from "@/lib/content";
 import { sendTicketEmail } from "@/lib/tickets";
+import { intasendCredentials } from "@/lib/billing";
+import { settleInvoice } from "@/lib/invoice-pay";
 
 export async function POST(request: Request) {
   const payload = (await request.json().catch(() => null)) as {
@@ -13,7 +15,7 @@ export async function POST(request: Request) {
   } | null;
   if (!payload) return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
 
-  const secret = process.env.INTASEND_WEBHOOK_SECRET;
+  const secret = (await intasendCredentials()).webhook;
   if (secret) {
     const header = request.headers.get("x-intasend-signature") || request.headers.get("authorization") || "";
     if (payload.challenge !== secret && !header.includes(secret)) {
@@ -122,29 +124,21 @@ export async function POST(request: Request) {
     });
   } else if (invoice) {
     if (paid) {
-      await service
-        .from("invoices")
-        .update({
-          status: "paid",
-          paid_at: new Date().toISOString(),
-          provider_ref: payload.invoice_id || invoice.provider_ref,
-          amount_paid_kes: invoice.total_kes,
-        })
-        .eq("id", invoice.id);
-      await notifyBuyerReceipt({
-        email: invoice.bill_email,
-        amount: Number(invoice.total_kes),
-        title: invoice.number,
+      await settleInvoice({
         invoiceId: invoice.id,
-        kind: "invoice",
+        provider: "intasend",
+        providerRef: payload.invoice_id || invoice.provider_ref || "",
+        amount: Number(invoice.total_kes) - Number(invoice.amount_paid_kes || 0),
+        payload,
       }).catch(() => {});
+    } else {
+      await service.from("payments").insert({
+        invoice_id: invoice.id,
+        provider: "intasend",
+        result: payload.state || null,
+        payload,
+      });
     }
-    await service.from("payments").insert({
-      invoice_id: invoice.id,
-      provider: "intasend",
-      result: payload.state || null,
-      payload,
-    });
   }
 
   return NextResponse.json({ ok: true });

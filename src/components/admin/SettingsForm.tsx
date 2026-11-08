@@ -166,14 +166,12 @@ function toUpdate(form: Form, keys: Key[]): TablesUpdate<"site_settings"> {
 
 export function SettingsForm({
   initial,
-  payments,
   canEdit = true,
   initialSection,
   profile,
   sessions,
 }: {
   initial: SiteSettings;
-  payments: { live: boolean; keys: boolean; webhook: boolean };
   canEdit?: boolean;
   initialSection?: string;
   profile: { name: string; email: string; role: string; avatarPath: string };
@@ -400,28 +398,6 @@ export function SettingsForm({
                 </div>
                 {footer}
               </div>
-            </Panel>
-            <Panel title="Payments" meta="IntaSend keys live in the server environment">
-              <dl className="grid gap-4 text-[13px] sm:grid-cols-3">
-                <div>
-                  <dt className="text-muted">API keys</dt>
-                  <dd className="mt-1">
-                    <Pill tone={payments.keys ? "success" : "warning"}>{payments.keys ? "Present" : "Missing"}</Pill>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted">Mode</dt>
-                  <dd className="mt-1">
-                    <Pill tone={payments.live ? "success" : "neutral"}>{payments.live ? "Live" : "Test"}</Pill>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted">Webhook secret</dt>
-                  <dd className="mt-1">
-                    <Pill tone={payments.webhook ? "success" : "warning"}>{payments.webhook ? "Set" : "Not set"}</Pill>
-                  </dd>
-                </div>
-              </dl>
             </Panel>
           </>
         ) : null}

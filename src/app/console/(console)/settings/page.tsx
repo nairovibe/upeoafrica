@@ -30,11 +30,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             role: staff?.role ?? "",
             avatarPath: staff?.avatar_path ?? "",
           }}
-          payments={{
-            live: process.env.INTASEND_TEST === "false",
-            keys: Boolean(process.env.INTASEND_SECRET_KEY),
-            webhook: Boolean(process.env.INTASEND_WEBHOOK_SECRET),
-          }}
         />
       ) : (
         <EmptyState>The settings record is missing from the database.</EmptyState>

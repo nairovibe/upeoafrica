@@ -244,6 +244,21 @@ export async function notifyBuyerReceipt(opts: {
   }).catch(() => {});
 }
 
+export async function notifyDeskCopy(opts: { subject: string; heading: string; body: string; buttonLabel?: string; buttonUrl?: string }) {
+  const db = await deskDb();
+  const { data: settings } = await db.from("site_settings").select("public_email").eq("id", 1).maybeSingle();
+  const inbox = settings?.public_email || company.email;
+  return sendHtml({
+    to: inbox,
+    subject: opts.subject,
+    preview: opts.heading,
+    heading: opts.heading,
+    body: opts.body,
+    buttonLabel: opts.buttonLabel,
+    buttonUrl: opts.buttonUrl,
+  });
+}
+
 export async function sendInvoiceEmail(opts: {
   to: string;
   name: string;
@@ -251,15 +266,22 @@ export async function sendInvoiceEmail(opts: {
   total: number;
   invoiceId: string;
   url: string;
+  payLinks?: { label: string; url: string; color: string }[];
 }) {
   const subject = `Invoice ${opts.number} from Upeo Africa Technologies`;
+  const payButtons = (opts.payLinks ?? [])
+    .map(
+      (link) =>
+        `<a href="${link.url}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 16px;background:${link.color};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;text-decoration:none">${escapeHtml(link.label)}</a>`,
+    )
+    .join("");
   const sent = await sendHtml({
     to: opts.to,
     replyTo: company.email,
     subject,
     preview: `${opts.number} · KES ${opts.total.toLocaleString("en-KE")}`,
     heading: `Invoice ${opts.number}`,
-    body: `Hello, ${escapeHtml(opts.name.split(" ")[0] || opts.name)}. Please find invoice ${opts.number} for KES ${opts.total.toLocaleString("en-KE")}. You can view or print it from the link below.`,
+    body: `Hello, ${escapeHtml(opts.name.split(" ")[0] || opts.name)}. Please find invoice ${opts.number} for KES ${opts.total.toLocaleString("en-KE")}. You can view or print it from the link below.${payButtons ? `<br /><br />Pay it now:<br /><br />${payButtons}` : ""}`,
     buttonLabel: "View invoice",
     buttonUrl: opts.url,
     replyNote: "Reply to this email and it reaches the team.",

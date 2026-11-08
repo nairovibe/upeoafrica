@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStaff } from "@/lib/cms";
 import { sendInvoiceEmail } from "@/lib/notify";
 import { company } from "@/lib/content";
+import { invoicePayLinks } from "@/lib/billing";
 
 export async function POST(request: Request) {
   const staff = await getStaff();
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `This invoice is ${invoice.status}.` }, { status: 409 });
   }
   const origin = process.env.NEXT_PUBLIC_SITE_URL || company.domain;
+  const payLinks = await invoicePayLinks(invoice.id, origin).catch(() => []);
   const sent = await sendInvoiceEmail({
     to: invoice.bill_email,
     name: invoice.bill_name,
@@ -23,6 +25,7 @@ export async function POST(request: Request) {
     total: Number(invoice.total_kes),
     invoiceId: invoice.id,
     url: `${origin}/invoice/${invoice.id}`,
+    payLinks,
   });
   if (!sent.ok) return NextResponse.json({ error: sent.error }, { status: 502 });
   await supabase.from("invoices").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", invoice.id);

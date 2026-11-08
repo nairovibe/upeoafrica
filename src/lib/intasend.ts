@@ -5,11 +5,13 @@ export async function startMpesaStk(opts: {
   apiRef: string;
   narrative: string;
 }) {
-  const secret = process.env.INTASEND_SECRET_KEY;
+  const { intasendCredentials } = await import("@/lib/billing");
+  const creds = await intasendCredentials();
+  const secret = creds.secret;
   if (!secret) {
     return { ok: false as const, pending: true as const, message: "Order recorded. M-Pesa is waiting on IntaSend keys." };
   }
-  const test = process.env.INTASEND_TEST !== "false";
+  const test = creds.test;
   const endpoint = test
     ? "https://sandbox.intasend.com/api/v1/payment/mpesa-stk-push/"
     : "https://payment.intasend.com/api/v1/payment/mpesa-stk-push/";
@@ -45,6 +47,33 @@ export async function startMpesaStk(opts: {
   };
 }
 
-export function intasendLive() {
-  return Boolean(process.env.INTASEND_SECRET_KEY) && process.env.INTASEND_TEST === "false";
+export async function startCardCheckout(opts: { amount: number; email: string; apiRef: string; comment: string; redirectUrl: string }) {
+  const { intasendCredentials } = await import("@/lib/billing");
+  const creds = await intasendCredentials();
+  if (!creds.secret || !creds.publishable) {
+    return { ok: false as const, error: "Card payments need the IntaSend publishable key and secret." };
+  }
+  const endpoint = creds.test ? "https://sandbox.intasend.com/api/v1/checkout/" : "https://payment.intasend.com/api/v1/checkout/";
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${creds.secret}` },
+    body: JSON.stringify({
+      public_key: creds.publishable,
+      amount: opts.amount,
+      currency: "KES",
+      email: opts.email,
+      api_ref: opts.apiRef,
+      redirect_url: opts.redirectUrl,
+      comment: opts.comment,
+    }),
+  });
+  const payload = (await response.json().catch(() => ({}))) as { url?: string; detail?: string };
+  if (!response.ok || !payload.url) return { ok: false as const, error: payload.detail || "Card checkout did not start." };
+  return { ok: true as const, url: payload.url };
+}
+
+export async function intasendLive() {
+  const { intasendCredentials } = await import("@/lib/billing");
+  const creds = await intasendCredentials();
+  return Boolean(creds.secret) && !creds.test;
 }
