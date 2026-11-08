@@ -201,18 +201,16 @@ export default function PrivacyPage() {
 
       <h2>7. Cookies and similar technologies</h2>
       <p>
-        <strong>7.1</strong> Essential cookies are used to keep a staff session on the
-        staff desk at /console. These are strictly necessary to operate that area of the
-        site and are not used for advertising.
+        <strong>7.1</strong> Essential cookies are used to complete a request you start on
+        the site, including a form and a checkout, and to keep that step from being abused
+        by automated submissions. They are not used for advertising.
       </p>
       <p>
-        <strong>7.2</strong> The public website also uses analytics and, where an advertising
-        identifier is saved, measurement cookies. Microsoft Clarity runs on the public pages.
-        Google Analytics, Google Tag Manager, Google Ads, and Meta run only when the matching
-        identifier is saved in site settings. The names, purposes, and lifetimes of these
-        cookies, and how to refuse them, are set out in our{" "}
-        <a href="/cookies">Cookies Policy</a>. Refusing essential cookies may prevent staff
-        from signing in to the desk.
+        <strong>7.2</strong> The public website also uses analytics cookies. Advertising
+        measurement cookies are used only when we enable them. The purposes, the lifetimes,
+        and how to refuse non-essential cookies are set out in our{" "}
+        <a href="/cookies">Cookies Policy</a>. Refusing every cookie may stop a form or a
+        checkout from completing.
       </p>
 
       <h2>8. Disclosure of personal data</h2>
