@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { RichEditor } from "@/components/admin/blog/RichEditor";
+import { toHtml } from "@/components/blog/analysis";
 import { FileField } from "@/components/admin/FileField";
 import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
 import { createClient } from "@/lib/supabase/client";
@@ -153,16 +155,10 @@ export function ExpertEditor({ initial, readOnly }: { initial?: Expert; readOnly
               </select>
             </Field>
           </div>
-          <Field label="Bio">
-            <textarea
-              className={inputClass}
-              rows={6}
-              value={bio}
-              disabled={readOnly}
-              placeholder="What they are responsible for, in plain language."
-              onChange={(e) => setBio(e.target.value)}
-            />
-          </Field>
+          <div>
+            <p className="mb-1.5 text-[13px] font-medium text-ink-900">Bio</p>
+            <RichEditor initialHtml={toHtml(bio)} onChange={setBio} editable={!readOnly} />
+          </div>
         </div>
       </Panel>
 

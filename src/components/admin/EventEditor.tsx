@@ -9,6 +9,8 @@ import { GalleryField } from "@/components/admin/events/GalleryField";
 import { SpeakersEditor, type SpeakerDraft } from "@/components/admin/events/SpeakersEditor";
 import { AgendaEditor, type AgendaDraft } from "@/components/admin/events/AgendaEditor";
 import { WizardSteps } from "@/components/admin/WizardSteps";
+import { RichEditor } from "@/components/admin/blog/RichEditor";
+import { toHtml } from "@/components/blog/analysis";
 import { TicketsEditor, emptyTicket, type TicketDraft } from "@/components/admin/events/TicketsEditor";
 import { defaultStartInput, fromNairobiInput, toNairobiInput } from "@/components/admin/events/time";
 import { newKey } from "@/components/admin/events/RowTools";
@@ -327,9 +329,10 @@ export function EventEditor({
                 onChange={(e) => setSummaryText(e.target.value)}
               />
             </Field>
-            <Field label="Body">
-              <textarea className={inputClass + " min-h-48"} value={body} onChange={(e) => setBody(e.target.value)} />
-            </Field>
+            <div>
+              <p className="mb-1.5 text-[13px] font-medium text-ink-900">Description</p>
+              <RichEditor initialHtml={toHtml(body)} onChange={setBody} />
+            </div>
           </div>
         </Panel>
         ) : null}

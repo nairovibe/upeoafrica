@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { RichEditor } from "@/components/admin/blog/RichEditor";
+import { toHtml } from "@/components/blog/analysis";
 import { FileField } from "@/components/admin/FileField";
 import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
 import { createClient } from "@/lib/supabase/client";
@@ -110,9 +112,10 @@ export function PartnerEditor({ initial, readOnly }: { initial?: Partner; readOn
               ))}
             </select>
           </Field>
-          <Field label="Blurb">
-            <textarea className={inputClass} rows={5} value={blurb} disabled={readOnly} onChange={(e) => setBlurb(e.target.value)} />
-          </Field>
+          <div>
+            <p className="mb-1.5 text-[13px] font-medium text-ink-900">Description</p>
+            <RichEditor initialHtml={toHtml(blurb)} onChange={setBlurb} editable={!readOnly} />
+          </div>
         </div>
       </Panel>
 

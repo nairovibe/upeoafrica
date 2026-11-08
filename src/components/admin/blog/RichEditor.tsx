@@ -80,11 +80,13 @@ export function RichEditor({
   onChange,
   onEditor,
   footer,
+  editable = true,
 }: {
   initialHtml: string;
   onChange: (html: string) => void;
   onEditor?: (editor: Editor) => void;
   footer?: React.ReactNode;
+  editable?: boolean;
 }) {
   const [picker, setPicker] = useState<PickerState>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -144,6 +146,10 @@ export function RichEditor({
   }, [editor, onEditor]);
 
   useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editor, editable]);
+
+  useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
     const onPick = (e: Event) => {
@@ -198,13 +204,15 @@ export function RichEditor({
 
   return (
     <div className="rounded-[5px] border border-line bg-white">
-      <Toolbar
-        editor={editor}
-        onLink={() => setLinkOpen(true)}
-        onImage={() => setPicker({ kind: "image" })}
-        onGallery={() => setPicker({ kind: "gallery" })}
-        onEmbed={() => setEmbedOpen(true)}
-      />
+      {editable ? (
+        <Toolbar
+          editor={editor}
+          onLink={() => setLinkOpen(true)}
+          onImage={() => setPicker({ kind: "image" })}
+          onGallery={() => setPicker({ kind: "gallery" })}
+          onEmbed={() => setEmbedOpen(true)}
+        />
+      ) : null}
       <EditorContent editor={editor} />
       {footer ? <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2 text-xs text-muted">{footer}</div> : null}
 

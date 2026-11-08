@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/notify";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { startMpesaStk } from "@/lib/intasend";
 import { chargeKes } from "@/lib/offer";
+import { parseTiers, tierDue } from "@/lib/tiers";
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as {
     productId?: string;
+    tierId?: string;
     email?: string;
     phone?: string;
     turnstileToken?: string;
@@ -41,7 +43,12 @@ export async function POST(request: Request) {
     .eq("published", true)
     .maybeSingle();
   if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
-  const amount = chargeKes(product);
+  const tiers = parseTiers(product.price_tiers);
+  const tier = tiers.length ? tiers.find((item) => item.id === body.tierId) : null;
+  if (tiers.length && !tier) {
+    return NextResponse.json({ error: "Choose a plan." }, { status: 400 });
+  }
+  const amount = tier ? tierDue(tier) : chargeKes(product);
   if (amount <= 0) {
     return NextResponse.json({ error: "This item is not for sale yet." }, { status: 400 });
   }
@@ -53,6 +60,7 @@ export async function POST(request: Request) {
       phone,
       product_id: product.id,
       amount_kes: amount,
+      tier_label: tier?.name || null,
       provider: "intasend",
       status: "pending",
       kind: "product",
@@ -68,7 +76,7 @@ export async function POST(request: Request) {
     phone,
     email,
     apiRef: order.id,
-    narrative: product.title,
+    narrative: tier ? `${product.title} · ${tier.name}` : product.title,
   });
 
   if (stk.pending) {

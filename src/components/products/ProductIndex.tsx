@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { formatKes } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
+import { stripTags } from "@/components/blog/analysis";
+import { parseTiers, tiersFrom } from "@/lib/tiers";
 import { matchesProductLine, productMenu, products, PRODUCT_LINES, type ProductLine } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +37,7 @@ export type ProductCard = {
   promo_label?: string | null;
   promo_starts_at?: string | null;
   promo_ends_at?: string | null;
+  price_tiers?: unknown;
 };
 
 function lineFrom(value: string | null): ProductLine | null {
@@ -90,21 +93,13 @@ export function ProductIndex({ catalogue, line }: { catalogue: ProductCard[]; li
             >
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{product.type}</p>
               <h2 className="mt-3 font-display text-xl font-semibold text-ink-900 group-hover:text-brand-600">{product.title}</h2>
-              <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-body">{product.description}</p>
+              <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-body">{stripTags(product.description)}</p>
               <p className="mt-4 text-sm font-medium text-ink-900">
-                {(() => {
-                  const offer = currentOffer(product);
-                  const due = chargeKes(product);
-                  if (due <= 0) return "Talk to us";
-                  return (
-                    <>
-                      {offer ? <span className="mr-2 font-normal text-muted line-through">{formatKes(offer.list)}</span> : null}
-                      {formatKes(due)}
-                    </>
-                  );
-                })()}
+                <ProductPrice product={product} />
               </p>
-              {chargeKes(product) > 0 ? <p className="mt-3 text-sm font-medium text-brand-600">Get it now</p> : null}
+              {(tiersFrom(parseTiers(product.price_tiers)) ?? chargeKes(product)) > 0 ? (
+                <p className="mt-3 text-sm font-medium text-brand-600">Get it now</p>
+              ) : null}
             </Link>
           ))}
         </div>
@@ -131,6 +126,21 @@ export function ProductIndex({ catalogue, line }: { catalogue: ProductCard[]; li
       )}
         </Container>
       </section>
+    </>
+  );
+}
+
+function ProductPrice({ product }: { product: ProductCard }) {
+  const tiers = parseTiers(product.price_tiers);
+  const from = tiersFrom(tiers);
+  const due = from ?? chargeKes(product);
+  const offer = tiers.length ? null : currentOffer(product);
+  if (due <= 0) return "Talk to us";
+  return (
+    <>
+      {tiers.length > 1 ? "From " : null}
+      {offer ? <span className="mr-2 font-normal text-muted line-through">{formatKes(offer.list)}</span> : null}
+      {formatKes(due)}
     </>
   );
 }

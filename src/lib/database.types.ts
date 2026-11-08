@@ -908,6 +908,7 @@ export type Database = {
           status: string
           ticket_code: string | null
           ticket_type_id: string | null
+          tier_label: string | null
           updated_at: string
         }
         Insert: {
@@ -930,6 +931,7 @@ export type Database = {
           status?: string
           ticket_code?: string | null
           ticket_type_id?: string | null
+          tier_label?: string | null
           updated_at?: string
         }
         Update: {
@@ -952,6 +954,7 @@ export type Database = {
           status?: string
           ticket_code?: string | null
           ticket_type_id?: string | null
+          tier_label?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1102,6 +1105,7 @@ export type Database = {
           id: string
           locale: string
           price_kes: number
+          price_tiers: Json
           promo_ends_at: string | null
           promo_label: string | null
           promo_price_kes: number | null
@@ -1123,6 +1127,7 @@ export type Database = {
           id?: string
           locale?: string
           price_kes?: number
+          price_tiers?: Json
           promo_ends_at?: string | null
           promo_label?: string | null
           promo_price_kes?: number | null
@@ -1144,6 +1149,7 @@ export type Database = {
           id?: string
           locale?: string
           price_kes?: number
+          price_tiers?: Json
           promo_ends_at?: string | null
           promo_label?: string | null
           promo_price_kes?: number | null

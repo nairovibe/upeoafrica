@@ -7,6 +7,8 @@ import { Container } from "@/components/ui/Container";
 import { getExpertBySlug, getExperts } from "@/lib/cms";
 import { publicMediaUrl } from "@/lib/constants";
 import { company } from "@/lib/content";
+import { stripTags } from "@/components/blog/analysis";
+import { ArticleCopy } from "@/components/site/ArticleCopy";
 import { safeHttpUrl } from "@/lib/stack";
 
 type Params = Promise<{ slug: string }>;
@@ -14,7 +16,7 @@ type Params = Promise<{ slug: string }>;
 export const revalidate = 43200;
 
 function descriptionFor(name: string, title: string, bio: string) {
-  const text = bio.trim().replace(/\s+/g, " ");
+  const text = stripTags(bio);
   if (text.length >= 40) return text.length > 160 ? `${text.slice(0, 157).replace(/\s+\S*$/, "")}…` : text;
   return `${name} is ${title} at ${company.name}.`;
 }
@@ -69,7 +71,7 @@ export default async function ExpertPage({ params }: { params: Params }) {
     "@type": "Person",
     name: person.name,
     jobTitle: person.title,
-    description: person.bio.trim() || undefined,
+    description: stripTags(person.bio) || undefined,
     image: photo || undefined,
     url: pageUrl,
     email: person.email || undefined,
@@ -133,13 +135,8 @@ export default async function ExpertPage({ params }: { params: Params }) {
               <ExpertSocials person={person} />
             </div>
             {person.bio.trim() ? (
-              <div className="mt-8 max-w-2xl space-y-4 text-lg leading-relaxed text-body">
-                {person.bio
-                  .trim()
-                  .split(/\n{2,}/)
-                  .map((paragraph) => (
-                    <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-                  ))}
+              <div className="mt-8 max-w-2xl">
+                <ArticleCopy text={person.bio} />
               </div>
             ) : null}
             <Link href="/about" className="mt-8 inline-flex text-sm font-medium text-brand-600 hover:underline">

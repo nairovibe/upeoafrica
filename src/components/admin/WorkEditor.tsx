@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ExternalLink, X } from "lucide-react";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { RichEditor } from "@/components/admin/blog/RichEditor";
+import { toHtml } from "@/components/blog/analysis";
 import { FileField } from "@/components/admin/FileField";
 import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
 import { ChipSelect, GalleryField, ListInput } from "@/components/admin/studio/fields";
@@ -181,9 +183,10 @@ export function WorkEditor({
             <Field label="Summary">
               <textarea className={inputClass} rows={3} value={summary} disabled={readOnly} onChange={(e) => setSummary(e.target.value)} />
             </Field>
-            <Field label="Body">
-              <textarea className={inputClass} rows={14} value={body} disabled={readOnly} onChange={(e) => setBody(e.target.value)} />
-            </Field>
+            <div>
+              <p className="mb-1.5 text-[13px] font-medium text-ink-900">Description</p>
+              <RichEditor initialHtml={toHtml(body)} onChange={setBody} editable={!readOnly} />
+            </div>
           </div>
         </Panel>
 

@@ -5,6 +5,7 @@ import { ManageTable, type DeskItem } from "@/components/admin/ManageTable";
 import { formatDay } from "@/components/admin/studio/format";
 import { formatKes } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
+import { parseTiers, tiersFrom } from "@/lib/tiers";
 import { getStaff } from "@/lib/cms";
 import { withParams } from "@/components/admin/money/format";
 
@@ -23,7 +24,7 @@ export default async function ProductsListPage({ searchParams }: { searchParams:
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
-    .select("id, title, slug, type, price_kes, promo_price_kes, promo_label, promo_starts_at, promo_ends_at, version, published, updated_at, deleted_at, orders(amount_kes, status)")
+    .select("id, title, slug, type, price_kes, price_tiers, promo_price_kes, promo_label, promo_starts_at, promo_ends_at, version, published, updated_at, deleted_at, orders(amount_kes, status)")
     .order("title");
 
   const products = (data ?? []).map((product) => {
@@ -49,6 +50,9 @@ export default async function ProductsListPage({ searchParams }: { searchParams:
     details: [
       product.type === "saas" ? "SaaS" : product.type,
       (() => {
+        const tiers = parseTiers(product.price_tiers);
+        const from = tiersFrom(tiers);
+        if (from != null) return from > 0 ? `From ${formatKes(from)} · ${tiers.length} tiers` : `${tiers.length} tiers`;
         const offer = currentOffer(product);
         const due = chargeKes(product);
         if (due <= 0) return "On request";

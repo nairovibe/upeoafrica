@@ -8,6 +8,7 @@ import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { TicketCheckoutForm, type TicketOption } from "@/components/site/TicketCheckoutForm";
 import { currentOffer } from "@/lib/offer";
+import { ArticleCopy } from "@/components/site/ArticleCopy";
 import { getEventBySlug, getPublishedEventSlugs, getTicketHolds, getTicketTypes } from "@/lib/cms";
 import { company } from "@/lib/content";
 import { publicMediaUrl } from "@/lib/constants";
@@ -200,7 +201,9 @@ export default async function EventPage({ params }: Props) {
               {item.body ? (
                 <div>
                   <h2 className="font-display text-2xl font-semibold text-ink-900">About this event</h2>
-                  <p className="mt-4 whitespace-pre-wrap text-lg leading-relaxed text-body">{item.body}</p>
+                  <div className="mt-4">
+                    <ArticleCopy text={item.body} />
+                  </div>
                 </div>
               ) : null}
 

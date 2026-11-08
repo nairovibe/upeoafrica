@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/Section";
 import { CTA } from "@/components/sections/CTA";
 import { getPartners } from "@/lib/cms";
+import { ArticleCopy } from "@/components/site/ArticleCopy";
 
 export const metadata: Metadata = {
   title: "Partners",
@@ -74,7 +75,9 @@ export default async function PartnersPage() {
                 <article key={p.id} className="max-w-3xl border-b border-ink-900/10 pb-16">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{relationshipLabel(p.relationship)}</p>
                   <h3 className="mt-3 font-display text-3xl font-semibold text-ink-900">{p.name}</h3>
-                  <p className="mt-4 text-lg leading-relaxed text-body">{p.blurb}</p>
+                  <div className="mt-4">
+                    <ArticleCopy text={p.blurb} />
+                  </div>
                   {p.url && (
                     <a href={p.url} className="mt-5 inline-block text-sm font-medium text-brand-600 hover:underline" target="_blank" rel="noreferrer">
                       Visit {p.name}
@@ -88,7 +91,9 @@ export default async function PartnersPage() {
                     <article key={p.id}>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{relationshipLabel(p.relationship)}</p>
                       <h3 className="mt-2 font-display text-lg font-semibold text-ink-900">{p.name}</h3>
-                      <p className="mt-2 text-lg leading-relaxed text-body">{p.blurb}</p>
+                      <div className="mt-2">
+                        <ArticleCopy text={p.blurb} />
+                      </div>
                     </article>
                   ))}
                 </div>

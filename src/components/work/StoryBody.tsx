@@ -1,10 +1,12 @@
 import { Fragment } from "react";
+import { isHtml } from "@/components/blog/analysis";
+import { renderArticleBody } from "@/lib/blog";
 
 /**
- * Renders the plain-text case study body. Supports the small markdown subset the
- * console hint documents: blank-line paragraphs, `##`/`###` headings, `-` or `1.`
- * lists, `>` quotes, `**bold**` and `[label](https://link)`. Output is React
- * elements only, so stored text can never inject HTML.
+ * Case studies written in the blog editor render as that same HTML.
+ * Older plain-text stories still use the small markdown subset: blank-line
+ * paragraphs, `##`/`###` headings, `-` or `1.` lists, `>` quotes, `**bold**`
+ * and `[label](https://link)`.
  */
 const INLINE = /(\*\*[^*]+\*\*|\[[^\]]+\]\((?:https?:\/\/|\/)[^)\s]+\))/g;
 
@@ -45,6 +47,10 @@ function lines(text: string) {
 }
 
 export function StoryBody({ text }: { text: string }) {
+  if (isHtml(text)) {
+    const { html } = renderArticleBody(text);
+    return <div className="article-body" dangerouslySetInnerHTML={{ __html: html }} />;
+  }
   const blocks = text
     .replace(/\r\n/g, "\n")
     .split(/\n\s*\n/)

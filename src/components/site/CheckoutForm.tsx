@@ -8,7 +8,7 @@ import { goToThanks } from "@/lib/thanks";
 const POLL_MS = 3000;
 const POLL_LIMIT = 40;
 
-export function CheckoutForm({ productId }: { productId: string }) {
+export function CheckoutForm({ productId, tierId }: { productId: string; tierId?: string }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("254");
   const [err, setErr] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export function CheckoutForm({ productId }: { productId: string }) {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, email, phone, turnstileToken: captcha }),
+      body: JSON.stringify({ productId, tierId, email, phone, turnstileToken: captcha }),
     });
     const json = (await res.json()) as { error?: string; orderId?: string };
     setBusy(false);
