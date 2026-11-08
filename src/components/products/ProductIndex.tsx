@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
-import { formatMoney } from "@/lib/constants";
+import { formatMoney, publicMediaUrl } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
-import { stripTags } from "@/components/blog/analysis";
+import { productBlurb } from "@/components/products/blurb";
 import { parseTiers, tiersFrom } from "@/lib/tiers";
 import { matchesProductLine, productMenu, products, PRODUCT_LINES, type ProductLine } from "@/lib/content";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ export type ProductCard = {
   type: string;
   title: string;
   description: string;
+  cover_path?: string | null;
   price_kes: number;
   promo_price_kes?: number | null;
   promo_label?: string | null;
@@ -85,24 +86,40 @@ export function ProductIndex({ catalogue, line }: { catalogue: ProductCard[]; li
       </div>
 
       {visible.length > 0 ? (
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {visible.map((product) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.slug}`}
-              className="group flex flex-col border border-line p-6 transition-colors duration-300 hover:border-brand-300"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{product.type}</p>
-              <h2 className="mt-3 font-display text-xl font-semibold text-ink-900 group-hover:text-brand-600">{product.title}</h2>
-              <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-body">{stripTags(product.description)}</p>
-              <p className="mt-4 text-sm font-medium text-ink-900">
-                <ProductPrice product={product} />
-              </p>
-              {(tiersFrom(parseTiers(product.price_tiers)) ?? chargeKes(product)) > 0 ? (
-                <p className="mt-3 text-sm font-medium text-brand-600">Get it now</p>
-              ) : null}
-            </Link>
-          ))}
+        <div className={cn("mt-12 grid gap-8", visible.length > 1 && "sm:grid-cols-2 lg:grid-cols-3")}>
+          {visible.map((product) => {
+            const cover = publicMediaUrl(product.cover_path);
+            const blurb = productBlurb(product.title, product.description);
+            const priced = (tiersFrom(parseTiers(product.price_tiers)) ?? chargeKes(product)) > 0;
+            return (
+              <Link
+                key={product.id}
+                href={`/products/${product.slug}`}
+                className={cn(
+                  "group flex h-full flex-col border border-line bg-white transition-colors duration-300 hover:border-brand-300",
+                  visible.length === 1 && "max-w-sm",
+                )}
+              >
+                <div className="aspect-[4/3] overflow-hidden border-b border-line bg-surface-2">
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cover} alt="" className="h-full w-full object-contain" />
+                  ) : null}
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{product.type}</p>
+                  <h2 className="mt-2 font-display text-xl font-semibold text-ink-900 group-hover:text-brand-600">{product.title}</h2>
+                  {blurb ? <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-body">{blurb}</p> : <span className="flex-1" />}
+                  <div className="mt-5 flex items-end justify-between gap-3 border-t border-line pt-4">
+                    <p className="font-display text-lg font-semibold text-ink-900">
+                      <ProductPrice product={product} />
+                    </p>
+                    {priced ? <span className="text-sm font-medium text-brand-600">Get it now</span> : null}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <div className="mt-12 grid gap-6 md:grid-cols-3">

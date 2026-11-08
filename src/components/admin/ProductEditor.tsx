@@ -11,6 +11,7 @@ import { WizardSteps } from "@/components/admin/WizardSteps";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
 import { TierEditor } from "@/components/admin/products/TierEditor";
 import { UploadField } from "@/components/admin/products/UploadField";
+import { GalleryField } from "@/components/admin/studio/fields";
 import { fromNairobiInput, toNairobiInput } from "@/components/admin/events/time";
 import { toHtml } from "@/components/blog/analysis";
 import { createClient } from "@/lib/supabase/client";
@@ -49,6 +50,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
   const [version, setVersion] = useState(initial?.version ?? "");
   const [changelog, setChangelog] = useState(initial?.changelog ?? "");
   const [cover, setCover] = useState(initial?.cover_path ?? "");
+  const [gallery, setGallery] = useState<string[]>(initial?.gallery ?? []);
   const [filePath, setFilePath] = useState(initial?.file_path ?? "");
   const [published, setPublished] = useState(initial?.published ?? false);
   const [errors, setErrors] = useState<Errors>({});
@@ -150,6 +152,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
       version: version.trim() || null,
       changelog: changelog || null,
       cover_path: cover || null,
+      gallery,
       file_path: filePath || null,
       published,
     };
@@ -336,8 +339,11 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
 
           {step === 2 ? (
             <div className="space-y-4">
-              <Panel title="Cover">
+              <Panel title="Cover" meta="The image on the product card.">
                 <UploadField folder="products" bucket="public-media" accept="image/*" value={cover} onChange={setCover} emptyLabel="No cover" />
+              </Panel>
+              <Panel title="Screenshots" meta="Shown in the gallery and the Screenshots tab.">
+                <GalleryField folder="products/gallery" value={gallery} onChange={setGallery} />
               </Panel>
               <Panel title="Release">
                 <div className="space-y-4">

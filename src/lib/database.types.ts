@@ -1109,6 +1109,7 @@ export type Database = {
           currency: string
           description: string
           file_path: string | null
+          gallery: string[]
           id: string
           locale: string
           price_kes: number
@@ -1132,6 +1133,7 @@ export type Database = {
           currency?: string
           description?: string
           file_path?: string | null
+          gallery?: string[]
           id?: string
           locale?: string
           price_kes?: number
@@ -1155,6 +1157,7 @@ export type Database = {
           currency?: string
           description?: string
           file_path?: string | null
+          gallery?: string[]
           id?: string
           locale?: string
           price_kes?: number

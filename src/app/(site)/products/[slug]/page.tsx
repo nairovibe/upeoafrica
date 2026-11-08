@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
-import { ArticleCopy } from "@/components/site/ArticleCopy";
-import { CheckoutForm } from "@/components/site/CheckoutForm";
 import { ProductBuy } from "@/components/products/ProductBuy";
+import { ProductGallery } from "@/components/products/ProductGallery";
+import { ProductTabs } from "@/components/products/ProductTabs";
+import { productBlurb } from "@/components/products/blurb";
 import { stripTags } from "@/components/blog/analysis";
 import { getProductBySlug, getPublishedProducts } from "@/lib/cms";
-import { formatMoney, priceCurrency } from "@/lib/constants";
-import { company } from "@/lib/content";
+import { publicMediaUrl, priceCurrency } from "@/lib/constants";
+import { renderArticleBody } from "@/lib/blog";
 import { chargeKes, currentOffer } from "@/lib/offer";
 import { parseTiers, tiersFrom } from "@/lib/tiers";
+
+const TYPE_LABELS: Record<string, string> = { plugin: "Plugin", download: "Download", saas: "SaaS" };
 
 export const revalidate = 43200;
 
@@ -24,7 +27,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const item = await getProductBySlug(slug);
   if (!item) return { title: "Products" };
-  return { title: item.title, description: stripTags(item.description).slice(0, 160) };
+  const image = publicMediaUrl(item.cover_path);
+  return {
+    title: item.title,
+    description: stripTags(item.description).slice(0, 160),
+    openGraph: image ? { images: [image] } : undefined,
+  };
+}
+
+function pictures(cover: string | null, gallery: string[]) {
+  const paths = [...new Set([cover, ...gallery].filter((path): path is string => Boolean(path)))];
+  return paths.map((path) => publicMediaUrl(path)).filter((url): url is string => Boolean(url));
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -35,71 +48,51 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const from = tiersFrom(tiers);
   const offer = tiers.length ? null : currentOffer(item);
   const due = from ?? chargeKes(item);
-  const intro = stripTags(item.description);
+  const images = pictures(item.cover_path, item.gallery ?? []);
+  const summary = productBlurb(item.title, item.description, 220);
+  const info = renderArticleBody(item.description);
+  const notes = renderArticleBody(item.changelog ?? "");
 
   return (
     <>
-      <PageHeader
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: item.title }]}
-        title={item.title}
-        intro={intro ? intro.slice(0, 220) : undefined}
-      />
-      <section className="bg-white py-24 lg:py-32">
+      <section className="bg-white pt-36 pb-20 md:pt-44">
         <Container>
-          <div className={tiers.length ? "grid gap-14 lg:grid-cols-[minmax(0,1fr)_420px]" : "grid gap-14 lg:grid-cols-[minmax(0,1fr)_340px]"}>
+          <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-x-2 text-xs font-medium uppercase tracking-[0.14em] text-muted">
+              <li>
+                <Link href="/" className="hover:text-brand-600">Home</Link>
+              </li>
+              <li aria-hidden>/</li>
+              <li>
+                <Link href="/products" className="hover:text-brand-600">Products</Link>
+              </li>
+              <li aria-hidden>/</li>
+              <li className="text-ink-900">{item.title}</li>
+            </ol>
+          </nav>
+
+          <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,400px)] lg:gap-14">
+            <ProductGallery images={images} title={item.title} />
             <div>
-              {item.version && <p className="text-sm text-muted">Version {item.version}</p>}
-              <div className={item.version ? "mt-8" : undefined}>
-                <ArticleCopy text={item.description} />
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{TYPE_LABELS[item.type] ?? item.type}</p>
+              <h1 className="mt-3 font-display text-4xl font-semibold text-ink-900">{item.title}</h1>
+              {item.version ? <p className="mt-2 text-sm text-muted">Version {item.version}</p> : null}
+              {summary ? <p className="mt-4 text-base leading-relaxed text-body">{summary}</p> : null}
+              <div className="mt-6">
+                <ProductBuy
+                  productId={item.id}
+                  title={item.title}
+                  tiers={tiers}
+                  currency={priceCurrency(item.currency)}
+                  price={due}
+                  listPrice={offer?.list}
+                  offerLabel={offer?.label}
+                />
               </div>
-              {item.changelog ? (
-                <div className="mt-12">
-                  <h2 className="font-display text-xl font-semibold text-ink-900">Changelog</h2>
-                  <div className="mt-4">
-                    <ArticleCopy text={item.changelog} />
-                  </div>
-                </div>
-              ) : null}
             </div>
-            <aside className="border border-line p-6">
-              {tiers.length ? (
-                <ProductBuy productId={item.id} tiers={tiers} currency={priceCurrency(item.currency)} />
-              ) : (
-              <>
-              <p className="font-display text-2xl font-semibold text-ink-900">
-                {due > 0 ? formatMoney(due, item.currency) : "On request"}
-              </p>
-              {offer ? (
-                <p className="mt-1 text-sm text-muted">
-                  <span className="line-through">{formatMoney(offer.list, item.currency)}</span>
-                  <span className="ml-2 font-medium text-brand-600">{offer.label}</span>
-                </p>
-              ) : null}
-              <p className="mt-2 text-sm text-body">
-                {due <= 0
-                  ? "Tell us what you need and we will scope it."
-                  : priceCurrency(item.currency) === "USD"
-                    ? "This price is in US dollars. M-Pesa checkout is for Kenyan shilling prices."
-                    : "Get it now with M-Pesa. The file link is emailed after confirmation."}
-              </p>
-              {due > 0 && priceCurrency(item.currency) === "USD" ? (
-                <p className="mt-4 text-sm text-body">
-                  Write to{" "}
-                  <a href={`mailto:${company.email}`} className="font-medium text-brand-600 hover:underline">
-                    {company.email}
-                  </a>{" "}
-                  and we will send the invoice.
-                </p>
-              ) : null}
-              {due > 0 && priceCurrency(item.currency) === "KES" ? (
-                <div className="mt-6">
-                  <CheckoutForm productId={item.id} />
-                </div>
-              ) : null}
-              </>
-              )}
-            </aside>
           </div>
+
+          <ProductTabs infoHtml={info.html} changelogHtml={notes.html} screenshots={images} title={item.title} />
         </Container>
       </section>
       <CTA />

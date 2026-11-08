@@ -86,7 +86,7 @@ export function CheckoutForm({ productId, tierId }: { productId: string; tierId?
 
   if (waiting) {
     return (
-      <div className="rounded-[5px] border border-line bg-white p-5" aria-live="polite">
+      <div className="border border-line bg-surface-2 p-5" aria-live="polite">
         <Loader2 className="h-5 w-5 animate-spin text-brand-600" aria-hidden />
         <h2 className="mt-4 font-display text-xl font-semibold text-ink-900">Check your phone</h2>
         <p className="mt-1 text-sm text-body">Approve the M-Pesa prompt. This page moves on once the payment is confirmed.</p>
@@ -121,7 +121,7 @@ export function CheckoutForm({ productId, tierId }: { productId: string; tierId?
         disabled={busy}
         className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[5px] bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
       >
-        {busy ? "Sending M-Pesa prompt..." : "Get it now"}
+        {busy ? "Sending M-Pesa prompt..." : "Checkout"}
         {busy ? null : <ArrowRight className="h-4 w-4" aria-hidden />}
       </button>
     </form>
