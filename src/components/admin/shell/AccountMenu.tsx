@@ -76,7 +76,7 @@ export function AccountMenu({
           aria-label="Account"
           onKeyDown={moveFocus}
           ref={focusFirstItem}
-          className={cn(popoverPanel, "w-60 overflow-hidden")}
+          className={cn(popoverPanel, "overflow-hidden sm:w-60")}
         >
           <div className="border-b border-line px-4 py-3">
             <p className="truncate text-[13px] font-medium text-ink-900">{profile.full_name || "Operator"}</p>

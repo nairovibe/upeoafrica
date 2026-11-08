@@ -73,7 +73,7 @@ export function Notifications({
         {unread > 0 ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-white" /> : null}
       </button>
       {open ? (
-        <div role="dialog" aria-label="Notifications" className={cn(popoverPanel, "w-[min(352px,calc(100vw-1.5rem))] overflow-hidden")}>
+        <div role="dialog" aria-label="Notifications" className={cn(popoverPanel, "overflow-hidden sm:w-[min(352px,calc(100vw-1.5rem))]")}>
           <div className="flex h-12 items-center justify-between border-b border-line px-4">
             <p className="font-display text-[14px] font-semibold text-ink-900">Notifications</p>
             {unread > 0 ? (

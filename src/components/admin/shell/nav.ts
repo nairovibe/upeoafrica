@@ -75,10 +75,6 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
 
 export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items.map((item) => ({ ...item, group: group.label })));
 
-export const MOBILE_NAV = ["/console", "/console/leads", "/console/orders", "/console/invoices", "/console/events", "/console/insights"]
-  .map((href) => NAV_ITEMS.find((item) => item.href === href))
-  .filter((item): item is (typeof NAV_ITEMS)[number] => Boolean(item));
-
 export function isActive(pathname: string, href: string) {
   return href === "/console" ? pathname === "/console" : pathname === href || pathname.startsWith(`${href}/`);
 }

@@ -41,18 +41,21 @@ export function Logo({
   variant = "default",
   href = "/",
   priority = false,
+  onClick,
 }: {
   className?: string;
   variant?: "default" | "light";
   href?: string;
   priority?: boolean;
+  onClick?: () => void;
 }) {
   if (variant === "light") {
     return (
       <Link
         href={href}
+        onClick={onClick}
         aria-label="Upeo Africa Technologies home"
-        className={`group inline-flex items-center gap-2.5 ${className}`}
+        className={`group inline-flex min-w-0 items-center gap-2.5 ${className}`}
       >
         <Image
           src={logoMarkImg}
@@ -76,11 +79,12 @@ export function Logo({
   }
 
   return (
-    <Link
-      href={href}
-      aria-label="Upeo Africa Technologies home"
-      className={`group inline-flex items-center ${className}`}
-    >
+      <Link
+        href={href}
+        onClick={onClick}
+        aria-label="Upeo Africa Technologies home"
+        className={`group inline-flex items-center ${className}`}
+      >
       <Image
         src={logoFull}
         alt="Upeo Africa Technologies"

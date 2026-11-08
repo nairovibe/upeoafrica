@@ -27,14 +27,23 @@ function websiteOk(value: string) {
   }
 }
 
-export function CheckoutWizard({ notice, watching }: { notice: string | null; watching: string | null }) {
+export function CheckoutWizard({
+  notice,
+  watching,
+  methods,
+}: {
+  notice: string | null;
+  watching: string | null;
+  methods: Record<Method, boolean>;
+}) {
   const { items, ready, setOpen } = useCart();
   const [step, setStep] = useState<"details" | "pay" | "waiting" | "confirming">(watching ? "confirming" : "details");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [website, setWebsite] = useState("");
-  const [method, setMethod] = useState<Method>("paypal");
+  const [method, setMethod] = useState<Method | null>(() => (["paypal", "mpesa", "card"] as const).find((id) => methods[id]) ?? null);
+  const [blocked, setBlocked] = useState<Method | null>(null);
   const [phone, setPhone] = useState("254");
   const [captcha, setCaptcha] = useState("");
   const [captchaReset, setCaptchaReset] = useState(0);
@@ -59,7 +68,8 @@ export function CheckoutWizard({ notice, watching }: { notice: string | null; wa
   const shillingTotal = kes + (converted ?? 0);
   const singleCurrency: PriceCurrency | null = mixed ? null : usd > 0 ? "USD" : "KES";
   const paypalTotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const needsRate = usd > 0;
+  const shillingReady = methods.mpesa || methods.card;
+  const needsRate = usd > 0 && shillingReady;
 
   useEffect(() => {
     if (!needsRate) return;
@@ -130,6 +140,7 @@ export function CheckoutWizard({ notice, watching }: { notice: string | null; wa
 
   async function pay(event: React.FormEvent) {
     event.preventDefault();
+    if (!method || !methods[method]) return setErr("Method temporarily unavailable");
     if (!captcha) return setErr("Complete the verification check before paying.");
     if (method === "mpesa" && !/^254\d{9}$/.test(phone.replace(/\s/g, ""))) {
       return setErr("Enter a Safaricom number in the form 2547XXXXXXXX.");
@@ -197,8 +208,8 @@ export function CheckoutWizard({ notice, watching }: { notice: string | null; wa
     <section className="bg-white pt-36 pb-20 md:pt-44">
       <Container>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">Checkout</p>
-        <h1 className="mt-3 font-display text-4xl font-semibold text-ink-900">Complete your purchase</h1>
-        <ol className="mt-8 flex items-center gap-3 text-sm" aria-label="Checkout steps">
+        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Complete your purchase</h1>
+        <ol className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm" aria-label="Checkout steps">
           <li className="flex items-center gap-2 font-medium text-ink-900">
             <span className="inline-flex h-8 w-8 items-center justify-center bg-brand-500 text-white">1</span>
             Your details
@@ -261,35 +272,61 @@ export function CheckoutWizard({ notice, watching }: { notice: string | null; wa
                 <fieldset>
                   <legend className="font-display text-xl font-semibold text-ink-900">Payment method</legend>
                   <div className="mt-4 space-y-3">
-                    <MethodChoice
-                      pressed={method === "paypal"}
-                      disabled={!singleCurrency}
-                      onClick={() => setMethod("paypal")}
-                      mark="paypal"
-                      title="PayPal"
-                      detail={
-                        singleCurrency
-                          ? `Pay ${formatMoney(paypalTotal, singleCurrency)}.`
-                          : "PayPal can take one currency at a time. Use M-Pesa or card to pay this cart in shillings."
-                      }
-                    />
-                    <MethodChoice
-                      pressed={method === "mpesa"}
-                      disabled={needsRate && !quote}
-                      onClick={() => setMethod("mpesa")}
-                      mark="mpesa"
-                      title="M-Pesa"
-                      detail={shillingDetail(needsRate, quote, rateError, shillingTotal)}
-                    />
-                    <MethodChoice
-                      pressed={method === "card"}
-                      disabled={needsRate && !quote}
-                      onClick={() => setMethod("card")}
-                      mark="card"
-                      title="Card"
-                      detail={shillingDetail(needsRate, quote, rateError, shillingTotal)}
-                    />
+                    {methods.paypal ? (
+                      <MethodChoice
+                        pressed={method === "paypal"}
+                        disabled={!singleCurrency}
+                        onClick={() => {
+                          setBlocked(null);
+                          setMethod("paypal");
+                        }}
+                        mark="paypal"
+                        title="PayPal"
+                        detail={
+                          singleCurrency
+                            ? `Pay ${formatMoney(paypalTotal, singleCurrency)}.`
+                            : shillingReady
+                              ? "PayPal can take one currency at a time. Use a shilling method for this cart."
+                              : "PayPal can take one currency at a time."
+                        }
+                      />
+                    ) : null}
+                    {methods.mpesa ? (
+                      <MethodChoice
+                        pressed={method === "mpesa"}
+                        disabled={needsRate && !quote}
+                        onClick={() => {
+                          setBlocked(null);
+                          setMethod("mpesa");
+                        }}
+                        mark="mpesa"
+                        title="M-Pesa"
+                        detail={shillingDetail(needsRate, quote, rateError, shillingTotal)}
+                      />
+                    ) : null}
+                    {methods.card ? (
+                      <MethodChoice
+                        pressed={method === "card"}
+                        disabled={needsRate && !quote}
+                        onClick={() => {
+                          setBlocked(null);
+                          setMethod("card");
+                        }}
+                        mark="card"
+                        title="Card"
+                        detail={shillingDetail(needsRate, quote, rateError, shillingTotal)}
+                      />
+                    ) : null}
                   </div>
+                  {(["paypal", "mpesa", "card"] as const).some((id) => !methods[id]) ? (
+                    <div className="mt-2 divide-y divide-line border-t border-line">
+                      {(["paypal", "mpesa", "card"] as const)
+                        .filter((id) => !methods[id])
+                        .map((id) => (
+                          <UnavailableMethod key={id} id={id} noted={blocked === id} onClick={() => setBlocked(id)} />
+                        ))}
+                    </div>
+                  ) : null}
                 </fieldset>
                 {quote && needsRate && method !== "paypal" ? (
                   <p className="mt-4 text-sm leading-relaxed text-body">
@@ -309,7 +346,7 @@ export function CheckoutWizard({ notice, watching }: { notice: string | null; wa
                 <div className="mt-5 flex flex-wrap items-center gap-4">
                   <button
                     type="submit"
-                    disabled={busy || (method === "paypal" && !singleCurrency) || (method !== "paypal" && needsRate && !quote)}
+                    disabled={busy || !method || (method === "paypal" && !singleCurrency) || (method !== "paypal" && needsRate && !quote)}
                     className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-[5px] bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {busy ? "Starting payment..." : "Pay now"}
@@ -349,6 +386,20 @@ function shillingDetail(needsRate: boolean, quote: Quote | null, rateError: stri
   return `Pay ${formatMoney(total, "KES")}.`;
 }
 
+const METHOD_LABEL: Record<Method, string> = { paypal: "PayPal", mpesa: "M-Pesa", card: "Card" };
+
+function UnavailableMethod({ id, noted, onClick }: { id: Method; noted: boolean; onClick: () => void }) {
+  return (
+    <button type="button" aria-disabled="true" onClick={onClick} className="flex w-full cursor-pointer items-center justify-between gap-4 py-3 text-left">
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-muted">{METHOD_LABEL[id]}</span>
+        {noted ? <span className="mt-0.5 block text-[11px] leading-snug text-muted">Method temporarily unavailable</span> : null}
+      </span>
+      <PaymentMark id={id} className="h-5 w-auto shrink-0 opacity-40" />
+    </button>
+  );
+}
+
 function MethodChoice({
   pressed,
   disabled,
@@ -376,7 +427,7 @@ function MethodChoice({
         disabled && "cursor-not-allowed opacity-60",
       )}
     >
-      <span>
+      <span className="min-w-0">
         <span className="block text-sm font-medium text-ink-900">{title}</span>
         <span className="mt-1 block text-sm leading-relaxed text-body">{detail}</span>
       </span>

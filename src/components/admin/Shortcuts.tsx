@@ -103,7 +103,7 @@ function ShortcutsPanel({
       ref={panelRef}
       role="dialog"
       aria-label="Shortcuts"
-      className={cn(popoverPanel, "w-[min(352px,calc(100vw-1.5rem))] overflow-hidden")}
+      className={cn(popoverPanel, "overflow-hidden sm:w-[min(352px,calc(100vw-1.5rem))]")}
     >
       <div className="flex h-12 items-center justify-between border-b border-line pl-4 pr-2">
         <p className="font-display text-[14px] font-semibold text-ink-900">{editing ? "Edit shortcuts" : "Shortcuts"}</p>
