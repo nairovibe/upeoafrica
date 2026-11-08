@@ -22,7 +22,7 @@ const pages: { path: string; changeFrequency: "weekly" | "monthly"; priority: nu
   { path: "/partners", changeFrequency: "monthly", priority: 0.5 },
 ];
 
-const legal = ["/privacy", "/terms", "/sla"];
+const legal = ["/privacy", "/terms", "/cookies", "/sla"];
 
 function imageOf(path: string | null | undefined) {
   const image = publicMediaUrl(path);

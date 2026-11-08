@@ -89,6 +89,7 @@ export const companyNav = [
 export const legalNav = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
+  { label: "Cookies Policy", href: "/cookies" },
   { label: "Service Level Agreement", href: "/sla" },
 ];
 

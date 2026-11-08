@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro="This policy explains what personal data Upeo Africa Technologies collects when you use our website or engage us for work, why we hold it, how we protect it, and the rights you can exercise over it at any time."
       effective="1 September 2026"
-      updated="7 November 2026"
+      updated="8 November 2026"
       activeHref="/privacy"
     >
       <p className="lead">
@@ -206,12 +206,13 @@ export default function PrivacyPage() {
         site and are not used for advertising.
       </p>
       <p>
-        <strong>7.2</strong> When a measurement ID is saved in site settings, the public
-        website loads that tool. Google Analytics, Google Tag Manager, Google Ads, Meta,
-        and Microsoft Clarity may place cookies that record how the site is used and which
-        visits lead to an enquiry, a booking, or a purchase. You may refuse non-essential
-        cookies in your browser. Refusing essential cookies may prevent staff from signing
-        in to the desk.
+        <strong>7.2</strong> The public website also uses analytics and, where an advertising
+        identifier is saved, measurement cookies. Microsoft Clarity runs on the public pages.
+        Google Analytics, Google Tag Manager, Google Ads, and Meta run only when the matching
+        identifier is saved in site settings. The names, purposes, and lifetimes of these
+        cookies, and how to refuse them, are set out in our{" "}
+        <a href="/cookies">Cookies Policy</a>. Refusing essential cookies may prevent staff
+        from signing in to the desk.
       </p>
 
       <h2>8. Disclosure of personal data</h2>
