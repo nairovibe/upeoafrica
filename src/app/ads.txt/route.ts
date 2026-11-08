@@ -1,14 +1,12 @@
 import { getPublicSettings } from "@/lib/cms";
+import { ADSENSE_CLIENT, adsensePublisherId } from "@/lib/adsense";
 import { adsenseAccount } from "@/lib/search-presence";
 
-/**
- * Served only after a real AdSense publisher id is saved or set in the environment.
- * An ads.txt file with a guessed id would fail AdSense review.
- */
+/** Lists the AdSense publisher that is allowed to serve ads on this site. */
 export async function GET() {
   const settings = await getPublicSettings();
-  const saved = adsenseAccount(settings?.google_adsense_account);
-  const id = (process.env.ADSENSE_PUBLISHER_ID?.trim() || saved).replace(/^ca-/, "");
+  const saved = adsenseAccount(settings?.google_adsense_account) || ADSENSE_CLIENT;
+  const id = adsensePublisherId(process.env.ADSENSE_PUBLISHER_ID?.trim() || saved);
   if (!/^pub-\d+$/.test(id)) {
     return new Response("Not configured", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
   }

@@ -6,6 +6,8 @@ import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { GtmSnippet } from "@/components/site/GtmSnippet";
 import { TrackingTags } from "@/components/site/TrackingTags";
 import { ClaritySnippet } from "@/components/site/ClaritySnippet";
+import { AdSenseAuto } from "@/components/site/AdSenseAuto";
+import { ADSENSE_CLIENT } from "@/lib/adsense";
 import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
 import { adsenseAccount, GOOGLE_VERIFICATION_FALLBACK, matchToken, measurementId, VERIFY } from "@/lib/search-presence";
@@ -23,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const baidu = matchToken(settings?.baidu_site_verification, VERIFY.baidu);
   const yandex = matchToken(settings?.yandex_site_verification, VERIFY.yandex);
   const facebook = matchToken(settings?.facebook_domain_verification, VERIFY.facebook);
-  const adsense = adsenseAccount(settings?.google_adsense_account);
+  const adsense = adsenseAccount(settings?.google_adsense_account) || ADSENSE_CLIENT;
   if (bing) other["msvalidate.01"] = bing;
   if (baidu) other["baidu-site-verification"] = baidu;
   if (yandex) other["yandex-verification"] = yandex;
@@ -46,6 +48,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         gaId={gtmId ? "" : measurementId(settings?.google_analytics_id)}
       />
       <ClaritySnippet />
+      <AdSenseAuto />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

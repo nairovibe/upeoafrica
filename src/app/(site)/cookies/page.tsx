@@ -248,10 +248,11 @@ export default function CookiesPage() {
         a purchase, or a download. That notice does not include a card number.
       </p>
       <p>
-        <strong>9.3</strong> An AdSense account line in the page, if we add one, verifies
-        the site with Google. By itself it does not place an advertisement and it does not
-        set an advertising cookie. If we later show AdSense units, we will update this
-        Policy first, because those units would set their own advertising cookies.
+        <strong>9.3</strong> Google AdSense may show advertisements on product pages, blog
+        pages, event pages, and the legal pages. It does not run on the homepage or on
+        service pages. When an advertisement loads, Google may set advertising cookies,
+        including cookies served from googlesyndication.com. Those cookies are not set on
+        pages where advertisements are not shown.
       </p>
 
       <h2>10. Providers outside this website</h2>

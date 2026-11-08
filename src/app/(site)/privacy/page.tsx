@@ -207,10 +207,11 @@ export default function PrivacyPage() {
       </p>
       <p>
         <strong>7.2</strong> The public website also uses analytics cookies. Advertising
-        measurement cookies are used only when we enable them. The purposes, the lifetimes,
-        and how to refuse non-essential cookies are set out in our{" "}
-        <a href="/cookies">Cookies Policy</a>. Refusing every cookie may stop a form or a
-        checkout from completing.
+        measurement cookies are used only when we enable them. Advertisements may appear on
+        product, blog, event, and legal pages, and those pages may set advertising cookies.
+        The purposes, the lifetimes, and how to refuse non-essential cookies are set out in
+        our <a href="/cookies">Cookies Policy</a>. Refusing every cookie may stop a form or
+        a checkout from completing.
       </p>
 
       <h2>8. Disclosure of personal data</h2>
