@@ -13,6 +13,8 @@ export type TicketOption = {
   name: string;
   description: string;
   price_kes: number;
+  list_price_kes?: number;
+  promo_label?: string | null;
   max_per_order: number;
   sales_start: string | null;
   sales_end: string | null;
@@ -307,12 +309,15 @@ export function TicketCheckoutForm({
               <span className="flex items-baseline justify-between gap-3">
                 <span className="font-medium text-ink-900">{t.name}</span>
                 <span className="font-display font-semibold text-ink-900">
+                  {t.list_price_kes != null && t.list_price_kes > t.price_kes ? (
+                    <span className="mr-2 text-xs font-normal text-muted line-through">{formatKes(t.list_price_kes)}</span>
+                  ) : null}
                   {t.price_kes > 0 ? formatKes(t.price_kes) : "Free"}
                 </span>
               </span>
               {t.description || note ? (
                 <span className="mt-0.5 block text-xs text-muted">
-                  {[t.description, note].filter(Boolean).join(" · ")}
+                  {[t.promo_label, t.description, note].filter(Boolean).join(" · ")}
                 </span>
               ) : null}
             </button>
@@ -391,6 +396,7 @@ export function TicketCheckoutForm({
             />
           </label>
 
+          <p className="font-display text-lg font-semibold text-ink-900">{free ? "Free" : formatKes(total)}</p>
           <TurnstileField action="ticket" theme="light" onToken={setCaptcha} resetSignal={captchaReset} />
           {err ? (
             <p className="text-sm text-red-600" role="alert">
@@ -412,7 +418,7 @@ export function TicketCheckoutForm({
                 ? qty > 1
                   ? "Get free tickets"
                   : "Get free ticket"
-                : `Pay ${formatKes(total)} with M-Pesa`}
+                : "Get it now"}
           </button>
         </form>
       )}

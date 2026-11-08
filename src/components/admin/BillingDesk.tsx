@@ -51,7 +51,7 @@ export function BillingDesk({ cards, origin }: { cards: BillingCard[]; origin: s
         <Panel key={card.id} title={COPY[card.id].title} meta={COPY[card.id].blurb}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-12 min-w-12 items-center justify-center rounded-[5px] border border-line bg-white px-2">
+              <span className="flex h-14 min-w-16 items-center justify-center rounded-[5px] border border-line bg-white px-3">
                 <PaymentMark id={card.id} className="h-6 w-auto" />
               </span>
               <div>

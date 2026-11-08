@@ -5,6 +5,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { startMpesaStk } from "@/lib/intasend";
 import { sendTicketEmail, ticketRpcError } from "@/lib/tickets";
 import { normaliseKePhone } from "@/components/events/utils";
+import { chargeKes } from "@/lib/offer";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -53,10 +54,10 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: ticket } = await supabase
     .from("ticket_types")
-    .select("name, price_kes")
+    .select("name, price_kes, promo_price_kes, promo_label, promo_starts_at, promo_ends_at")
     .eq("id", body.ticketTypeId)
     .maybeSingle();
-  if (ticket && ticket.price_kes > 0 && !phone) {
+  if (ticket && chargeKes(ticket) > 0 && !phone) {
     return NextResponse.json({ error: "Enter the M-Pesa number that will pay." }, { status: 400 });
   }
 

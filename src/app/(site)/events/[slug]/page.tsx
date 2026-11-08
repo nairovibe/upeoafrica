@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { CTA } from "@/components/sections/CTA";
 import { TicketCheckoutForm, type TicketOption } from "@/components/site/TicketCheckoutForm";
+import { currentOffer } from "@/lib/offer";
 import { getEventBySlug, getPublishedEventSlugs, getTicketHolds, getTicketTypes } from "@/lib/cms";
 import { company } from "@/lib/content";
 import { publicMediaUrl } from "@/lib/constants";
@@ -76,7 +77,9 @@ export default async function EventPage({ params }: Props) {
       id: t.id,
       name: t.name,
       description: t.description,
-      price_kes: t.price_kes,
+      price_kes: currentOffer(t)?.price ?? t.price_kes,
+      list_price_kes: t.price_kes,
+      promo_label: currentOffer(t)?.label ?? null,
       max_per_order: t.max_per_order,
       sales_start: t.sales_start,
       sales_end: t.sales_end,

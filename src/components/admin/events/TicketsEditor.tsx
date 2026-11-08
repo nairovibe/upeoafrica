@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import { AdminBtn, Field, inputClass } from "@/components/admin/ui";
 import { moveItem, newKey, RowTools } from "@/components/admin/events/RowTools";
+import { cn } from "@/lib/utils";
 
 export type TicketDraft = {
   key: string;
@@ -14,10 +15,29 @@ export type TicketDraft = {
   sales_start: string;
   sales_end: string;
   max_per_order: string;
+  promo: boolean;
+  promo_price_kes: string;
+  promo_label: string;
+  promo_starts: string;
+  promo_ends: string;
 };
 
 export function emptyTicket(name = ""): TicketDraft {
-  return { key: newKey(), name, description: "", price_kes: "0", quota: "", sales_start: "", sales_end: "", max_per_order: "10" };
+  return {
+    key: newKey(),
+    name,
+    description: "",
+    price_kes: "0",
+    quota: "",
+    sales_start: "",
+    sales_end: "",
+    max_per_order: "10",
+    promo: false,
+    promo_price_kes: "",
+    promo_label: "",
+    promo_starts: "",
+    promo_ends: "",
+  };
 }
 
 export function TicketsEditor({
@@ -108,6 +128,39 @@ export function TicketsEditor({
                 />
               </Field>
             </div>
+            <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2">
+              <span className="text-sm font-medium text-ink-900">Run a promotion</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={t.promo}
+                onClick={() => set(i, { promo: !t.promo })}
+                className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors", t.promo ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
+              >
+                <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", t.promo ? "translate-x-[18px]" : "translate-x-0.5")} />
+              </button>
+            </label>
+            {t.promo ? (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Offer price (KES)">
+                  <input
+                    className={inputClass}
+                    inputMode="numeric"
+                    value={t.promo_price_kes}
+                    onChange={(e) => set(i, { promo_price_kes: e.target.value.replace(/[^\d]/g, "") })}
+                  />
+                </Field>
+                <Field label="Offer name">
+                  <input className={inputClass} value={t.promo_label} placeholder="Early bird" onChange={(e) => set(i, { promo_label: e.target.value })} />
+                </Field>
+                <Field label="Offer starts">
+                  <input className={inputClass} type="datetime-local" value={t.promo_starts} onChange={(e) => set(i, { promo_starts: e.target.value })} />
+                </Field>
+                <Field label="Offer ends">
+                  <input className={inputClass} type="datetime-local" value={t.promo_ends} onChange={(e) => set(i, { promo_ends: e.target.value })} />
+                </Field>
+              </div>
+            ) : null}
             {orders > 0 ? (
               <p className="mt-2 text-xs text-muted">
                 {orders} {orders === 1 ? "order" : "orders"}

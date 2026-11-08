@@ -5,27 +5,37 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { WizardSteps } from "@/components/admin/WizardSteps";
 import { UploadField } from "@/components/admin/products/UploadField";
+import { fromNairobiInput, toNairobiInput } from "@/components/admin/events/time";
 import { createClient } from "@/lib/supabase/client";
 import { PRODUCT_TYPES, formatKes, slugify } from "@/lib/constants";
 import { company } from "@/lib/content";
 import { refreshSite } from "@/lib/refresh-site";
+import { currentOffer } from "@/lib/offer";
 import { startNavProgress } from "@/components/ui/NavProgress";
 import type { Product } from "@/lib/cms";
 import { cn } from "@/lib/utils";
 
 const TYPE_LABELS: Record<string, string> = { plugin: "Plugin", download: "Download", saas: "SaaS" };
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const STEPS = ["Product", "Price", "Files", "Publish"];
 
-type Errors = Partial<Record<"title" | "slug" | "price" | "file" | "form", string>>;
+type Errors = Partial<Record<"title" | "slug" | "price" | "promo" | "file" | "form", string>>;
 
 export function ProductEditor({ initial, sales }: { initial?: Product; sales?: { count: number; revenue: number } }) {
   const router = useRouter();
+  const [step, setStep] = useState(0);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial));
   const [type, setType] = useState(initial?.type ?? "plugin");
   const [price, setPrice] = useState(String(initial?.price_kes ?? 0));
+  const [promoOn, setPromoOn] = useState(initial?.promo_price_kes != null);
+  const [promoPrice, setPromoPrice] = useState(initial?.promo_price_kes != null ? String(initial.promo_price_kes) : "");
+  const [promoLabel, setPromoLabel] = useState(initial?.promo_label ?? "");
+  const [promoStart, setPromoStart] = useState(toNairobiInput(initial?.promo_starts_at));
+  const [promoEnd, setPromoEnd] = useState(toNairobiInput(initial?.promo_ends_at));
   const [description, setDescription] = useState(initial?.description ?? "");
   const [version, setVersion] = useState(initial?.version ?? "");
   const [changelog, setChangelog] = useState(initial?.changelog ?? "");
@@ -38,21 +48,60 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
 
   const needsFile = type !== "saas";
   const priceNum = Number(price);
+  const saleNum = Number(promoPrice);
+  const percentOff =
+    priceNum > 0 && Number.isInteger(saleNum) && saleNum >= 0 && saleNum < priceNum
+      ? Math.round((1 - saleNum / priceNum) * 100)
+      : 0;
+  const preview = currentOffer({
+    price_kes: Number.isInteger(priceNum) ? priceNum : 0,
+    promo_price_kes: promoOn && promoPrice.trim() !== "" ? saleNum : null,
+    promo_label: promoLabel,
+    promo_starts_at: fromNairobiInput(promoStart),
+    promo_ends_at: fromNairobiInput(promoEnd),
+  });
 
-  function validate(): Errors {
+  function problems(): Errors {
     const e: Errors = {};
     if (!title.trim()) e.title = "Add a name.";
     if (!SLUG_RE.test(slug)) e.slug = "Use lowercase letters, numbers and single dashes.";
     if (price.trim() === "" || !Number.isInteger(priceNum) || priceNum < 0) e.price = "Use a whole number of shillings, 0 or more.";
+    if (promoOn) {
+      if (priceNum <= 0) e.promo = "Set a list price before a promotion.";
+      else if (promoPrice.trim() === "" || !Number.isInteger(saleNum) || saleNum < 0 || saleNum >= priceNum) e.promo = "The offer price must be a whole number below the list price.";
+      const start = fromNairobiInput(promoStart);
+      const end = fromNairobiInput(promoEnd);
+      if ((promoStart && !start) || (promoEnd && !end)) e.promo = "Use a valid start and end.";
+      else if (start && end && end <= start) e.promo = "The offer must end after it starts.";
+    }
     if (published && priceNum > 0 && needsFile && !filePath) e.file = "Attach the file before selling it.";
     return e;
   }
 
+  function go(next: number) {
+    const e = problems();
+    const blocked =
+      (step === 0 && (e.title || e.slug)) ||
+      (step === 1 && (e.price || e.promo)) ||
+      (next > step && step === 2 && e.file);
+    if (next > step && blocked) {
+      setErrors(e);
+      return;
+    }
+    setErrors({});
+    setStep(Math.max(0, Math.min(STEPS.length - 1, next)));
+  }
+
   async function save() {
     setSaved(false);
-    const e = validate();
+    const e = problems();
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) {
+      if (e.title || e.slug) setStep(0);
+      else if (e.price || e.promo) setStep(1);
+      else if (e.file) setStep(2);
+      return;
+    }
     setBusy(true);
     const supabase = createClient();
 
@@ -61,6 +110,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
     const { data: clash } = await taken;
     if (clash?.length) {
       setBusy(false);
+      setStep(0);
       setErrors({ slug: "Another product already uses this slug." });
       return;
     }
@@ -70,6 +120,10 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
       slug,
       type,
       price_kes: priceNum,
+      promo_price_kes: promoOn ? saleNum : null,
+      promo_label: promoOn ? promoLabel.trim() || null : null,
+      promo_starts_at: promoOn ? fromNairobiInput(promoStart) : null,
+      promo_ends_at: promoOn ? fromNairobiInput(promoEnd) : null,
       description,
       version: version.trim() || null,
       changelog: changelog || null,
@@ -110,151 +164,238 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-      <Panel title="Details">
-        <div className="space-y-4">
-          <Field label="Name">
-            <input
-              className={cn(inputClass, errors.title && "border-red-400")}
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (!slugTouched) setSlug(slugify(e.target.value));
-              }}
-            />
-            <FieldError text={errors.title} />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
-            <Field label="Slug">
-              <div className={cn("flex items-center rounded-[5px] border border-line bg-white focus-within:border-brand-500", errors.slug && "border-red-400")}>
-                <span className="pl-3 text-sm text-muted">/products/</span>
-                <input
-                  className="w-full bg-transparent py-2.5 pr-3 text-sm text-ink-900 outline-none"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
-                  }}
-                  onBlur={() => setSlug((s) => slugify(s))}
-                />
+    <div className="space-y-6">
+      <WizardSteps steps={STEPS} current={step} onPick={go} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="min-w-0">
+          {step === 0 ? (
+            <Panel title="Product">
+              <div className="space-y-4">
+                <Field label="Name">
+                  <input
+                    className={cn(inputClass, errors.title && "border-red-400")}
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (!slugTouched) setSlug(slugify(e.target.value));
+                    }}
+                  />
+                  <FieldError text={errors.title} />
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
+                  <Field label="Slug">
+                    <div className={cn("flex items-center rounded-[5px] border border-line bg-white focus-within:border-brand-500", errors.slug && "border-red-400")}>
+                      <span className="pl-3 text-sm text-muted">/products/</span>
+                      <input
+                        className="w-full bg-transparent py-2.5 pr-3 text-sm text-ink-900 outline-none"
+                        value={slug}
+                        onChange={(e) => {
+                          setSlugTouched(true);
+                          setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
+                        }}
+                        onBlur={() => setSlug((s) => slugify(s))}
+                      />
+                    </div>
+                    <FieldError text={errors.slug} />
+                  </Field>
+                  <Field label="Type">
+                    <select className={inputClass} value={type} onChange={(e) => setType(e.target.value)}>
+                      {PRODUCT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {TYPE_LABELS[t] ?? t}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Description">
+                  <textarea className={inputClass} rows={8} value={description} onChange={(e) => setDescription(e.target.value)} />
+                </Field>
               </div>
-              <FieldError text={errors.slug} />
-            </Field>
-            <Field label="Type">
-              <select className={inputClass} value={type} onChange={(e) => setType(e.target.value)}>
-                {PRODUCT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {TYPE_LABELS[t] ?? t}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-          <Field label="Description">
-            <textarea className={inputClass} rows={8} value={description} onChange={(e) => setDescription(e.target.value)} />
-          </Field>
-          <Field label="Changelog">
-            <textarea
-              className={cn(inputClass, "font-mono text-[13px]")}
-              rows={5}
-              value={changelog}
-              placeholder={"1.2.0\n- Added M-Pesa receipts"}
-              onChange={(e) => setChangelog(e.target.value)}
-            />
-          </Field>
-        </div>
-      </Panel>
+            </Panel>
+          ) : null}
 
-      <aside className="space-y-4 lg:sticky lg:top-20">
-        <Panel
-          title="Publishing"
-          action={
-            <button
-              type="button"
-              role="switch"
-              aria-checked={published}
-              aria-label="Live on the site"
-              onClick={() => setPublished((v) => !v)}
-              className={cn(
-                "relative h-5 w-9 cursor-pointer rounded-full transition-colors duration-150",
-                published ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line",
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150",
-                  published ? "translate-x-[18px]" : "translate-x-0.5",
-                )}
-              />
-            </button>
-          }
-        >
-          <div className="space-y-3">
-            <p className="text-[13px] text-body">{published ? "Live on the products page." : "Hidden from the site."}</p>
-            {initial?.published ? (
-              <Link
-                href={`/products/${initial.slug}`}
-                target="_blank"
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-600 hover:underline"
-              >
-                View product page
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              </Link>
-            ) : null}
-            {sales ? (
-              <p className="text-xs text-muted">
-                {sales.count} {sales.count === 1 ? "sale" : "sales"} · {formatKes(sales.revenue)}
-              </p>
-            ) : null}
-            <FieldError text={errors.form} />
-            {saved && !Object.keys(errors).length ? <p className="text-xs text-emerald-600">Saved.</p> : null}
-            <div className="grid [&>*]:w-full">
-              <AdminBtn onClick={save} pending={busy}>
-                {busy ? "Saving..." : initial ? "Save changes" : "Create product"}
-              </AdminBtn>
+          {step === 1 ? (
+            <Panel title="Price" meta="The list price is what the page shows when no offer is running.">
+              <div className="space-y-4">
+                <Field label="List price (KES)">
+                  <input
+                    className={cn(inputClass, errors.price && "border-red-400")}
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                  <FieldError text={errors.price} />
+                  {priceNum === 0 && !errors.price ? <p className="mt-1 text-xs text-muted">Shows as On request. Checkout stays closed.</p> : null}
+                </Field>
+                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2.5">
+                  <span className="text-sm font-medium text-ink-900">Run a promotion</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={promoOn}
+                    onClick={() => setPromoOn((v) => !v)}
+                    className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors", promoOn ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
+                  >
+                    <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform", promoOn ? "translate-x-[18px]" : "translate-x-0.5")} />
+                  </button>
+                </label>
+                {promoOn ? (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Discount %">
+                        <input
+                          className={inputClass}
+                          inputMode="numeric"
+                          value={percentOff || ""}
+                          placeholder="20"
+                          onChange={(e) => {
+                            const raw = Number(e.target.value.replace(/[^\d]/g, ""));
+                            if (!raw || priceNum <= 0) {
+                              setPromoPrice("");
+                              return;
+                            }
+                            const sale = Math.round(priceNum * (100 - Math.min(raw, 99)) / 100);
+                            setPromoPrice(String(Math.min(Math.max(sale, 0), priceNum - 1)));
+                          }}
+                        />
+                      </Field>
+                      <Field label="Offer price (KES)">
+                        <input
+                          className={cn(inputClass, errors.promo && "border-red-400")}
+                          inputMode="numeric"
+                          value={promoPrice}
+                          onChange={(e) => setPromoPrice(e.target.value.replace(/[^\d]/g, ""))}
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Offer name">
+                      <input className={inputClass} value={promoLabel} placeholder="Launch offer" onChange={(e) => setPromoLabel(e.target.value)} />
+                    </Field>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Starts (Nairobi)">
+                        <input className={inputClass} type="datetime-local" value={promoStart} onChange={(e) => setPromoStart(e.target.value)} />
+                      </Field>
+                      <Field label="Ends (Nairobi)">
+                        <input className={inputClass} type="datetime-local" value={promoEnd} onChange={(e) => setPromoEnd(e.target.value)} />
+                      </Field>
+                    </div>
+                    <p className="text-xs text-muted">Leave the dates empty to keep the offer on until you switch it off.</p>
+                    <FieldError text={errors.promo} />
+                  </div>
+                ) : null}
+              </div>
+            </Panel>
+          ) : null}
+
+          {step === 2 ? (
+            <div className="space-y-4">
+              <Panel title="Cover">
+                <UploadField folder="products" bucket="public-media" accept="image/*" value={cover} onChange={setCover} emptyLabel="No cover" />
+              </Panel>
+              <Panel title="Release">
+                <div className="space-y-4">
+                  <Field label="Version">
+                    <input className={inputClass} value={version} placeholder="1.0.0" onChange={(e) => setVersion(e.target.value)} />
+                  </Field>
+                  <Field label="Changelog">
+                    <textarea
+                      className={cn(inputClass, "font-mono text-[13px]")}
+                      rows={5}
+                      value={changelog}
+                      placeholder={"1.2.0\n- Added M-Pesa receipts"}
+                      onChange={(e) => setChangelog(e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </Panel>
+              {needsFile ? (
+                <Panel title="Download" meta="Sent after payment">
+                  <UploadField
+                    folder="plugins"
+                    bucket="product-files"
+                    accept=".zip,.rar,.7z,.pdf"
+                    value={filePath}
+                    onChange={setFilePath}
+                    emptyLabel="No file attached"
+                  />
+                  <FieldError text={errors.file} />
+                </Panel>
+              ) : null}
             </div>
-          </div>
-        </Panel>
+          ) : null}
 
-        <Panel title="Pricing">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Price (KES)">
-              <input
-                className={cn(inputClass, errors.price && "border-red-400")}
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-            </Field>
-            <Field label="Version">
-              <input className={inputClass} value={version} placeholder="1.0.0" onChange={(e) => setVersion(e.target.value)} />
-            </Field>
-          </div>
-          <FieldError text={errors.price} />
-          {priceNum === 0 && !errors.price ? <p className="mt-2 text-xs text-muted">Shows as On request.</p> : null}
-        </Panel>
+          {step === 3 ? (
+            <Panel title="Publish">
+              <div className="space-y-3 text-sm text-body">
+                <p><span className="font-medium text-ink-900">{title || "Untitled"}</span> · {TYPE_LABELS[type] ?? type}</p>
+                <p>
+                  {preview
+                    ? `${formatKes(preview.price)} during ${preview.label}. List price ${formatKes(preview.list)}.`
+                    : priceNum > 0
+                      ? `${formatKes(priceNum)} with no offer running.`
+                      : "On request. The Get it now button stays hidden."}
+                </p>
+                <p>{published ? "Live on the products page." : "Hidden until you switch it on."}</p>
+              </div>
+            </Panel>
+          ) : null}
+        </div>
 
-        <Panel title="Cover">
-          <UploadField folder="products" bucket="public-media" accept="image/*" value={cover} onChange={setCover} emptyLabel="No cover" />
-        </Panel>
-
-        {needsFile ? (
-          <Panel title="Download" meta="Sent to buyers after payment">
-            <UploadField
-              folder="plugins"
-              bucket="product-files"
-              accept=".zip,.rar,.7z,.pdf"
-              value={filePath}
-              onChange={setFilePath}
-              emptyLabel="No file attached"
-            />
-            <FieldError text={errors.file} />
+        <aside className="space-y-4 lg:sticky lg:top-20">
+          <Panel
+            title={STEPS[step]}
+            action={
+              <button
+                type="button"
+                role="switch"
+                aria-checked={published}
+                aria-label="Live on the site"
+                onClick={() => setPublished((v) => !v)}
+                className={cn("relative h-5 w-9 cursor-pointer rounded-full transition-colors duration-150", published ? "bg-brand-500" : "bg-surface-3 ring-1 ring-inset ring-line")}
+              >
+                <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150", published ? "translate-x-[18px]" : "translate-x-0.5")} />
+              </button>
+            }
+          >
+            <div className="space-y-3">
+              <p className="text-[13px] text-body">{published ? "Live on the products page." : "Hidden from the site."}</p>
+              <p className="text-[13px] text-body">
+                {preview ? `Buyers pay ${formatKes(preview.price)} right now.` : priceNum > 0 ? `Buyers pay ${formatKes(priceNum)}.` : "No checkout until a price is set."}
+              </p>
+              {initial?.published ? (
+                <Link href={`/products/${initial.slug}`} target="_blank" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-600 hover:underline">
+                  View product page
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              ) : null}
+              {sales ? (
+                <p className="text-xs text-muted">
+                  {sales.count} {sales.count === 1 ? "sale" : "sales"} · {formatKes(sales.revenue)}
+                </p>
+              ) : null}
+              <FieldError text={errors.form} />
+              {saved && !Object.keys(errors).length ? <p className="text-xs text-emerald-600">Saved.</p> : null}
+              <div className="flex gap-2">
+                {step > 0 ? (
+                  <AdminBtn variant="ghost" onClick={() => go(step - 1)}>Back</AdminBtn>
+                ) : null}
+                {step < STEPS.length - 1 ? (
+                  <AdminBtn onClick={() => go(step + 1)}>Continue</AdminBtn>
+                ) : (
+                  <AdminBtn onClick={save} pending={busy}>{busy ? "Saving..." : initial ? "Save changes" : "Create product"}</AdminBtn>
+                )}
+              </div>
+              {initial && step < STEPS.length - 1 ? (
+                <AdminBtn variant="ghost" onClick={save} pending={busy}>{busy ? "Saving..." : "Save changes"}</AdminBtn>
+              ) : null}
+            </div>
           </Panel>
-        ) : null}
-      </aside>
+        </aside>
+      </div>
     </div>
   );
 }

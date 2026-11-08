@@ -13,6 +13,7 @@ import {
   modeLabel,
   priceLabel,
 } from "@/components/events/utils";
+import { chargeKes } from "@/lib/offer";
 
 const intro =
   "Talks, workshops, bootcamps and online sessions run by Upeo Africa Technologies in Mombasa. Book a free seat or pay for your ticket with M-Pesa.";
@@ -33,7 +34,7 @@ export default async function EventsPage() {
   const [tickets, holds] = await Promise.all([getTicketTypesForEvents(ids), getTicketHolds(ids)]);
 
   const prices = new Map<string, number[]>();
-  for (const t of tickets) prices.set(t.event_id, [...(prices.get(t.event_id) ?? []), t.price_kes]);
+  for (const t of tickets) prices.set(t.event_id, [...(prices.get(t.event_id) ?? []), chargeKes(t)]);
 
   const upcoming = events.filter((e) => !isEventOver(e.starts_at));
   const past = events.filter((e) => isEventOver(e.starts_at)).reverse();
@@ -129,16 +130,19 @@ function UpcomingRow({ event, price, seatsLeft }: { event: Event; price: string 
       </div>
       <div className="col-span-2 flex items-center justify-between gap-4 sm:col-span-1 sm:flex-col sm:items-end sm:justify-center sm:gap-1">
         <span className="font-display text-lg font-semibold text-ink-900">{price ?? "Details"}</span>
-        {seatsLeft != null ? (
-          <span className={seatsLeft === 0 ? "text-sm font-medium text-brand-600" : "text-sm text-muted"}>
-            {seatsLeft === 0 ? "Sold out" : `${seatsLeft} seats left`}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
-            View
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </span>
-        )}
+        <span className="inline-flex items-center gap-3">
+          {seatsLeft != null ? (
+            <span className={seatsLeft === 0 ? "text-sm font-medium text-brand-600" : "text-sm text-muted"}>
+              {seatsLeft === 0 ? "Sold out" : `${seatsLeft} seats left`}
+            </span>
+          ) : null}
+          {seatsLeft !== 0 ? (
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+              Get it now
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </span>
+          ) : null}
+        </span>
       </div>
     </Link>
   );

@@ -8,6 +8,7 @@ import { FileField } from "@/components/admin/FileField";
 import { GalleryField } from "@/components/admin/events/GalleryField";
 import { SpeakersEditor, type SpeakerDraft } from "@/components/admin/events/SpeakersEditor";
 import { AgendaEditor, type AgendaDraft } from "@/components/admin/events/AgendaEditor";
+import { WizardSteps } from "@/components/admin/WizardSteps";
 import { TicketsEditor, emptyTicket, type TicketDraft } from "@/components/admin/events/TicketsEditor";
 import { defaultStartInput, fromNairobiInput, toNairobiInput } from "@/components/admin/events/time";
 import { newKey } from "@/components/admin/events/RowTools";
@@ -22,6 +23,7 @@ import { startNavProgress } from "@/components/ui/NavProgress";
 
 const META_TITLE_MAX = 60;
 const META_DESC_MAX = 160;
+const STEPS = ["Event", "Schedule", "Tickets", "Programme", "Publish"];
 
 function Counter({ value, max }: { value: string; max: number }) {
   return (
@@ -47,6 +49,7 @@ export function EventEditor({
   summary?: { sold: number; revenue: number; checkedIn: number };
 }) {
   const router = useRouter();
+  const [step, setStep] = useState(0);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [category, setCategory] = useState(initial?.category ?? "");
@@ -78,6 +81,11 @@ export function EventEditor({
           sales_start: toNairobiInput(t.sales_start),
           sales_end: toNairobiInput(t.sales_end),
           max_per_order: String(t.max_per_order),
+          promo: t.promo_price_kes != null,
+          promo_price_kes: t.promo_price_kes != null ? String(t.promo_price_kes) : "",
+          promo_label: t.promo_label ?? "",
+          promo_starts: toNairobiInput(t.promo_starts_at),
+          promo_ends: toNairobiInput(t.promo_ends_at),
         }))
       : [emptyTicket("General")],
   );
@@ -94,31 +102,78 @@ export function EventEditor({
   const past = initial ? isEventOver(initial.starts_at) : false;
   const status = !publishedAt ? "Draft" : past ? "Past" : "Live";
 
-  function validate() {
-    if (!title.trim()) return "Add a title.";
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return "Use lowercase letters, numbers and dashes in the slug.";
-    const start = fromNairobiInput(startsAt);
-    if (!start) return "Set a start date and time.";
-    const end = fromNairobiInput(endsAt);
-    if (end && end <= start) return "The end must be after the start.";
-    const reg = fromNairobiInput(regCloses);
-    if (reg && end && reg > end) return "Registration must close before the event ends.";
-    for (const t of tickets) {
+  function stepProblem(index: number) {
+    if (index === 0) {
+      if (!title.trim()) return "Add a title.";
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return "Use lowercase letters, numbers and dashes in the slug.";
+    }
+    if (index === 1) {
+      const start = fromNairobiInput(startsAt);
+      if (!start) return "Set a start date and time.";
+      const end = fromNairobiInput(endsAt);
+      if (end && end <= start) return "The end must be after the start.";
+      const reg = fromNairobiInput(regCloses);
+      if (reg && end && reg > end) return "Registration must close before the event ends.";
+    }
+    if (index === 2) {
+      for (const t of tickets) {
       if (!t.name.trim()) return "Every ticket type needs a name.";
       if (t.max_per_order === "" || Number(t.max_per_order) < 1) return `${t.name}: max per order must be at least 1.`;
       const s = fromNairobiInput(t.sales_start);
       const e = fromNairobiInput(t.sales_end);
       if (s && e && e <= s) return `${t.name}: sales must end after they start.`;
+      if (t.promo) {
+        const list = Number(t.price_kes) || 0;
+        const sale = Number(t.promo_price_kes);
+        if (list <= 0) return `${t.name}: set a ticket price before a promotion.`;
+        if (t.promo_price_kes.trim() === "" || !Number.isInteger(sale) || sale < 0 || sale >= list) return `${t.name}: the offer price must be below the ticket price.`;
+        const offerStart = fromNairobiInput(t.promo_starts);
+        const offerEnd = fromNairobiInput(t.promo_ends);
+        if ((t.promo_starts && !offerStart) || (t.promo_ends && !offerEnd)) return `${t.name}: the offer dates are not valid.`;
+        if (offerStart && offerEnd && offerEnd <= offerStart) return `${t.name}: the offer must end after it starts.`;
+      }
     }
-    if (published && tickets.length === 0) return "Add at least one ticket type before publishing.";
+      if (published && tickets.length === 0) return "Add at least one ticket type before publishing.";
+    }
     return null;
+  }
+
+  function validate() {
+    for (let index = 0; index < 3; index += 1) {
+      const problem = stepProblem(index);
+      if (problem) return problem;
+    }
+    return null;
+  }
+
+  function go(next: number) {
+    if (next > step) {
+      for (let index = step; index < next; index += 1) {
+        const problem = stepProblem(index);
+        if (problem) {
+          setErr(problem);
+          setStep(index);
+          return;
+        }
+      }
+    }
+    setErr(null);
+    setStep(Math.max(0, Math.min(STEPS.length - 1, next)));
   }
 
   async function save() {
     setErr(null);
     setNotice(null);
     const problem = validate();
-    if (problem) return setErr(problem);
+    if (problem) {
+      for (let index = 0; index < 3; index += 1) {
+        if (stepProblem(index)) {
+          setStep(index);
+          break;
+        }
+      }
+      return setErr(problem);
+    }
     setBusy(true);
     const supabase = createClient();
     const nextPublishedAt = published ? publishedAt || new Date().toISOString() : null;
@@ -184,6 +239,10 @@ export function EventEditor({
         sales_end: fromNairobiInput(t.sales_end),
         max_per_order: Math.max(1, Number(t.max_per_order) || 1),
         sort_order: i,
+        promo_price_kes: t.promo && t.promo_price_kes !== "" ? Number(t.promo_price_kes) : null,
+        promo_label: t.promo ? t.promo_label.trim() || null : null,
+        promo_starts_at: t.promo ? fromNairobiInput(t.promo_starts) : null,
+        promo_ends_at: t.promo ? fromNairobiInput(t.promo_ends) : null,
       };
       if (t.id) {
         const { error } = await supabase.from("ticket_types").update(payload).eq("id", t.id);
@@ -226,8 +285,11 @@ export function EventEditor({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="space-y-6">
+      <WizardSteps steps={STEPS} current={step} onPick={go} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="min-w-0 space-y-6">
+        {step === 0 ? (
         <Panel title="Details">
           <div className="space-y-4">
             <Field label="Title">
@@ -270,7 +332,10 @@ export function EventEditor({
             </Field>
           </div>
         </Panel>
+        ) : null}
 
+        {step === 1 ? (
+        <>
         <Panel title="Schedule" meta="Nairobi time (EAT)">
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Starts">
@@ -306,7 +371,11 @@ export function EventEditor({
             </Field>
           </div>
         </Panel>
+        </>
+        ) : null}
 
+        {step === 3 ? (
+        <>
         <Panel title="Media">
           <div className="space-y-5">
             <FileField label="Cover" folder="events" value={cover} onChange={setCover} accept="image/*" />
@@ -321,8 +390,11 @@ export function EventEditor({
         <Panel title="Agenda">
           <AgendaEditor value={agenda} onChange={setAgenda} />
         </Panel>
+        </>
+        ) : null}
 
-        <Panel title="Tickets">
+        {step === 2 ? (
+        <Panel title="Tickets" meta="The offer price is what Get it now charges while the promotion is open.">
           <div className="mb-4 max-w-[200px]">
             <Field label="Event capacity">
               <input
@@ -336,7 +408,9 @@ export function EventEditor({
           </div>
           <TicketsEditor value={tickets} onChange={setTickets} orderCounts={orderCounts} />
         </Panel>
+        ) : null}
 
+        {step === 4 ? (
         <Panel title="SEO">
           <div className="space-y-4">
             <Field label="Meta title">
@@ -358,6 +432,7 @@ export function EventEditor({
             </Field>
           </div>
         </Panel>
+        ) : null}
       </div>
 
       <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -411,10 +486,24 @@ export function EventEditor({
             {err ? <p className="text-sm text-red-600">{err}</p> : null}
             {notice ? <p className="text-sm text-emerald-700">{notice}</p> : null}
 
-            <div className="flex flex-col gap-2">
-              <AdminBtn onClick={save} pending={busy}>
-                {busy ? "Saving..." : published && !publishedAt ? "Save and publish" : "Save"}
+            <div className="flex flex-wrap gap-2">
+              {step > 0 ? (
+                <AdminBtn variant="ghost" onClick={() => go(step - 1)}>Back</AdminBtn>
+              ) : null}
+              {step < STEPS.length - 1 ? (
+                <AdminBtn onClick={() => go(step + 1)}>Continue</AdminBtn>
+              ) : (
+                <AdminBtn onClick={save} pending={busy}>
+                  {busy ? "Saving..." : published && !publishedAt ? "Save and publish" : initial ? "Save" : "Create event"}
+                </AdminBtn>
+              )}
+            </div>
+            {initial && step < STEPS.length - 1 ? (
+              <AdminBtn variant="ghost" onClick={save} pending={busy}>
+                {busy ? "Saving..." : "Save"}
               </AdminBtn>
+            ) : null}
+            <div className="flex flex-col gap-2">
               {publishedAt && slug ? (
                 <a
                   href={`/events/${slug}`}
@@ -430,6 +519,7 @@ export function EventEditor({
           </div>
         </Panel>
       </aside>
+      </div>
     </div>
   );
 }

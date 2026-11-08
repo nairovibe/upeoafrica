@@ -1102,6 +1102,10 @@ export type Database = {
           id: string
           locale: string
           price_kes: number
+          promo_ends_at: string | null
+          promo_label: string | null
+          promo_price_kes: number | null
+          promo_starts_at: string | null
           published: boolean
           slug: string
           title: string
@@ -1119,6 +1123,10 @@ export type Database = {
           id?: string
           locale?: string
           price_kes?: number
+          promo_ends_at?: string | null
+          promo_label?: string | null
+          promo_price_kes?: number | null
+          promo_starts_at?: string | null
           published?: boolean
           slug: string
           title: string
@@ -1136,6 +1144,10 @@ export type Database = {
           id?: string
           locale?: string
           price_kes?: number
+          promo_ends_at?: string | null
+          promo_label?: string | null
+          promo_price_kes?: number | null
+          promo_starts_at?: string | null
           published?: boolean
           slug?: string
           title?: string
@@ -1380,6 +1392,10 @@ export type Database = {
           max_per_order: number
           name: string
           price_kes: number
+          promo_ends_at: string | null
+          promo_label: string | null
+          promo_price_kes: number | null
+          promo_starts_at: string | null
           quota: number | null
           sales_end: string | null
           sales_start: string | null
@@ -1392,6 +1408,10 @@ export type Database = {
           max_per_order?: number
           name: string
           price_kes?: number
+          promo_ends_at?: string | null
+          promo_label?: string | null
+          promo_price_kes?: number | null
+          promo_starts_at?: string | null
           quota?: number | null
           sales_end?: string | null
           sales_start?: string | null
@@ -1404,6 +1424,10 @@ export type Database = {
           max_per_order?: number
           name?: string
           price_kes?: number
+          promo_ends_at?: string | null
+          promo_label?: string | null
+          promo_price_kes?: number | null
+          promo_starts_at?: string | null
           quota?: number | null
           sales_end?: string | null
           sales_start?: string | null

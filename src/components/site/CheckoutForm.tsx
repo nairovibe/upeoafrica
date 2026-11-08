@@ -121,7 +121,7 @@ export function CheckoutForm({ productId }: { productId: string }) {
         disabled={busy}
         className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[5px] bg-brand-500 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
       >
-        {busy ? "Sending M-Pesa prompt..." : "Pay with M-Pesa"}
+        {busy ? "Sending M-Pesa prompt..." : "Get it now"}
         {busy ? null : <ArrowRight className="h-4 w-4" aria-hidden />}
       </button>
     </form>

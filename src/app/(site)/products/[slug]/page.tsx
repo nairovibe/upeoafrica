@@ -6,6 +6,7 @@ import { CTA } from "@/components/sections/CTA";
 import { CheckoutForm } from "@/components/site/CheckoutForm";
 import { getProductBySlug, getPublishedProducts } from "@/lib/cms";
 import { formatKes } from "@/lib/constants";
+import { chargeKes, currentOffer } from "@/lib/offer";
 
 export const revalidate = 43200;
 
@@ -25,6 +26,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const item = await getProductBySlug(slug);
   if (!item) notFound();
+  const offer = currentOffer(item);
+  const due = chargeKes(item);
 
   return (
     <>
@@ -47,10 +50,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
             <aside className="border border-line p-6">
               <p className="font-display text-2xl font-semibold text-ink-900">
-                {item.price_kes > 0 ? formatKes(item.price_kes) : "On request"}
+                {due > 0 ? formatKes(due) : "On request"}
               </p>
-              <p className="mt-2 text-sm text-body">Pay with M-Pesa STK. The file link is emailed after confirmation.</p>
-              {item.price_kes > 0 ? (
+              {offer ? (
+                <p className="mt-1 text-sm text-muted">
+                  <span className="line-through">{formatKes(offer.list)}</span>
+                  <span className="ml-2 font-medium text-brand-600">{offer.label}</span>
+                </p>
+              ) : null}
+              <p className="mt-2 text-sm text-body">
+                {due > 0 ? "Get it now with M-Pesa. The file link is emailed after confirmation." : "Tell us what you need and we will scope it."}
+              </p>
+              {due > 0 ? (
                 <div className="mt-6">
                   <CheckoutForm productId={item.id} />
                 </div>

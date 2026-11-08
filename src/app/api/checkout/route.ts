@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/notify";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { startMpesaStk } from "@/lib/intasend";
+import { chargeKes } from "@/lib/offer";
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -40,7 +41,8 @@ export async function POST(request: Request) {
     .eq("published", true)
     .maybeSingle();
   if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
-  if (product.price_kes <= 0) {
+  const amount = chargeKes(product);
+  if (amount <= 0) {
     return NextResponse.json({ error: "This item is not for sale yet." }, { status: 400 });
   }
 
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
       email,
       phone,
       product_id: product.id,
-      amount_kes: product.price_kes,
+      amount_kes: amount,
       provider: "intasend",
       status: "pending",
       kind: "product",
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
   }
 
   const stk = await startMpesaStk({
-    amount: product.price_kes,
+    amount,
     phone,
     email,
     apiRef: order.id,
