@@ -49,9 +49,9 @@ export function BillingDesk({ cards, origin }: { cards: BillingCard[]; origin: s
     <div className="grid gap-4">
       {cards.map((card) => (
         <Panel key={card.id} title={COPY[card.id].title} meta={COPY[card.id].blurb}>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-14 min-w-16 items-center justify-center rounded-[5px] border border-line bg-white px-3">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-14 w-[7.5rem] shrink-0 items-center justify-center overflow-hidden rounded-[5px] border border-line bg-white px-2">
                 <PaymentMark id={card.id} className="h-6 w-auto" />
               </span>
               <div>
@@ -100,7 +100,7 @@ export function BillingDesk({ cards, origin }: { cards: BillingCard[]; origin: s
                 <Field label="Webhook secret">
                   <input className={inputClass} name="secret.webhook_secret" type="password" autoComplete="new-password" placeholder="Optional" />
                 </Field>
-                <p className="text-xs text-muted">IntaSend webhook URL: {origin}/api/webhooks/intasend</p>
+                <p className="break-all text-xs text-muted">IntaSend webhook URL: {origin}/api/webhooks/intasend</p>
               </>
             ) : null}
             {current.id === "card" ? (
@@ -136,7 +136,7 @@ export function BillingDesk({ cards, origin }: { cards: BillingCard[]; origin: s
                 <Field label="Client secret">
                   <input className={inputClass} name="secret.client_secret" type="password" autoComplete="new-password" placeholder={current.configured ? "Saved. Leave blank to keep it." : "Airtel secret"} />
                 </Field>
-                <p className="text-xs text-muted">Airtel callback URL: {origin}/api/webhooks/airtel</p>
+                <p className="break-all text-xs text-muted">Airtel callback URL: {origin}/api/webhooks/airtel</p>
               </>
             ) : null}
             {current.id === "bank" ? (

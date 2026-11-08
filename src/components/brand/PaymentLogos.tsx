@@ -1,13 +1,10 @@
-import Image from "next/image";
-
 /**
  * Payment-rail marks used in the "Payment integrations" strip.
  *
  * M-Pesa and Airtel Money are real third-party brand marks, so they are served
  * from official vector artwork in `public/logos/payments/` and never redrawn or
  * recoloured. They always sit on a white tile, which is what the artwork expects.
- * `unoptimized` keeps them out of the image optimiser, which refuses SVG by
- * default and would only add a round-trip for files this small.
+ * A plain img keeps the SVG out of the image optimiser, which refuses SVG.
  *
  * Bank and card are generic category icons, not brand marks, so they stay as
  * inline SVG and inherit `currentColor`.
@@ -17,27 +14,15 @@ type MarkProps = { className?: string };
 
 export function MpesaMark({ className }: MarkProps) {
   return (
-    <Image
-      src="/logos/payments/mpesa.svg"
-      alt="M-Pesa"
-      width={512}
-      height={273}
-      className={className}
-      unoptimized
-    />
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/logos/payments/mpesa.svg" alt="M-Pesa" width={512} height={273} className={className} />
   );
 }
 
 export function AirtelMoneyMark({ className }: MarkProps) {
   return (
-    <Image
-      src="/logos/payments/airtel.svg"
-      alt="Airtel Money"
-      width={309}
-      height={323}
-      className={className}
-      unoptimized
-    />
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/logos/payments/airtel.svg" alt="Airtel Money" width={309} height={323} className={className} />
   );
 }
 

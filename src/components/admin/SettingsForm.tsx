@@ -252,40 +252,40 @@ export function SettingsForm({
   ) : null;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <nav aria-label="Settings sections" className="lg:sticky lg:top-20 lg:self-start">
-        <ul className="flex gap-1 overflow-x-auto lg:flex-col">
-          <li className="shrink-0">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <nav aria-label="Settings sections" className="min-w-0 lg:sticky lg:top-20 lg:self-start">
+        <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-1">
+          <li className="min-w-0">
             <button
               type="button"
               onClick={() => go("profile")}
               aria-current={section === "profile" ? "page" : undefined}
               className={cn(
-                "flex w-full items-center gap-2.5 rounded-[5px] px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                "flex w-full min-w-0 items-center gap-2.5 rounded-[5px] px-3 py-2 text-left text-[13px] font-medium transition-colors",
                 section === "profile" ? "bg-brand-50 text-brand-700" : "text-body hover:bg-surface-3 hover:text-ink-900",
               )}
             >
               <UserRound className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              <span className="whitespace-nowrap">Your profile</span>
+              <span className="min-w-0">Your profile</span>
             </button>
           </li>
           {SECTIONS.map((s) => {
             const Icon = s.icon;
             const on = s.id === section;
             return (
-              <li key={s.id} className="shrink-0">
+              <li key={s.id} className="min-w-0">
                 <button
                   type="button"
                   onClick={() => go(s.id)}
                   aria-current={on ? "page" : undefined}
                   className={cn(
-                    "flex w-full items-center gap-2.5 rounded-[5px] px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                    "flex w-full min-w-0 items-center gap-2.5 rounded-[5px] px-3 py-2 text-left text-[13px] font-medium transition-colors",
                     on ? "bg-brand-50 text-brand-700" : "text-body hover:bg-surface-3 hover:text-ink-900",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span className="whitespace-nowrap">{s.label}</span>
-                  {dirty(s.keys) ? <span className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-500" aria-label="Unsaved" /> : null}
+                  <span className="min-w-0">{s.label}</span>
+                  {dirty(s.keys) ? <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-label="Unsaved" /> : null}
                 </button>
               </li>
             );

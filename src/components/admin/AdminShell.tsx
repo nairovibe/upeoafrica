@@ -111,7 +111,7 @@ export function AdminShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="desk-chrome sticky top-0 z-20 flex h-14 items-center gap-1.5 border-b border-line bg-white px-3 lg:px-6">
+        <header className="desk-chrome sticky top-0 z-20 flex h-14 min-w-0 items-center gap-1.5 border-b border-line bg-white px-3 lg:px-6">
           <button
             type="button"
             onClick={() => setMobileNav(true)}
@@ -128,11 +128,17 @@ export function AdminShell({
           >
             <PanelLeft className="h-4 w-4" />
           </button>
-          <p className="min-w-0 truncate pl-1 font-display text-[15px] font-semibold text-ink-900">{pageTitle(pathname)}</p>
+          <AccountMenu
+            profile={profile}
+            open={popover === "account"}
+            onToggle={() => togglePopover("account")}
+            onClose={closePopover}
+          />
+          <p className="min-w-0 flex-1 truncate pl-1 font-display text-[15px] font-semibold text-ink-900">{pageTitle(pathname)}</p>
           <button
             type="button"
             onClick={openPalette}
-            className="ml-auto hidden h-9 w-full max-w-xs cursor-pointer items-center gap-2 rounded-[5px] border border-line px-3 text-left text-[13px] text-muted transition-colors hover:border-brand-300 sm:inline-flex"
+            className="ml-auto hidden h-9 w-56 shrink-0 cursor-pointer items-center gap-2 rounded-[5px] border border-line px-3 text-left text-[13px] text-muted transition-colors hover:border-brand-300 lg:inline-flex"
           >
             <Search className="h-3.5 w-3.5" aria-hidden />
             Search
@@ -142,7 +148,7 @@ export function AdminShell({
             type="button"
             onClick={openPalette}
             aria-label="Search"
-            className="ml-auto inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[5px] hover:bg-surface-3 sm:hidden"
+            className="ml-auto inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[5px] hover:bg-surface-3 lg:hidden"
           >
             <Search className="h-4 w-4" />
           </button>
@@ -158,14 +164,8 @@ export function AdminShell({
             onToggle={() => togglePopover("notices")}
             onClose={closePopover}
           />
-          <AccountMenu
-            profile={profile}
-            open={popover === "account"}
-            onToggle={() => togglePopover("account")}
-            onClose={closePopover}
-          />
         </header>
-        <div className="min-w-0 flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</div>
+        <div className="min-w-0 flex-1 overflow-x-clip px-4 py-6 lg:px-8 lg:py-8">{children}</div>
       </div>
       {mobileNav ? (
         <div className="fixed inset-0 z-40 md:hidden">

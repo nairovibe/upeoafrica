@@ -7,6 +7,7 @@ import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui"
 import { FileField } from "@/components/admin/FileField";
 import { Notice } from "@/components/admin/studio/controls";
 import { revokeSession, saveProfile, signOutOtherDevices } from "@/app/console/(console)/settings/actions";
+import { setProfilePatch } from "@/components/admin/shell/profile-live";
 import { createClient } from "@/lib/supabase/client";
 import type { LoginSession } from "@/lib/sessions";
 
@@ -45,6 +46,7 @@ export function ProfileSettings({
         setMsg({ tone: "error", text: result.error });
         return;
       }
+      setProfilePatch({ full_name: fullName.trim(), avatar_path: photo.trim() || null });
       setMsg({ tone: "ok", text: "Profile saved. Articles you publish use this photo." });
       router.refresh();
     });
@@ -122,11 +124,11 @@ export function ProfileSettings({
                 <div className="flex min-w-0 items-start gap-3">
                   <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink-900">
+                    <p className="flex flex-wrap items-center gap-2 break-words text-sm font-medium text-ink-900">
                       {session.device}
                       {session.current ? <Pill tone="brand">This device</Pill> : null}
                     </p>
-                    <p className="text-xs text-muted">
+                    <p className="break-words text-xs text-muted">
                       {session.place}
                       <span aria-hidden> · </span>
                       Last active {when(session.seen)}

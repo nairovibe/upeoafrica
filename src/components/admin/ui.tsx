@@ -158,10 +158,10 @@ export function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block" htmlFor={htmlFor}>
+    <label className="block min-w-0" htmlFor={htmlFor}>
       <span className="mb-1.5 block text-[13px] font-medium text-ink-900">{label}</span>
       {children}
-      {hint ? <span className="mt-1 block text-xs text-muted">{hint}</span> : null}
+      {hint ? <span className="mt-1 block break-words text-xs text-muted">{hint}</span> : null}
     </label>
   );
 }
@@ -208,12 +208,12 @@ export function Panel({
   return (
     <section className={cn("rounded-[5px] border border-line bg-white", className)}>
       {title ? (
-        <header className="flex items-start justify-between gap-3 px-5 pt-4">
-          <div className="min-w-0">
-            <h2 className="truncate font-display text-[15px] font-semibold text-ink-900">{title}</h2>
-            {meta ? <p className="mt-0.5 text-xs text-muted">{meta}</p> : null}
+        <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-5">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-[15px] font-semibold text-ink-900">{title}</h2>
+            {meta ? <p className="mt-0.5 break-words text-xs text-muted">{meta}</p> : null}
           </div>
-          {action ? <div className="shrink-0">{action}</div> : null}
+          {action ? <div className="max-w-full">{action}</div> : null}
         </header>
       ) : null}
       <div className={cn(flush ? "mt-3" : "p-5", Boolean(title) && !flush && "pt-4")}>{children}</div>
@@ -347,4 +347,4 @@ export function EmptyState({ children, action }: { children: React.ReactNode; ac
 }
 
 export const inputClass =
-  "w-full rounded-[5px] border border-line bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition-[border-color] duration-200 focus:border-brand-500";
+  "w-full min-w-0 max-w-full rounded-[5px] border border-line bg-white px-3 py-2.5 text-sm text-ink-900 outline-none transition-[border-color] duration-200 focus:border-brand-500";

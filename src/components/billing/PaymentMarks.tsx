@@ -30,8 +30,8 @@ export function MastercardMark({ className = "h-6 w-auto" }: { className?: strin
 
 export function PaymentMark({ id, className = "h-6 w-auto" }: { id: string; className?: string }) {
   if (id === "paypal") return <PayPalMark className={className} />;
-  if (id === "airtel") return <AirtelMoneyMark className="h-8 w-auto" />;
-  if (id === "mpesa") return <OfficialMpesaMark className="h-7 w-auto" />;
+  if (id === "airtel") return <AirtelMoneyMark className="h-8 w-auto max-w-[4.5rem] object-contain" />;
+  if (id === "mpesa") return <OfficialMpesaMark className="h-7 w-auto max-w-[6.5rem] object-contain" />;
   if (id === "card") return (
     <span className="inline-flex items-center gap-1.5">
       <VisaMark className={className} />

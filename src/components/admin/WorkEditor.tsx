@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ExternalLink, X } from "lucide-react";
+import { ChevronDown, ExternalLink, X } from "lucide-react";
 import { AdminBtn, Field, Panel, PublishStatus, inputClass } from "@/components/admin/ui";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
 import { toHtml } from "@/components/blog/analysis";
@@ -150,7 +150,7 @@ export function WorkEditor({
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-5">
         <Panel title="Story">
           <div className="space-y-4">
@@ -373,6 +373,11 @@ export function WorkEditor({
   );
 }
 
+function toggleTech(value: string[], name: string, on: boolean) {
+  const rest = value.filter((item) => item.toLowerCase() !== name.toLowerCase());
+  return on ? rest : [...rest, name];
+}
+
 function StackPicker({
   value,
   onChange,
@@ -382,57 +387,68 @@ function StackPicker({
   onChange: (next: string[]) => void;
   disabled?: boolean;
 }) {
+  const [open, setOpen] = useState<string | null>(stackGroups[0]?.id ?? null);
   const known = new Set(stackGroups.flatMap((group) => group.items.map((item) => item.name.toLowerCase())));
   const extra = value.filter((name) => name.trim() && !known.has(name.trim().toLowerCase()));
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-2">
       <span className="block text-[13px] font-medium text-ink-900">Stack</span>
-      {stackGroups.map((group) => (
-        <div key={group.id}>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{group.label}</p>
-          <div className="flex flex-wrap gap-2">
-            {group.items.map((item) => {
-              const on = value.some((name) => name.toLowerCase() === item.name.toLowerCase());
-              return (
-                <button
-                  key={item.name}
-                  type="button"
-                  disabled={disabled}
-                  aria-pressed={on}
-                  onClick={() =>
-                    onChange(
-                      on
-                        ? value.filter((name) => name.toLowerCase() !== item.name.toLowerCase())
-                        : [...value.filter((name) => name.toLowerCase() !== item.name.toLowerCase()), item.name],
-                    )
-                  }
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-[5px] border px-2.5 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-60",
-                    on ? "border-brand-500 bg-brand-50 text-brand-700" : "border-line bg-white text-body hover:border-brand-300",
-                  )}
-                >
-                  {on ? <Check className="h-3.5 w-3.5" /> : null}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/logos/${item.slug}.svg?v=color`} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
-                  {item.name}
-                </button>
-              );
-            })}
+      {stackGroups.map((group) => {
+        const picked = group.items.filter((item) => value.some((name) => name.toLowerCase() === item.name.toLowerCase()));
+        const expanded = open === group.id;
+        return (
+          <div key={group.id} className="min-w-0 rounded-[5px] border border-line bg-white">
+            <button
+              type="button"
+              disabled={disabled}
+              aria-expanded={expanded}
+              onClick={() => setOpen(expanded ? null : group.id)}
+              className="flex w-full min-w-0 items-center justify-between gap-3 px-3 py-2.5 text-left disabled:opacity-60"
+            >
+              <span className="min-w-0">
+                <span className="block text-[13px] font-medium text-ink-900">{group.label}</span>
+                <span className="block truncate text-xs text-muted">{picked.length ? picked.map((item) => item.name).join(", ") : "None selected"}</span>
+              </span>
+              <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted transition-transform", expanded && "rotate-180")} aria-hidden />
+            </button>
+            {expanded ? (
+              <ul className="border-t border-line">
+                {group.items.map((item) => {
+                  const on = picked.some((pickedItem) => pickedItem.name === item.name);
+                  return (
+                    <li key={item.name}>
+                      <label className="flex min-w-0 cursor-pointer items-center gap-3 px-3 py-2.5 text-sm text-ink-900 hover:bg-surface-2">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 shrink-0 accent-brand-500"
+                          checked={on}
+                          disabled={disabled}
+                          onChange={() => onChange(toggleTech(value, item.name, on))}
+                        />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/logos/${item.slug}.svg`} alt="" width={20} height={20} className="h-5 w-5 shrink-0 object-contain" />
+                        <span className="min-w-0">{item.name}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </div>
-        </div>
-      ))}
+        );
+      })}
       {extra.length ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           {extra.map((name) => (
             <button
               key={name}
               type="button"
               disabled={disabled}
               onClick={() => onChange(value.filter((item) => item !== name))}
-              className="inline-flex items-center gap-1.5 rounded-[5px] border border-line px-2.5 py-1.5 text-[12px] font-medium text-body"
+              className="inline-flex max-w-full items-center gap-1.5 rounded-[5px] border border-line px-2.5 py-1.5 text-[12px] font-medium text-body"
             >
-              {techByName(name)?.name ?? name}
-              <X className="h-3.5 w-3.5" aria-hidden />
+              <span className="min-w-0 truncate">{techByName(name)?.name ?? name}</span>
+              <X className="h-3.5 w-3.5 shrink-0" aria-hidden />
               <span className="sr-only">Remove {name}</span>
             </button>
           ))}

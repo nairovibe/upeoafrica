@@ -22,6 +22,7 @@ export async function saveProfile(input: { fullName: string; avatarPath: string 
   await supabase.from("articles").update({ author_name: fullName, author_photo_path: avatar }).eq("author_id", staff.id);
   revalidateTag(PUBLIC_TAG, { expire: 0 });
   revalidatePath("/blogs", "layout");
+  revalidatePath("/console", "layout");
   revalidatePath("/console/settings");
   return { ok: true };
 }

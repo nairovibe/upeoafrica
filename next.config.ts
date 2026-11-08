@@ -31,7 +31,9 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/:path((?!console(?:/|$)|api(?:/|$)|_next(?:/|$)|favicon\\.ico|icon\\.png|robots\\.txt|ads\\.txt|feed\\.xml|indexnow-key\\.txt).*)",
+        // Static files stay on this host. Sending /logos and other public assets
+        // to /console makes every brand mark render as a broken document.
+        source: "/:path((?!console(?:/|$)|api(?:/|$)|_next(?:/|$)|favicon\\.ico|icon\\.png|robots\\.txt|ads\\.txt|feed\\.xml|indexnow-key\\.txt|logos(?:/|$)|flags(?:/|$)|.*\\.(?:svg|png|jpe?g|webp|gif|ico|avif|woff2?)).*)",
         has: [{ type: "host", value: consoleHost }],
         destination: `https://${consoleHost}/console`,
         permanent: false,

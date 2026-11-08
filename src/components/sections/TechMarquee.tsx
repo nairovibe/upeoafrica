@@ -7,7 +7,7 @@ function StackRow({ hidden = false }: { hidden?: boolean }) {
         <span key={t.slug + t.name} className="flex shrink-0 items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={`/logos/${t.slug}.svg?v=color`}
+            src={`/logos/${t.slug}.svg`}
             alt=""
             width={48}
             height={48}

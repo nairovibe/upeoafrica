@@ -16,7 +16,7 @@ export function StackMarks({ names, limit = 8 }: { names: string[]; limit?: numb
           >
             {item ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/logos/${item.slug}.svg?v=color`} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
+              <img src={`/logos/${item.slug}.svg`} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
             ) : null}
             <span>{name}</span>
           </li>
