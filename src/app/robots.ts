@@ -53,6 +53,5 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       ...heavy.map((userAgent) => ({ userAgent, disallow: "/" })),
     ],
     sitemap: `${company.domain}/sitemap.xml`,
-    host: company.domain,
   };
 }
