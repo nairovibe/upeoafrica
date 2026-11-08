@@ -10,7 +10,17 @@ export const VERIFY = {
   pixel: /^\d{8,20}$/,
   ads: /^AW-\d{5,20}(?:\/[A-Za-z0-9_-]{1,40})?$/i,
   ga: /^G-[A-Z0-9]{4,20}$/i,
+  adsense: /^ca-pub-\d{10,20}$/i,
 } as const;
+
+/** Pulls a ca-pub account from a bare ID or the AdSense meta tag. */
+export function adsenseAccount(raw: string | null | undefined) {
+  const value = metaContent(raw);
+  const found = value.match(/(?:ca-)?pub-\d{10,20}/i);
+  if (!found) return "";
+  const id = found[0].toLowerCase();
+  return id.startsWith("ca-") ? id : `ca-${id}`;
+}
 
 /** Pulls a GA4 measurement ID from a bare ID or a pasted gtag snippet. */
 export function measurementId(raw: string | null | undefined) {

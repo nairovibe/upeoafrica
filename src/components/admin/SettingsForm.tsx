@@ -13,7 +13,7 @@ import type { SiteSettings } from "@/lib/cms";
 import type { TablesUpdate } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 import { refreshSite } from "@/lib/refresh-site";
-import { measurementId, metaContent, VERIFY } from "@/lib/search-presence";
+import { adsenseAccount, measurementId, metaContent, VERIFY } from "@/lib/search-presence";
 
 type Form = ReturnType<typeof toForm>;
 type Key = keyof Form;
@@ -57,6 +57,7 @@ const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; keys: Key[] }[
     icon: Search,
     keys: [
       "google_site_verification",
+      "google_adsense_account",
       "bing_site_verification",
       "baidu_site_verification",
       "yandex_site_verification",
@@ -95,6 +96,7 @@ function toForm(s: SiteSettings) {
     gtm_id: s.gtm_id ?? "",
     google_analytics_id: s.google_analytics_id ?? "",
     google_site_verification: s.google_site_verification ?? "",
+    google_adsense_account: s.google_adsense_account ?? "",
     bing_site_verification: s.bing_site_verification ?? "",
     baidu_site_verification: s.baidu_site_verification ?? "",
     yandex_site_verification: s.yandex_site_verification ?? "",
@@ -124,6 +126,9 @@ function validate(form: Form, keys: Key[]): string | null {
   }
   if (keys.includes("google_analytics_id") && form.google_analytics_id.trim() && !measurementId(form.google_analytics_id)) {
     return "Google Analytics ID looks like G-XXXXXXXXXX.";
+  }
+  if (keys.includes("google_adsense_account") && form.google_adsense_account.trim() && !adsenseAccount(form.google_adsense_account)) {
+    return "AdSense account looks like ca-pub-1234567890123456.";
   }
   const tokens: [Key, RegExp, string][] = [
     ["google_site_verification", VERIFY.google, "Google verification is the content value from the meta tag."],
@@ -165,6 +170,7 @@ function toUpdate(form: Form, keys: Key[]): TablesUpdate<"site_settings"> {
     )
       out[key] = metaContent(value) || null;
     else if (key === "google_analytics_id") out[key] = measurementId(value) || null;
+    else if (key === "google_adsense_account") out[key] = adsenseAccount(value) || null;
     else out[key] = value.trim() || null;
   }
   return out as TablesUpdate<"site_settings">;
@@ -416,6 +422,9 @@ export function SettingsForm({
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Google Search Console">{text("google_site_verification", { placeholder: "google-site-verification content" })}</Field>
+                <Field label="Google AdSense" hint="Paste the meta tag from AdSense, or the ca-pub number. This connects the site. It does not place ads.">
+                  {text("google_adsense_account", { placeholder: "ca-pub-1234567890123456" })}
+                </Field>
                 <Field label="Bing Webmaster">{text("bing_site_verification", { placeholder: "msvalidate.01 content" })}</Field>
                 <Field label="Baidu">{text("baidu_site_verification", { placeholder: "baidu-site-verification content" })}</Field>
                 <Field label="Yandex">{text("yandex_site_verification", { placeholder: "yandex-verification content" })}</Field>

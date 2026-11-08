@@ -8,7 +8,7 @@ import { TrackingTags } from "@/components/site/TrackingTags";
 import { ClaritySnippet } from "@/components/site/ClaritySnippet";
 import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
-import { GOOGLE_VERIFICATION_FALLBACK, matchToken, measurementId, VERIFY } from "@/lib/search-presence";
+import { adsenseAccount, GOOGLE_VERIFICATION_FALLBACK, matchToken, measurementId, VERIFY } from "@/lib/search-presence";
 
 const siteUrl = company.domain;
 
@@ -23,10 +23,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const baidu = matchToken(settings?.baidu_site_verification, VERIFY.baidu);
   const yandex = matchToken(settings?.yandex_site_verification, VERIFY.yandex);
   const facebook = matchToken(settings?.facebook_domain_verification, VERIFY.facebook);
+  const adsense = adsenseAccount(settings?.google_adsense_account);
   if (bing) other["msvalidate.01"] = bing;
   if (baidu) other["baidu-site-verification"] = baidu;
   if (yandex) other["yandex-verification"] = yandex;
   if (facebook) other["facebook-domain-verification"] = facebook;
+  if (adsense) other["google-adsense-account"] = adsense;
   return { verification: { google, other: Object.keys(other).length ? other : undefined } };
 }
 
