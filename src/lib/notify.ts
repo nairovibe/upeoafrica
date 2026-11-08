@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { formatMoney } from "@/lib/constants";
 import { company } from "@/lib/content";
 import { brandedEmailHtml, RESEND_FROM } from "@/lib/email";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
@@ -207,24 +208,28 @@ export async function notifyBuyerReceipt(opts: {
   invoiceId?: string;
   downloadUrl?: string;
   kind?: string;
+  currency?: string;
+  name?: string;
 }) {
+  const money = formatMoney(opts.amount, opts.currency);
   const subject =
     opts.kind === "ticket"
       ? `Your ticket: ${opts.title}`
       : opts.kind === "invoice"
         ? `Receipt: ${opts.title}`
-        : `Receipt: ${opts.title}`;
+        : `Your download: ${opts.title}`;
   const extra = opts.downloadUrl
-    ? ` Your download is ready for seven days.`
+    ? " This link is only for this purchase, and it works for seven days."
     : opts.kind === "ticket"
-      ? ` Show this email at the door, or keep it on your phone.`
+      ? " Show this email at the door, or keep it on your phone."
       : "";
+  const hello = opts.name ? `Hello ${escapeHtml(opts.name)}. ` : "";
   const sent = await sendHtml({
     to: opts.email,
     subject,
-    preview: `KES ${opts.amount.toLocaleString("en-KE")} · ${opts.title}`,
+    preview: `${money} · ${opts.title}`,
     heading: "Payment received.",
-    body: `Thank you. We received KES ${opts.amount.toLocaleString("en-KE")} for ${opts.title}.${extra}`,
+    body: `${hello}Thank you. We received ${money} for ${opts.title}.${extra}`,
     buttonLabel: opts.downloadUrl ? "Download file" : undefined,
     buttonUrl: opts.downloadUrl,
   });

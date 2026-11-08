@@ -9,7 +9,7 @@ export function ProductGallery({ images, title }: { images: string[]; title: str
 
   if (!current) {
     return (
-      <div className="flex aspect-[4/3] items-end border border-line bg-surface-2 p-6">
+      <div className="flex min-h-48 items-end border border-line bg-surface-2 p-6">
         <p className="font-display text-lg font-semibold text-ink-900">{title}</p>
       </div>
     );
@@ -17,10 +17,10 @@ export function ProductGallery({ images, title }: { images: string[]; title: str
 
   return (
     <div>
-      <div className="aspect-[4/3] overflow-hidden border border-line bg-surface-2">
+      <div className="overflow-hidden border border-line bg-white">
         {/* Supabase covers are served directly. The image optimizer rejects some of these files. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={current} alt={title} className="h-full w-full object-contain" />
+        <img src={current} alt={title} className="h-auto w-full" />
       </div>
       {images.length > 1 ? (
         <ul className="mt-3 flex gap-3 overflow-x-auto" aria-label="Product images">

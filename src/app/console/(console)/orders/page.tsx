@@ -1,7 +1,7 @@
 import { CircleAlert, Clock, Ticket, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPage, FilterTabs, Stat } from "@/components/admin/ui";
-import { formatKes } from "@/lib/constants";
+import { formatKes, formatMoney, priceCurrency } from "@/lib/constants";
 import { OrdersTable, type OrderRow } from "@/components/admin/money/OrdersTable";
 import { SearchForm } from "@/components/admin/money/SearchForm";
 import { cleanQuery, daysAgoIso, formatWhen, withParams } from "@/components/admin/money/format";
@@ -23,7 +23,7 @@ export default async function OrdersPage({
   let list = supabase
     .from("orders")
     .select(
-      "id, created_at, email, phone, attendee_name, attendee_company, kind, amount_kes, status, provider_ref, ticket_code, quantity, checked_in_at, download_expires_at, event_id, products(title), events(title), ticket_types(name), payments(id, result, created_at)",
+      "id, created_at, email, phone, attendee_name, attendee_company, kind, amount_kes, currency, tier_label, status, provider_ref, ticket_code, quantity, checked_in_at, download_expires_at, event_id, products(title), events(title), ticket_types(name), payments(id, result, created_at)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -33,7 +33,7 @@ export default async function OrdersPage({
 
   const [{ data: orders }, { data: all }] = await Promise.all([
     list,
-    supabase.from("orders").select("status, kind, amount_kes, created_at"),
+    supabase.from("orders").select("status, kind, amount_kes, currency, created_at"),
   ]);
 
   const since = daysAgoIso(30);
@@ -45,16 +45,17 @@ export default async function OrdersPage({
       counts.all += 1;
       counts[o.status] = (counts[o.status] ?? 0) + 1;
     }
+    const shillings = priceCurrency(o.currency) !== "USD";
     if (o.status === "paid") {
-      if (o.created_at >= since) {
+      if (o.created_at >= since && shillings) {
         stats.paid30 += o.amount_kes;
         stats.paid30Count += 1;
       }
-      if (o.kind === "ticket") stats.tickets += o.amount_kes;
-      else stats.products += o.amount_kes;
+      if (shillings && o.kind === "ticket") stats.tickets += o.amount_kes;
+      else if (shillings) stats.products += o.amount_kes;
     } else if (o.status === "pending") {
       stats.pending += 1;
-      stats.pendingKes += o.amount_kes;
+      if (shillings) stats.pendingKes += o.amount_kes;
     } else if (o.status === "failed") {
       stats.failed += 1;
     }
@@ -78,8 +79,8 @@ export default async function OrdersPage({
       item: isTicket ? o.events?.title || "Event ticket" : o.products?.title || "Product",
       itemMeta: isTicket
         ? [o.ticket_types?.name, `${o.quantity} ${o.quantity === 1 ? "ticket" : "tickets"}`].filter(Boolean).join(" · ")
-        : "Product",
-      amount: formatKes(o.amount_kes),
+        : o.tier_label || "Product",
+      amount: formatMoney(o.amount_kes, o.currency),
       status: o.status,
       reference: (isTicket ? o.ticket_code : o.provider_ref) ?? "",
       providerRef: o.provider_ref,

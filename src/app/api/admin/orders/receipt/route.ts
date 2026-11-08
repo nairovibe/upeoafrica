@@ -29,8 +29,10 @@ export async function POST(request: Request) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL || company.domain;
   await notifyBuyerReceipt({
     email: order.email,
+    name: order.attendee_name || undefined,
     amount: Number(order.amount_kes),
-    title,
+    currency: order.currency,
+    title: order.tier_label ? `${title} · ${order.tier_label}` : title,
     orderId: order.id,
     downloadUrl: order.kind === "product" ? `${origin}/api/download/${order.id}` : undefined,
     kind: order.kind,

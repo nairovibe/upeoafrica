@@ -101,7 +101,9 @@ export async function POST(request: Request) {
       const origin = company.domain;
       await notifyBuyerReceipt({
         email: order.email,
+        name: order.attendee_name || undefined,
         amount: Number(order.amount_kes),
+        currency: order.currency,
         title,
         orderId: order.id,
         downloadUrl: order.kind === "product" ? `${origin}/api/download/${order.id}` : undefined,

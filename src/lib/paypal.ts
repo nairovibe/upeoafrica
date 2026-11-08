@@ -36,6 +36,8 @@ export async function createPayPalOrder(opts: {
   amount: number;
   returnUrl: string;
   cancelUrl: string;
+  currency?: "KES" | "USD";
+  description?: string;
 }) {
   const config = await paypalConfig();
   if (!config) return { ok: false as const, error: "PayPal is not switched on." };
@@ -50,8 +52,8 @@ export async function createPayPalOrder(opts: {
         {
           reference_id: opts.invoiceId,
           custom_id: opts.invoiceId,
-          description: `Invoice ${opts.number}`,
-          amount: { currency_code: "KES", value: opts.amount.toFixed(2) },
+          description: opts.description ?? `Invoice ${opts.number}`,
+          amount: { currency_code: opts.currency ?? "KES", value: opts.amount.toFixed(2) },
         },
       ],
       payment_source: {

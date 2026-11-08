@@ -31,7 +31,7 @@ const COPY: Record<ThanksKind, { eyebrow: string; title: string; body: string }>
   order: {
     eyebrow: "Payment received",
     title: "Payment received.",
-    body: "The download link is on its way to your email.",
+    body: "We emailed a download link for this purchase. It works for seven days.",
   },
 };
 
