@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { AdminBtn, Field, Panel, PublishStatus, inputClass } from "@/components/admin/ui";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
 import { toHtml } from "@/components/blog/analysis";
 import { FileField } from "@/components/admin/FileField";
-import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
+import { DangerBtn, Modal, Notice } from "@/components/admin/studio/controls";
 import { createClient } from "@/lib/supabase/client";
 import { EXPERT_DISCIPLINES, slugify } from "@/lib/constants";
 import { safeHttpUrl } from "@/lib/stack";
@@ -165,7 +165,7 @@ export function ExpertEditor({ initial, readOnly }: { initial?: Expert; readOnly
       <div className="space-y-5">
         <Panel title="On the site">
           <div className="space-y-4">
-            <Toggle label="Published on About" checked={published} onChange={setPublished} disabled={readOnly} />
+            <PublishStatus value={published ? "live" : "draft"} onChange={(next) => setPublished(next === "live")} disabled={readOnly} />
             <Field label="Sort order">
               <input className={inputClass} type="number" value={sortOrder} disabled={readOnly} onChange={(e) => setSortOrder(e.target.value)} />
             </Field>

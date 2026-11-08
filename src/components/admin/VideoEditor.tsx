@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Film } from "lucide-react";
-import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { AdminBtn, Field, Panel, PublishStatus, inputClass } from "@/components/admin/ui";
 import { FileField } from "@/components/admin/FileField";
-import { DangerBtn, Modal, Notice, Toggle } from "@/components/admin/studio/controls";
+import { DangerBtn, Modal, Notice } from "@/components/admin/studio/controls";
 import { formatDay } from "@/components/admin/studio/format";
 import { parseVideoUrl } from "@/components/admin/studio/video";
 import { createClient } from "@/lib/supabase/client";
@@ -162,7 +162,7 @@ export function VideoEditor({
       <div className="space-y-5">
         <Panel title="Publish" meta={initial ? `Updated ${formatDay(initial.updated_at)}` : undefined}>
           <div className="space-y-3.5">
-            <Toggle label="Live on the site" checked={published} onChange={setPublished} disabled={readOnly} />
+            <PublishStatus value={published ? "live" : "draft"} onChange={(next) => setPublished(next === "live")} disabled={readOnly} />
             {msg ? <Notice tone={msg.tone}>{msg.text}</Notice> : null}
             {!readOnly ? (
               <div className="flex flex-wrap gap-2 border-t border-line pt-3.5">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ExternalLink, X } from "lucide-react";
-import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { AdminBtn, Field, Panel, PublishStatus, inputClass } from "@/components/admin/ui";
 import { RichEditor } from "@/components/admin/blog/RichEditor";
 import { toHtml } from "@/components/blog/analysis";
 import { FileField } from "@/components/admin/FileField";
@@ -223,7 +223,7 @@ export function WorkEditor({
       <div className="space-y-5">
         <Panel title="Publish" meta={initial ? `Updated ${formatDay(initial.updated_at)}` : undefined}>
           <div className="space-y-3.5">
-            <Toggle label="Live on the site" checked={published} onChange={setPublished} disabled={readOnly} />
+            <PublishStatus value={published ? "live" : "draft"} onChange={(next) => setPublished(next === "live")} disabled={readOnly} />
             <Toggle label="Featured" checked={featured} onChange={setFeatured} disabled={readOnly} />
             <Toggle
               label="Under NDA"

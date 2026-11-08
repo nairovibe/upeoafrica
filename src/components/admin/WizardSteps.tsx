@@ -51,14 +51,7 @@ export function WizardSteps({
               >
                 {index + 1}
               </span>
-              <span className="min-w-0">
-                <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-muted sm:text-[11px]">
-                  Step {index + 1}
-                </span>
-                <span className={cn("block text-xs font-medium sm:text-sm", reached ? "text-ink-900" : "text-body")}>
-                  {label}
-                </span>
-              </span>
+              <span className={cn("block text-xs font-medium sm:text-sm", reached ? "text-ink-900" : "text-body")}>{label}</span>
             </button>
           </li>
         );

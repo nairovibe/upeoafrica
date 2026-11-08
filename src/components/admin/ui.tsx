@@ -166,6 +166,30 @@ export function Field({
   );
 }
 
+export function PublishStatus({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: "draft" | "live";
+  onChange: (next: "draft" | "live") => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Field label="Status">
+      <select
+        className={inputClass}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value === "live" ? "live" : "draft")}
+      >
+        <option value="draft">Draft</option>
+        <option value="live">Live</option>
+      </select>
+    </Field>
+  );
+}
+
 export function Panel({
   title,
   meta,

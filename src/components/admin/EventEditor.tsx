@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
+import { AdminBtn, Field, Panel, Pill, PublishStatus, inputClass } from "@/components/admin/ui";
 import { CurrencyPicker } from "@/components/admin/CurrencyPicker";
-import { Switch } from "@/components/admin/studio/controls";
 import { FileField } from "@/components/admin/FileField";
 import { GalleryField } from "@/components/admin/events/GalleryField";
 import { SpeakersEditor, type SpeakerDraft } from "@/components/admin/events/SpeakersEditor";
@@ -105,7 +104,7 @@ export function EventEditor({
   const [busy, setBusy] = useState(false);
 
   const past = initial ? isEventOver(initial.starts_at) : false;
-  const status = !publishedAt ? "Draft" : past ? "Past" : "Live";
+  const status = !published ? "Draft" : past ? "Past" : "Live";
 
   function stepProblem(index: number) {
     if (index === 0) {
@@ -453,10 +452,10 @@ export function EventEditor({
           }
         >
           <div className="space-y-4">
-            <label className="flex cursor-pointer items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink-900">Show on /events</span>
-              <Switch checked={published} label="Show on /events" onClick={() => setPublished((v) => !v)} />
-            </label>
+            <PublishStatus value={published ? "live" : "draft"} onChange={(next) => setPublished(next === "live")} />
+            <p className="text-[13px] text-body">
+              {published ? "Live on the events page." : "Draft. Hidden from the events page until you set it live."}
+            </p>
 
             {summary ? (
               <dl className="grid grid-cols-3 gap-2 border-y border-line py-3 text-center">
@@ -488,13 +487,13 @@ export function EventEditor({
                 <AdminBtn onClick={() => go(step + 1)}>Continue</AdminBtn>
               ) : (
                 <AdminBtn onClick={save} pending={busy}>
-                  {busy ? "Saving..." : published && !publishedAt ? "Save and publish" : initial ? "Save" : "Create event"}
+                  {busy ? "Saving..." : published ? (publishedAt ? "Save" : "Publish") : "Save draft"}
                 </AdminBtn>
               )}
             </div>
-            {initial && step < STEPS.length - 1 ? (
+            {step < STEPS.length - 1 ? (
               <AdminBtn variant="ghost" onClick={save} pending={busy}>
-                {busy ? "Saving..." : "Save"}
+                {busy ? "Saving..." : published ? "Save" : "Save draft"}
               </AdminBtn>
             ) : null}
             <div className="flex flex-col gap-2">

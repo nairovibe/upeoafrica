@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { AdminBtn, Field, Panel, inputClass } from "@/components/admin/ui";
+import { AdminBtn, Field, Panel, Pill, PublishStatus, inputClass } from "@/components/admin/ui";
 import { CurrencyPicker } from "@/components/admin/CurrencyPicker";
 import { Switch } from "@/components/admin/studio/controls";
 import { WizardSteps } from "@/components/admin/WizardSteps";
@@ -381,7 +381,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                         ? `${formatMoney(priceNum, currency)} with no offer running.`
                         : "On request. The Get it now button stays hidden."}
                 </p>
-                <p>{published ? "Live on the products page." : "Hidden until you switch it on."}</p>
+                <p>{published ? "Live on the products page." : "Draft. It stays off the products page."}</p>
               </div>
             </Panel>
           ) : null}
@@ -390,12 +390,11 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
         <aside className="space-y-4 lg:sticky lg:top-20">
           <Panel
             title={title.trim() || "New product"}
-            action={
-              <Switch checked={published} label="Live on the site" onClick={() => setPublished((v) => !v)} />
-            }
+            action={<Pill tone={published ? "success" : "neutral"}>{published ? "Live" : "Draft"}</Pill>}
           >
             <div className="space-y-3">
-              <p className="text-[13px] text-body">{published ? "Live on the products page." : "Hidden from the site."}</p>
+              <PublishStatus value={published ? "live" : "draft"} onChange={(next) => setPublished(next === "live")} />
+              <p className="text-[13px] text-body">{published ? "Live on the products page." : "Draft. Hidden from the site until you set it live."}</p>
               <p className="text-[13px] text-body">
                 {tiersOn
                   ? fromPrice != null && fromPrice > 0
@@ -427,11 +426,15 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                 {step < STEPS.length - 1 ? (
                   <AdminBtn onClick={() => go(step + 1)}>Continue</AdminBtn>
                 ) : (
-                  <AdminBtn onClick={save} pending={busy}>{busy ? "Saving..." : initial ? "Save changes" : "Create product"}</AdminBtn>
+                  <AdminBtn onClick={save} pending={busy}>
+                    {busy ? "Saving..." : published ? (initial ? "Save changes" : "Publish") : "Save draft"}
+                  </AdminBtn>
                 )}
               </div>
-              {initial && step < STEPS.length - 1 ? (
-                <AdminBtn variant="ghost" onClick={save} pending={busy}>{busy ? "Saving..." : "Save changes"}</AdminBtn>
+              {step < STEPS.length - 1 ? (
+                <AdminBtn variant="ghost" onClick={save} pending={busy}>
+                  {busy ? "Saving..." : published ? "Save" : "Save draft"}
+                </AdminBtn>
               ) : null}
             </div>
           </Panel>
