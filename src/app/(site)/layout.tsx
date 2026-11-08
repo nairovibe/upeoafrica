@@ -5,6 +5,7 @@ import { InquiryModal } from "@/components/site/InquiryModal";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { GtmSnippet } from "@/components/site/GtmSnippet";
 import { TrackingTags } from "@/components/site/TrackingTags";
+import { ClaritySnippet } from "@/components/site/ClaritySnippet";
 import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
 import { GOOGLE_VERIFICATION_FALLBACK, matchToken, VERIFY } from "@/lib/search-presence";
@@ -38,6 +39,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     <>
       {gtmId ? <GtmSnippet id={gtmId} /> : null}
       <TrackingTags pixelId={settings?.meta_pixel_id} adsId={settings?.google_ads_id} />
+      <ClaritySnippet />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
