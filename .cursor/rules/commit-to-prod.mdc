@@ -1,0 +1,17 @@
+---
+description: After finishing requested work, commit and push to main for production
+alwaysApply: true
+---
+
+# Commit finished work to main
+
+When a request changes this project, finish by committing and pushing to `origin main`. Vercel deploys from that branch.
+
+- A finished code change is the commit. Do not wait for a separate "commit" message.
+- Do not commit when the request is only a question, a review, or an explicit "do not commit".
+- Never commit `.env`, `.env.local`, `.env.vercel`, or other secrets.
+- Never update git config, skip hooks, or force-push.
+- PowerShell: quote paths that contain parentheses. Pass the commit message with a here-string, not a bash heredoc.
+- Commit message: one or two sentences on why the change exists.
+- After the push, confirm `git status` is clean and level with `origin/main`.
+- GitHub may say the repository moved to `nairovibe/upeoafrica`. Leave the remote as it is. Pushes to the current URL still update `main`.
