@@ -18,7 +18,7 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const siteUrl = "https://upeoafricatechnologies.co.ke";
+const siteUrl = company.domain;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -9,7 +9,7 @@ import { company } from "@/lib/content";
 import { getPublicSettings } from "@/lib/cms";
 import { GOOGLE_VERIFICATION_FALLBACK, matchToken, VERIFY } from "@/lib/search-presence";
 
-const siteUrl = "https://upeoafricatechnologies.co.ke";
+const siteUrl = company.domain;
 
 /** Serve public pages from cache. Console publishes call revalidate and refresh them. */
 export const revalidate = 43200;

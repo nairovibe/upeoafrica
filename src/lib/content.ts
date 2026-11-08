@@ -51,7 +51,7 @@ export const company = {
   googleReviewUrl:
     "https://www.google.com/maps/search/?api=1&query=Upeo+Africa+Technologies+Ltd+Mombasa",
   bookingUrl: "https://cal.com/upeoafricatechnologies",
-  domain: "https://upeoafricatechnologies.co.ke",
+  domain: "https://www.upeoafricatechnologies.co.ke",
   social: {
     facebook: "https://www.facebook.com/upeoafrica",
     x: "https://x.com/upeoafrica",
