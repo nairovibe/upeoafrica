@@ -211,6 +211,7 @@ export async function notifyBuyerReceipt(opts: {
   currency?: string;
   name?: string;
 }) {
+  const complimentary = opts.kind === "product" && opts.amount <= 0;
   const money = formatMoney(opts.amount, opts.currency);
   const subject =
     opts.kind === "ticket"
@@ -219,7 +220,9 @@ export async function notifyBuyerReceipt(opts: {
         ? `Receipt: ${opts.title}`
         : `Your download: ${opts.title}`;
   const extra = opts.downloadUrl
-    ? " This link is only for this purchase, and it works for seven days."
+    ? complimentary
+      ? " This link is only for this request, and it works for seven days."
+      : " This link is only for this purchase, and it works for seven days."
     : opts.kind === "ticket"
       ? " Show this email at the door, or keep it on your phone."
       : "";
@@ -227,9 +230,11 @@ export async function notifyBuyerReceipt(opts: {
   const sent = await sendHtml({
     to: opts.email,
     subject,
-    preview: `${money} · ${opts.title}`,
-    heading: "Payment received.",
-    body: `${hello}Thank you. We received ${money} for ${opts.title}.${extra}`,
+    preview: complimentary ? opts.title : `${money} · ${opts.title}`,
+    heading: complimentary ? "Your download is ready." : "Payment received.",
+    body: complimentary
+      ? `${hello}The download for ${opts.title} is ready.${extra}`
+      : `${hello}Thank you. We received ${money} for ${opts.title}.${extra}`,
     buttonLabel: opts.downloadUrl ? "Download file" : undefined,
     buttonUrl: opts.downloadUrl,
   });
@@ -243,7 +248,7 @@ export async function notifyBuyerReceipt(opts: {
   }).catch(() => {});
   await pushDeskEvent({
     type: "order",
-    title: `Paid: ${opts.title}`,
+    title: complimentary ? `Download: ${opts.title}` : `Paid: ${opts.title}`,
     body: opts.email,
     href: opts.invoiceId ? `/console/invoices/${opts.invoiceId}` : "/console/orders",
   }).catch(() => {});

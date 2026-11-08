@@ -34,6 +34,11 @@ const COPY: Record<ThanksKind, { eyebrow: string; title: string; body: string }>
     title: "Payment received.",
     body: "We emailed a download link for this purchase. It works for seven days.",
   },
+  download: {
+    eyebrow: "Download on the way",
+    title: "The download is on its way.",
+    body: "We emailed a link for this product. It works for seven days. This address is on the mailing list for future notes.",
+  },
 };
 
 export default async function ThankYouPage({
@@ -52,7 +57,7 @@ export default async function ThankYouPage({
   return (
     <section className="bg-white pt-32 pb-20 md:pt-40 md:pb-28">
       <Container className="mx-auto max-w-xl text-center">
-        {kind === "order" ? <ClearProductCart /> : null}
+        {kind === "order" || kind === "download" ? <ClearProductCart /> : null}
         <ThankYouAnimation />
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">{copy.eyebrow}</p>
         <h1 className="mt-3 text-3xl font-bold leading-[1.08] text-ink-900 sm:text-4xl">{copy.title}</h1>

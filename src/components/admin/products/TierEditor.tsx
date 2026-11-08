@@ -83,7 +83,7 @@ export function TierEditor({
                 <Switch checked={tier.popular} label="Mark as popular" onClick={() => set(index, { popular: !tier.popular })} />
                 <span className="text-sm font-medium text-ink-900">Mark as popular</span>
               </label>
-              <p className="text-xs text-muted">{due > 0 ? `Buyers pay ${formatMoney(due, currency)}` : "On request"}</p>
+              <p className="text-xs text-muted">{due > 0 ? `Buyers pay ${formatMoney(due, currency)}` : "Free. Checkout skips payment."}</p>
             </div>
           </div>
         );

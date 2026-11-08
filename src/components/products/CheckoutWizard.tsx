@@ -68,8 +68,9 @@ export function CheckoutWizard({
   const shillingTotal = kes + (converted ?? 0);
   const singleCurrency: PriceCurrency | null = mixed ? null : usd > 0 ? "USD" : "KES";
   const paypalTotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const payable = items.some((item) => item.amount > 0);
   const shillingReady = methods.mpesa || methods.card;
-  const needsRate = usd > 0 && shillingReady;
+  const needsRate = payable && usd > 0 && shillingReady;
 
   useEffect(() => {
     if (!needsRate) return;
@@ -136,6 +137,38 @@ export function CheckoutWizard({
     if (!websiteOk(website)) return setErr("A website URL is required.");
     setErr(null);
     setStep("pay");
+  }
+
+  async function claimFree(event: React.FormEvent) {
+    event.preventDefault();
+    if (name.trim().length < 2) return setErr("Enter your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErr("Enter a valid email. The download link is sent there.");
+    if (company.trim().length < 2) return setErr("Enter the company name.");
+    if (!websiteOk(website)) return setErr("A website URL is required.");
+    if (!captcha) return setErr("Complete the verification check before continuing.");
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/checkout/free", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: items.map((item) => ({ productId: item.productId, tierId: item.tierId })),
+        name,
+        email,
+        company,
+        website,
+        turnstileToken: captcha,
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      setBusy(false);
+      setCaptcha("");
+      setCaptchaReset((n) => n + 1);
+      setErr(json.error || "The download could not be sent.");
+      return;
+    }
+    goToThanks("download");
   }
 
   async function pay(event: React.FormEvent) {
@@ -214,11 +247,15 @@ export function CheckoutWizard({
             <span className="inline-flex h-8 w-8 items-center justify-center bg-brand-500 text-white">1</span>
             Your details
           </li>
-          <li className="h-px min-w-8 flex-1 bg-line" aria-hidden />
-          <li className={cn("flex items-center gap-2 font-medium", step === "details" ? "text-muted" : "text-ink-900")}>
-            <span className={cn("inline-flex h-8 w-8 items-center justify-center", step === "details" ? "bg-surface-2 text-muted" : "bg-brand-500 text-white")}>2</span>
-            Payment
-          </li>
+          {payable ? (
+            <>
+              <li className="h-px min-w-8 flex-1 bg-line" aria-hidden />
+              <li className={cn("flex items-center gap-2 font-medium", step === "details" ? "text-muted" : "text-ink-900")}>
+                <span className={cn("inline-flex h-8 w-8 items-center justify-center", step === "details" ? "bg-surface-2 text-muted" : "bg-brand-500 text-white")}>2</span>
+                Payment
+              </li>
+            </>
+          ) : null}
         </ol>
 
         <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -242,7 +279,7 @@ export function CheckoutWizard({
               </div>
             ) : null}
             {step === "details" ? (
-              <form onSubmit={continueDetails} className="max-w-xl space-y-4">
+              <form onSubmit={payable ? continueDetails : claimFree} className="max-w-xl space-y-4">
                 <label className="block text-sm font-medium text-ink-900">
                   Name
                   <input className={FIELD} required value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
@@ -250,7 +287,11 @@ export function CheckoutWizard({
                 <label className="block text-sm font-medium text-ink-900">
                   Email
                   <input className={FIELD} type="email" required value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
-                  <span className="mt-1 block text-xs font-normal text-muted">The download link is sent here.</span>
+                  <span className="mt-1 block text-xs font-normal text-muted">
+                    {payable
+                      ? "The download link is sent here."
+                      : "The download link is sent here. This address also joins the mailing list."}
+                  </span>
                 </label>
                 <label className="block text-sm font-medium text-ink-900">
                   Company name
@@ -261,13 +302,25 @@ export function CheckoutWizard({
                   <input className={FIELD} required value={website} onChange={(event) => setWebsite(event.target.value)} inputMode="url" placeholder="https://" autoComplete="url" />
                   <span className="mt-1 block text-xs font-normal text-muted">Required.</span>
                 </label>
-                <button type="submit" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-[5px] bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600">
-                  Continue
-                  <ArrowRight className="h-4 w-4" aria-hidden />
+                {payable ? null : (
+                  <div>
+                    <p className="text-sm leading-relaxed text-body">No payment is due for this cart.</p>
+                    <div className="mt-4">
+                      <TurnstileField action="checkout" theme="light" onToken={setCaptcha} resetSignal={captchaReset} />
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={!payable && busy}
+                  className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-[5px] bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {payable ? "Continue" : busy ? "Sending the download..." : "Get the download"}
+                  {payable || !busy ? <ArrowRight className="h-4 w-4" aria-hidden /> : null}
                 </button>
               </form>
             ) : null}
-            {step === "pay" ? (
+            {payable && step === "pay" ? (
               <form onSubmit={pay} className="max-w-xl">
                 <fieldset>
                   <legend className="font-display text-xl font-semibold text-ink-900">Payment method</legend>
@@ -365,11 +418,12 @@ export function CheckoutWizard({
               {items.map((item) => (
                 <li key={item.productId} className="flex items-start justify-between gap-3 py-3 text-sm">
                   <span className="min-w-0 break-words text-ink-900">{item.tierName ? `${item.title} · ${item.tierName}` : item.title}</span>
-                  <span className="shrink-0 font-medium text-ink-900">{formatMoney(item.amount, item.currency)}</span>
+                  <span className="shrink-0 font-medium text-ink-900">{item.amount > 0 ? formatMoney(item.amount, item.currency) : "Free"}</span>
                 </li>
               ))}
             </ul>
-            {method !== "paypal" && converted != null ? (
+            {!payable ? <p className="mt-4 text-sm text-ink-900">No payment is due.</p> : null}
+            {payable && method !== "paypal" && converted != null ? (
               <p className="mt-4 text-sm text-ink-900">Charged as {formatMoney(shillingTotal, "KES")}</p>
             ) : null}
           </aside>

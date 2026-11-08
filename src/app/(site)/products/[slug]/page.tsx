@@ -14,7 +14,7 @@ import { publicMediaUrl, priceCurrency } from "@/lib/constants";
 import { MoneyFigure } from "@/components/products/MoneyFigure";
 import { renderArticleBody } from "@/lib/blog";
 import { chargeKes, currentOffer } from "@/lib/offer";
-import { parseTiers, tiersFrom } from "@/lib/tiers";
+import { parseTiers, tierDue, tiersFrom } from "@/lib/tiers";
 
 const TYPE_LABELS: Record<string, string> = { plugin: "Plugin", download: "Download", saas: "SaaS" };
 
@@ -92,8 +92,10 @@ export default async function ProductPage({
               <p className="mt-6">
                 {due > 0 ? (
                   <MoneyFigure amount={due} currency={item.currency} from={tiers.length > 1} size="lg" />
+                ) : tiers.some((tier) => tierDue(tier) > 0) ? (
+                  <MoneyFigure amount={Math.min(...tiers.map((tier) => tierDue(tier)).filter((amount) => amount > 0))} currency={item.currency} from size="lg" />
                 ) : (
-                  <span className="font-display text-3xl font-semibold text-ink-900">On request</span>
+                  <span className="font-display text-3xl font-semibold text-ink-900">Free</span>
                 )}
               </p>
             </div>

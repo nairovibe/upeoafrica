@@ -49,7 +49,6 @@ export function ProductBuy({
   const selected = tiers.find((tier) => tier.id === tierId) ?? null;
   const due = selected ? tierDue(selected) : price;
   const offer = selected ? tierOffer(selected) : null;
-  const payable = due > 0;
   const lineId = selected?.id ?? "";
   const inCart = addedId === lineId;
 
@@ -64,7 +63,7 @@ export function ProductBuy({
   }, [items, productId]);
 
   function addTier(tier: PriceTier | null, amount: number) {
-    if (amount <= 0) return;
+    if (amount < 0) return;
     add({
       productId,
       slug,
@@ -90,7 +89,7 @@ export function ProductBuy({
             const tone = planTone(tier, tiers);
             const tierOfferPrice = tierOffer(tier);
             const tierPrice = tierDue(tier);
-            const added = tier.id === addedId && tierPrice > 0;
+            const added = tier.id === addedId;
             const onDark = tone === "agency";
             return (
               <button
@@ -118,7 +117,7 @@ export function ProductBuy({
                     {tierPrice > 0 ? (
                       <MoneyFigure amount={tierPrice} currency={currency} size="lg" tone={onDark ? "light" : "ink"} />
                     ) : (
-                      <span className={cn("font-display text-3xl font-semibold", onDark ? "text-white" : "text-ink-900")}>On request</span>
+                      <span className={cn("font-display text-3xl font-semibold", onDark ? "text-white" : "text-ink-900")}>Free</span>
                     )}
                   </span>
                   {tierOfferPrice ? (
@@ -136,8 +135,7 @@ export function ProductBuy({
                       ))}
                     </ul>
                   ) : null}
-                  {tierPrice > 0 ? (
-                    <span className="mt-auto w-full pt-8">
+                  <span className="mt-auto w-full pt-8">
                       <span
                         className={cn(
                           "inline-flex h-11 w-full items-center justify-center text-sm font-medium",
@@ -151,7 +149,6 @@ export function ProductBuy({
                         {added ? "Added" : "Add to cart"}
                       </span>
                     </span>
-                  ) : null}
                 </span>
               </button>
             );
@@ -165,11 +162,9 @@ export function ProductBuy({
               {offerLabel ? <span className="ml-2 font-medium text-brand-600">{offerLabel}</span> : null}
             </p>
           ) : null}
-          {payable ? (
-            <button type="button" onClick={() => addTier(null, due)} className={buyButtonClass("mt-4")}>
-              {inCart ? "Added" : "Add to cart"}
-            </button>
-          ) : null}
+          <button type="button" onClick={() => addTier(null, due)} className={buyButtonClass("mt-4")}>
+            {inCart ? "Added" : due > 0 ? "Add to cart" : "Get it free"}
+          </button>
         </div>
       )}
 

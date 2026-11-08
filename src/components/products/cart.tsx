@@ -213,7 +213,7 @@ function CartPanel() {
                       ) : null}
                       <div className="min-w-0 flex-1">
                         <p className="break-words text-sm font-medium text-ink-900">{name}</p>
-                        <p className="mt-1 font-display text-base font-semibold text-ink-900">{formatMoney(item.amount, item.currency)}</p>
+                        <p className="mt-1 font-display text-base font-semibold text-ink-900">{item.amount > 0 ? formatMoney(item.amount, item.currency) : "Free"}</p>
                         <button
                           type="button"
                           onClick={() => remove(item.productId)}

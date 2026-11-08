@@ -1,4 +1,4 @@
-export type ThanksKind = "enquiry" | "subscribe" | "ticket" | "order";
+export type ThanksKind = "enquiry" | "subscribe" | "ticket" | "order" | "download";
 
 export type TicketThanks = {
   code: string | null;
@@ -17,7 +17,7 @@ export type ThanksPayload = {
 const KEY = "upeo-thanks";
 
 export function isThanksKind(value: string | undefined): value is ThanksKind {
-  return value === "enquiry" || value === "subscribe" || value === "ticket" || value === "order";
+  return value === "enquiry" || value === "subscribe" || value === "ticket" || value === "order" || value === "download";
 }
 
 export function goToThanks(kind: ThanksKind, extra?: { value?: number; ticket?: TicketThanks }) {

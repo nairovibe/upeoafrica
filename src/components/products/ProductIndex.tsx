@@ -52,9 +52,10 @@ function lineFrom(value: string | null): ProductLine | null {
 
 function cartLine(product: ProductCard): CartItem | null {
   const tiers = parseTiers(product.price_tiers);
-  const tier = tiers.find((row) => row.popular && tierDue(row) > 0) ?? tiers.find((row) => tierDue(row) > 0) ?? null;
+  const paid = tiers.find((row) => row.popular && tierDue(row) > 0) ?? tiers.find((row) => tierDue(row) > 0) ?? null;
+  const tier = paid ?? tiers.find((row) => row.popular) ?? tiers[0] ?? null;
   const amount = tier ? tierDue(tier) : chargeKes(product);
-  if (amount <= 0) return null;
+  if (amount < 0) return null;
   return {
     productId: product.id,
     slug: product.slug,
@@ -242,7 +243,7 @@ function CatalogueItem({ product, view, onBuy }: { product: ProductCard; view: "
           <p className="font-display text-lg font-semibold text-ink-900">
             <ProductPrice product={product} />
           </p>
-          {priced ? <BuyButton href="/products/checkout" onClick={onBuy} /> : null}
+          {priced ? <BuyButton href="/products/checkout" label={cartLine(product)?.amount ? "Get it now" : "Get it free"} onClick={onBuy} /> : null}
         </div>
       </article>
     );
@@ -267,16 +268,16 @@ function CatalogueItem({ product, view, onBuy }: { product: ProductCard; view: "
         <p className="font-display text-lg font-semibold text-ink-900">
           <ProductPrice product={product} />
         </p>
-        {priced ? <BuyButton href="/products/checkout" onClick={onBuy} /> : null}
+        {priced ? <BuyButton href="/products/checkout" label={cartLine(product)?.amount ? "Get it now" : "Get it free"} onClick={onBuy} /> : null}
       </div>
     </article>
   );
 }
 
-function BuyButton({ href, onClick }: { href: string; onClick: () => void }) {
+function BuyButton({ href, onClick, label }: { href: string; onClick: () => void; label: string }) {
   return (
     <Link href={href} onClick={onClick} className={buyButtonClass()}>
-      Get it now
+      {label}
       <ArrowRight className="h-4 w-4" aria-hidden />
     </Link>
   );
@@ -287,7 +288,11 @@ function ProductPrice({ product }: { product: ProductCard }) {
   const from = tiersFrom(tiers);
   const due = from ?? chargeKes(product);
   const offer = tiers.length ? null : currentOffer(product);
-  if (due <= 0) return "Talk to us";
+  if (due <= 0 && tiers.some((tier) => tierDue(tier) > 0)) {
+    const lowest = Math.min(...tiers.map((tier) => tierDue(tier)).filter((amount) => amount > 0));
+    return <MoneyFigure amount={lowest} currency={product.currency} from={tiers.length > 1} />;
+  }
+  if (due <= 0) return "Free";
   return (
     <span className="inline-flex flex-wrap items-baseline gap-x-2">
       {offer ? <span className="text-sm font-normal text-muted line-through">{formatMoney(offer.list, product.currency)}</span> : null}

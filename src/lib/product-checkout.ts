@@ -1,5 +1,6 @@
 import { priceCurrency, type PriceCurrency } from "@/lib/constants";
 import { kesFromUsd, usdToKesQuote, type FxQuote } from "@/lib/fx";
+import { normalizeEmail } from "@/lib/newsletter";
 import { chargeKes } from "@/lib/offer";
 import { createServiceClient } from "@/lib/supabase/server";
 import { parseTiers, tierDue } from "@/lib/tiers";
@@ -77,7 +78,7 @@ export async function pricedLines(service: Service, items: CheckoutItem[]) {
     const tier = tiers.length ? tiers.find((row) => row.id === item.tierId) ?? null : null;
     if (tiers.length && !tier) return { ok: false as const, error: `Choose a plan for ${product.title}.` };
     const amount = tier ? tierDue(tier) : chargeKes(product);
-    if (amount <= 0) return { ok: false as const, error: `${product.title} is not for sale yet.` };
+    if (amount < 0) return { ok: false as const, error: `${product.title} is not for sale yet.` };
     lines.push({
       productId: product.id,
       tierId: tier?.id ?? null,
@@ -91,6 +92,9 @@ export async function pricedLines(service: Service, items: CheckoutItem[]) {
 }
 
 export async function chargeLines(lines: PricedLine[], method: PayMethod) {
+  if (!lines.some((line) => line.amount > 0)) {
+    return { ok: false as const, error: "This download is free. No payment is due." };
+  }
   if (method === "paypal") {
     const currencies = new Set(lines.map((line) => line.currency));
     if (currencies.size > 1) {
@@ -168,4 +172,20 @@ export async function insertCheckoutOrders(
     ids.push(data.id);
   }
   return { ok: true as const, ids, batchId };
+}
+
+/** Keep a free-download address on the mailing list so later notes can reach them. */
+export async function rememberCheckoutEmail(service: Service, email: string) {
+  const clean = normalizeEmail(email);
+  if (!clean) return;
+  const { data: existing } = await service.from("newsletter_subscribers").select("id, status").eq("email", clean).maybeSingle();
+  if (existing?.status === "subscribed") return;
+  if (existing) {
+    await service
+      .from("newsletter_subscribers")
+      .update({ status: "subscribed", unsubscribed_at: null, source: "checkout" })
+      .eq("id", existing.id);
+    return;
+  }
+  await service.from("newsletter_subscribers").insert({ email: clean, status: "subscribed", source: "checkout" });
 }

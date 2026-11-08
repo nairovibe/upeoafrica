@@ -85,7 +85,7 @@ export async function fulfillCheckoutBatch(opts: {
   currency: string;
   payload: Json;
   origin: string;
-  provider: "paypal" | "intasend";
+  provider: "paypal" | "intasend" | "free";
   trustAmount?: boolean;
 }) {
   const service = await createServiceClient();

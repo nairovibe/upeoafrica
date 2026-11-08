@@ -5,7 +5,7 @@ import { ManageTable, type DeskItem } from "@/components/admin/ManageTable";
 import { formatDay } from "@/components/admin/studio/format";
 import { formatKes, formatMoney } from "@/lib/constants";
 import { chargeKes, currentOffer } from "@/lib/offer";
-import { parseTiers, tiersFrom } from "@/lib/tiers";
+import { parseTiers, tierDue, tiersFrom } from "@/lib/tiers";
 import { getStaff } from "@/lib/cms";
 import { withParams } from "@/components/admin/money/format";
 
@@ -56,10 +56,15 @@ export default async function ProductsListPage({ searchParams }: { searchParams:
       (() => {
         const tiers = parseTiers(product.price_tiers);
         const from = tiersFrom(tiers);
-        if (from != null) return from > 0 ? `From ${formatMoney(from, product.currency)} · ${tiers.length} tiers` : `${tiers.length} tiers`;
+        if (from != null) {
+          const dues = tiers.map((tier) => tierDue(tier));
+          if (dues.every((amount) => amount <= 0)) return `Free · ${tiers.length} tiers`;
+          if (from <= 0) return `From free · ${tiers.length} tiers`;
+          return `From ${formatMoney(from, product.currency)} · ${tiers.length} tiers`;
+        }
         const offer = currentOffer(product);
         const due = chargeKes(product);
-        if (due <= 0) return "On request";
+        if (due <= 0) return "Free";
         return offer ? `${formatMoney(due, product.currency)} · ${offer.label}` : formatMoney(due, product.currency);
       })(),
       product.version || "-",

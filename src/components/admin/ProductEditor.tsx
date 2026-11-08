@@ -94,8 +94,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
       if ((promoStart && !start) || (promoEnd && !end)) e.promo = "Use a valid start and end.";
       else if (start && end && end <= start) e.promo = "The offer must end after it starts.";
     }
-    const selling = tiersOn ? tiers.some((tier) => tierDue(tier) > 0) : priceNum > 0;
-    if (published && selling && needsFile && !filePath) e.file = "Attach the file before selling it.";
+    if (published && needsFile && !filePath) e.file = "Attach the file before publishing it.";
     return e;
   }
 
@@ -281,7 +280,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                     onChange={(e) => setPrice(e.target.value)}
                   />
                   <FieldError text={errors.price} />
-                  {priceNum === 0 && !errors.price ? <p className="mt-1 text-xs text-muted">Shows as On request. Checkout stays closed.</p> : null}
+                  {priceNum === 0 && !errors.price ? <p className="mt-1 text-xs text-muted">Free. Checkout collects their details and emails the download.</p> : null}
                 </Field>
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[5px] border border-line px-3 py-2.5">
                   <span className="text-sm font-medium text-ink-900">Run a promotion</span>
@@ -357,7 +356,7 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                 </div>
               </Panel>
               {needsFile ? (
-                <Panel title="Download" meta="Sent after payment">
+                <Panel title="Download" meta="Emailed after checkout">
                   <UploadField
                     folder="plugins"
                     bucket="product-files"
@@ -380,12 +379,14 @@ export function ProductEditor({ initial, sales }: { initial?: Product; sales?: {
                   {tiersOn
                     ? fromPrice != null && fromPrice > 0
                       ? `${tiers.length} tiers, from ${formatMoney(fromPrice, currency)}.`
-                      : `${tiers.length} tiers. Checkout stays closed until a tier has a price.`
+                      : tiers.some((tier) => tierDue(tier) > 0)
+                        ? `${tiers.length} tiers. A free tier skips payment. A priced tier still asks for one.`
+                        : `${tiers.length} tiers. Free. Checkout collects their details and emails the download.`
                     : preview
                       ? `${formatMoney(preview.price, currency)} during ${preview.label}. List price ${formatMoney(preview.list, currency)}.`
                       : priceNum > 0
                         ? `${formatMoney(priceNum, currency)} with no offer running.`
-                        : "On request. The Get it now button stays hidden."}
+                        : "Free. Checkout collects their details and emails the download."}
                 </p>
                 <p>{published ? "Live on the products page." : "Draft. It stays off the products page."}</p>
               </div>

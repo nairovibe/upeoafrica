@@ -434,7 +434,7 @@ export function SettingsForm({
                 />
               </Field>
               <p className="text-xs leading-relaxed text-muted">
-                Confirmation pages are /thank-you?for=enquiry, subscribe, ticket or order. Each one sends a conversion event named conversion, with conversion_kind set to that value. Use that event in Tag Manager for Google Ads, Meta and any other pixel. The page is not in the sitemap and is marked noindex.
+                Confirmation pages are /thank-you?for=enquiry, subscribe, ticket, order or download. Each one sends a conversion event named conversion, with conversion_kind set to that value. Use that event in Tag Manager for Google Ads, Meta and any other pixel. The page is not in the sitemap and is marked noindex.
               </p>
               {footer}
             </div>
