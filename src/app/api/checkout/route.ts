@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { chargeLines, checkoutItems, insertCheckoutOrders, pricedLines, readBuyer } from "@/lib/product-checkout";
+import { failCheckoutBatch } from "@/lib/product-order";
 import { rateLimit } from "@/lib/notify";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { startMpesaStk } from "@/lib/intasend";
-import { chargeKes } from "@/lib/offer";
-import { parseTiers, tierDue } from "@/lib/tiers";
-import { priceCurrency } from "@/lib/constants";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -14,105 +13,65 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as {
+    items?: { productId?: string; tierId?: string | null }[];
     productId?: string;
-    tierId?: string;
+    tierId?: string | null;
+    name?: string;
     email?: string;
+    company?: string;
+    website?: string;
     phone?: string;
     turnstileToken?: string;
   };
   if (!(await verifyTurnstile(body.turnstileToken, ip, "checkout"))) {
     return NextResponse.json({ error: "Could not verify this checkout." }, { status: 400 });
   }
-  const email = body.email?.trim() ?? "";
+  const buyer = readBuyer(body);
+  if (!buyer.ok) return NextResponse.json({ error: buyer.error }, { status: 400 });
   const phone = (body.phone ?? "").replace(/\s/g, "");
-  if (!body.productId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^254\d{9}$/.test(phone)) {
-    return NextResponse.json(
-      { error: "Email and a Safaricom number in the form 2547XXXXXXXX are required." },
-      { status: 400 },
-    );
+  if (!/^254\d{9}$/.test(phone)) {
+    return NextResponse.json({ error: "Enter a Safaricom number in the form 2547XXXXXXXX." }, { status: 400 });
   }
 
   const service = await createServiceClient();
-  const supabase = service ?? (await createClient());
-  if (!service) {
-    return NextResponse.json({ error: "Checkout is not configured yet." }, { status: 503 });
-  }
-  const { data: product } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", body.productId)
-    .eq("published", true)
-    .maybeSingle();
-  if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
-  const tiers = parseTiers(product.price_tiers);
-  const tier = tiers.length ? tiers.find((item) => item.id === body.tierId) : null;
-  if (tiers.length && !tier) {
-    return NextResponse.json({ error: "Choose a plan." }, { status: 400 });
-  }
-  const amount = tier ? tierDue(tier) : chargeKes(product);
-  if (priceCurrency(product.currency) === "USD") {
-    return NextResponse.json(
-      { error: "This product is priced in US dollars. M-Pesa checkout is for Kenyan shilling prices." },
-      { status: 400 },
-    );
-  }
-  if (amount <= 0) {
-    return NextResponse.json({ error: "This item is not for sale yet." }, { status: 400 });
-  }
+  if (!service) return NextResponse.json({ error: "Checkout is not configured yet." }, { status: 503 });
 
-  const { data: order, error } = await supabase
-    .from("orders")
-    .insert({
-      email,
-      phone,
-      product_id: product.id,
-      amount_kes: amount,
-      currency: "KES",
-      tier_label: tier?.name || null,
-      provider: "intasend",
-      status: "pending",
-      kind: "product",
-    })
-    .select("id")
-    .single();
-  if (error || !order) {
-    return NextResponse.json({ error: "Could not start checkout." }, { status: 500 });
-  }
+  const priced = await pricedLines(service, checkoutItems(body));
+  if (!priced.ok) return NextResponse.json({ error: priced.error }, { status: 400 });
+  const charged = await chargeLines(priced.lines, "mpesa");
+  if (!charged.ok) return NextResponse.json({ error: charged.error }, { status: 400 });
+
+  const created = await insertCheckoutOrders(service, buyer.buyer, charged.rows, "intasend", phone);
+  if (!created.ok) return NextResponse.json({ error: created.error }, { status: 500 });
 
   const stk = await startMpesaStk({
-    amount,
+    amount: charged.total,
     phone,
-    email,
-    apiRef: order.id,
-    narrative: tier ? `${product.title} · ${tier.name}` : product.title,
+    email: buyer.buyer.email,
+    apiRef: created.ids[0],
+    narrative: charged.rows.map((row) => row.title).join(", ").slice(0, 100),
   });
 
-  if (stk.pending) {
-    return NextResponse.json({
-      ok: true,
-      orderId: order.id,
-      pending: true,
-      message: stk.message,
-    });
-  }
-
   if (!stk.ok) {
-    await supabase.from("orders").update({ status: "failed" }).eq("id", order.id);
+    await failCheckoutBatch(created.ids[0]);
     return NextResponse.json({ error: stk.message }, { status: 502 });
   }
 
   if (stk.providerRef) {
-    await supabase.from("orders").update({ provider_ref: stk.providerRef }).eq("id", order.id);
+    await service.from("orders").update({ provider_ref: stk.providerRef }).in("id", created.ids);
   }
+  await service.from("payments").insert({
+    order_id: created.ids[0],
+    provider: "intasend",
+    result: "stk_initiated",
+    payload: stk.payload,
+  });
 
-  if (service) {
-    await service.from("payments").insert({
-      order_id: order.id,
-      provider: "intasend",
-      result: "stk_initiated",
-      payload: stk.payload,
-    });
-  }
-
-  return NextResponse.json({ ok: true, orderId: order.id });
+  return NextResponse.json({
+    ok: true,
+    orderId: created.ids[0],
+    total: charged.total,
+    currency: "KES",
+    rate: charged.quote?.rate ?? null,
+  });
 }

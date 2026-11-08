@@ -5,6 +5,7 @@ import { company } from "@/lib/content";
 import { sendTicketEmail } from "@/lib/tickets";
 import { intasendCredentials } from "@/lib/billing";
 import { settleInvoice } from "@/lib/invoice-pay";
+import { fulfillCheckoutBatch, failCheckoutBatch } from "@/lib/product-order";
 
 export async function POST(request: Request) {
   const payload = (await request.json().catch(() => null)) as {
@@ -78,6 +79,34 @@ export async function POST(request: Request) {
       result: payload.state || null,
       payload,
     });
+  } else if (order && order.kind === "product") {
+    if (paid && order.status !== "paid") {
+      const origin = new URL(request.url).origin;
+      await fulfillCheckoutBatch({
+        orderId: order.id,
+        providerRef: payload.invoice_id || order.provider_ref || "",
+        amount: Number(order.amount_kes),
+        currency: order.currency,
+        payload,
+        origin,
+        provider: "intasend",
+        trustAmount: true,
+      });
+    } else if (failed && order.status === "pending") {
+      await failCheckoutBatch(order.id);
+      await service.from("payments").insert({
+        order_id: order.id,
+        provider: "intasend",
+        result: payload.state || null,
+        payload,
+      });
+      await pushDeskEvent({
+        type: "payment",
+        title: "Payment failed",
+        body: order.email,
+        href: "/console/orders",
+      }).catch(() => {});
+    }
   } else if (order) {
     if (paid) {
       const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();

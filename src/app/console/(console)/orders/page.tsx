@@ -23,7 +23,7 @@ export default async function OrdersPage({
   let list = supabase
     .from("orders")
     .select(
-      "id, created_at, email, phone, attendee_name, attendee_company, kind, amount_kes, currency, tier_label, status, provider_ref, ticket_code, quantity, checked_in_at, download_expires_at, event_id, products(title), events(title), ticket_types(name), payments(id, result, created_at)",
+      "id, created_at, email, phone, attendee_name, attendee_company, website_url, list_amount, fx_rate, kind, amount_kes, currency, tier_label, status, provider_ref, ticket_code, quantity, checked_in_at, download_expires_at, event_id, products(title), events(title), ticket_types(name), payments(id, result, created_at)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -67,8 +67,17 @@ export default async function OrdersPage({
     if (isTicket) {
       if (o.attendee_company) details.push({ label: "Company", value: o.attendee_company });
       details.push({ label: "Checked in", value: o.checked_in_at ? formatWhen(o.checked_in_at) : "Not yet" });
-    } else if (o.download_expires_at) {
-      details.push({ label: "Download expires", value: formatWhen(o.download_expires_at) });
+    } else {
+      if (o.attendee_company) details.push({ label: "Company", value: o.attendee_company });
+      if (o.website_url) details.push({ label: "Website", value: o.website_url });
+      if (o.fx_rate) {
+        details.push({
+          label: "Exchange rate",
+          value: `1 USD = ${Number(o.fx_rate).toLocaleString("en-KE", { maximumFractionDigits: 2 })} KES`,
+        });
+      }
+      if (o.list_amount && o.fx_rate) details.push({ label: "Listed price", value: formatMoney(o.list_amount, "USD") });
+      if (o.download_expires_at) details.push({ label: "Download expires", value: formatWhen(o.download_expires_at) });
     }
     return {
       id: o.id,

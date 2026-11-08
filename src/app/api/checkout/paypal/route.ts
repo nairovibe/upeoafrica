@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { priceCurrency } from "@/lib/constants";
-import { chargeKes } from "@/lib/offer";
+import { chargeLines, checkoutItems, insertCheckoutOrders, pricedLines, readBuyer } from "@/lib/product-checkout";
+import { failCheckoutBatch } from "@/lib/product-order";
 import { rateLimit, verifyTurnstile } from "@/lib/notify";
-import { parseTiers, tierDue } from "@/lib/tiers";
 import { createPayPalOrder } from "@/lib/paypal";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -13,77 +12,48 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as {
+    items?: { productId?: string; tierId?: string | null }[];
     productId?: string;
-    tierId?: string;
+    tierId?: string | null;
     name?: string;
     email?: string;
+    company?: string;
+    website?: string;
     turnstileToken?: string;
   };
   if (!(await verifyTurnstile(body.turnstileToken, ip, "checkout"))) {
     return NextResponse.json({ error: "Could not verify this checkout." }, { status: 400 });
   }
-
-  const name = body.name?.trim() ?? "";
-  const email = body.email?.trim() ?? "";
-  if (name.length < 2 || name.length > 80 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !body.productId) {
-    return NextResponse.json({ error: "A name and a valid email are required." }, { status: 400 });
-  }
+  const buyer = readBuyer(body);
+  if (!buyer.ok) return NextResponse.json({ error: buyer.error }, { status: 400 });
 
   const service = await createServiceClient();
   if (!service) return NextResponse.json({ error: "Checkout is not configured yet." }, { status: 503 });
 
-  const { data: product } = await service
-    .from("products")
-    .select("*")
-    .eq("id", body.productId)
-    .eq("published", true)
-    .maybeSingle();
-  if (!product) return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  const priced = await pricedLines(service, checkoutItems(body));
+  if (!priced.ok) return NextResponse.json({ error: priced.error }, { status: 400 });
+  const charged = await chargeLines(priced.lines, "paypal");
+  if (!charged.ok) return NextResponse.json({ error: charged.error }, { status: 400 });
 
-  const tiers = parseTiers(product.price_tiers);
-  const tier = tiers.length ? tiers.find((item) => item.id === body.tierId) : null;
-  if (tiers.length && !tier) return NextResponse.json({ error: "Choose a plan." }, { status: 400 });
-  const amount = tier ? tierDue(tier) : chargeKes(product);
-  if (amount <= 0) return NextResponse.json({ error: "This item is not for sale yet." }, { status: 400 });
-  if (!product.file_path) {
-    return NextResponse.json({ error: "This product does not have a file to download yet." }, { status: 400 });
-  }
-
-  const currency = priceCurrency(product.currency);
-  const { data: order, error } = await service
-    .from("orders")
-    .insert({
-      email,
-      attendee_name: name,
-      product_id: product.id,
-      amount_kes: amount,
-      currency,
-      tier_label: tier?.name || null,
-      provider: "paypal",
-      status: "pending",
-      kind: "product",
-    })
-    .select("id")
-    .single();
-  if (error || !order) return NextResponse.json({ error: "Could not start checkout." }, { status: 500 });
+  const created = await insertCheckoutOrders(service, buyer.buyer, charged.rows, "paypal", null);
+  if (!created.ok) return NextResponse.json({ error: created.error }, { status: 500 });
 
   const origin = new URL(request.url).origin;
-  const back = `${origin}/products/${product.slug}`;
-  const title = tier?.name ? `${product.title} · ${tier.name}` : product.title;
+  const description = charged.rows.map((row) => row.title).join(", ").slice(0, 120);
   const paypal = await createPayPalOrder({
-    invoiceId: order.id,
-    number: order.id.slice(0, 8),
-    amount,
-    currency,
-    description: title,
+    invoiceId: created.ids[0],
+    number: created.ids[0].slice(0, 8),
+    amount: charged.total,
+    currency: charged.currency,
+    description,
     returnUrl: `${origin}/api/checkout/paypal/return`,
-    cancelUrl: `${back}?pay=cancelled#checkout`,
+    cancelUrl: `${origin}/products/checkout?pay=cancelled`,
   });
   if (!paypal.ok) {
-    await service.from("orders").update({ status: "failed" }).eq("id", order.id);
+    await failCheckoutBatch(created.ids[0]);
     return NextResponse.json({ error: paypal.error }, { status: 502 });
   }
 
-  await service.from("orders").update({ provider_ref: paypal.orderId }).eq("id", order.id);
+  await service.from("orders").update({ provider_ref: paypal.orderId }).in("id", created.ids);
   return NextResponse.json({ ok: true, url: paypal.url });
 }

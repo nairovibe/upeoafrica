@@ -896,6 +896,10 @@ export type Database = {
           currency: string
           attendee_company: string | null
           attendee_name: string | null
+          batch_id: string | null
+          fx_rate: number | null
+          list_amount: number | null
+          website_url: string | null
           checked_in_at: string | null
           created_at: string
           download_expires_at: string | null
@@ -920,6 +924,10 @@ export type Database = {
           currency?: string
           attendee_company?: string | null
           attendee_name?: string | null
+          batch_id?: string | null
+          fx_rate?: number | null
+          list_amount?: number | null
+          website_url?: string | null
           checked_in_at?: string | null
           created_at?: string
           download_expires_at?: string | null
@@ -944,6 +952,10 @@ export type Database = {
           currency?: string
           attendee_company?: string | null
           attendee_name?: string | null
+          batch_id?: string | null
+          fx_rate?: number | null
+          list_amount?: number | null
+          website_url?: string | null
           checked_in_at?: string | null
           created_at?: string
           download_expires_at?: string | null

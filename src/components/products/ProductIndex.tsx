@@ -242,7 +242,7 @@ function CatalogueItem({ product, view, onBuy }: { product: ProductCard; view: "
           <p className="font-display text-lg font-semibold text-ink-900">
             <ProductPrice product={product} />
           </p>
-          {priced ? <BuyButton href={`/products/${product.slug}#checkout`} onClick={onBuy} /> : null}
+          {priced ? <BuyButton href="/products/checkout" onClick={onBuy} /> : null}
         </div>
       </article>
     );
@@ -267,7 +267,7 @@ function CatalogueItem({ product, view, onBuy }: { product: ProductCard; view: "
         <p className="font-display text-lg font-semibold text-ink-900">
           <ProductPrice product={product} />
         </p>
-        {priced ? <BuyButton href={`/products/${product.slug}#checkout`} onClick={onBuy} /> : null}
+        {priced ? <BuyButton href="/products/checkout" onClick={onBuy} /> : null}
       </div>
     </article>
   );

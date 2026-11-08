@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { ClearProductCart } from "@/components/products/cart";
 import { ThankYouAnimation, ThankYouMoment } from "@/components/site/ThankYouMoment";
 import { getPublicSettings } from "@/lib/cms";
 import { company } from "@/lib/content";
@@ -51,6 +52,7 @@ export default async function ThankYouPage({
   return (
     <section className="bg-white pt-32 pb-20 md:pt-40 md:pb-28">
       <Container className="mx-auto max-w-xl text-center">
+        {kind === "order" ? <ClearProductCart /> : null}
         <ThankYouAnimation />
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">{copy.eyebrow}</p>
         <h1 className="mt-3 text-3xl font-bold leading-[1.08] text-ink-900 sm:text-4xl">{copy.title}</h1>
