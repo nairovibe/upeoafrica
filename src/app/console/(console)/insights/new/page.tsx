@@ -7,7 +7,7 @@ export default async function NewInsightPage() {
   const [staff, taxonomy] = await Promise.all([getStaff(), getEditorTaxonomy()]);
   return (
     <AdminPage title="Add new article" hint="Write the article, set how it should be found, then save a draft or publish." action={<AdminBtn variant="ghost" href="/console/insights">All articles</AdminBtn>}>
-      <ArticleEditor operatorName={staff?.full_name ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
+      <ArticleEditor operatorName={staff?.full_name ?? ""} operatorPhoto={staff?.avatar_path ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
     </AdminPage>
   );
 }

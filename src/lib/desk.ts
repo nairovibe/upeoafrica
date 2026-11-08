@@ -212,6 +212,7 @@ export async function getOverview(): Promise<Overview> {
     supabase
       .from("events")
       .select("id, title, starts_at, mode, venue, capacity, published_at")
+      .is("deleted_at", null)
       .gte("starts_at", eventsFrom)
       .order("starts_at", { ascending: true })
       .limit(50),
@@ -235,17 +236,19 @@ export async function getOverview(): Promise<Overview> {
       .gte("created_at", failedFrom)
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("case_studies").select("id", { count: "exact", head: true }).gte("published_at", monthStart),
+    supabase.from("case_studies").select("id", { count: "exact", head: true }).is("deleted_at", null).gte("published_at", monthStart),
     supabase.from("articles").select("id", { count: "exact", head: true }).is("deleted_at", null).gte("published_at", monthStart),
     supabase
       .from("products")
       .select("id", { count: "exact", head: true })
       .eq("published", true)
+      .is("deleted_at", null)
       .gte("created_at", monthStart),
-    supabase.from("events").select("id", { count: "exact", head: true }).gte("published_at", monthStart),
+    supabase.from("events").select("id", { count: "exact", head: true }).is("deleted_at", null).gte("published_at", monthStart),
     supabase
       .from("case_studies")
       .select("id, title, updated_at")
+      .is("deleted_at", null)
       .is("published_at", null)
       .order("updated_at", { ascending: false })
       .limit(4),
@@ -260,11 +263,13 @@ export async function getOverview(): Promise<Overview> {
       .from("products")
       .select("id, title, updated_at")
       .eq("published", false)
+      .is("deleted_at", null)
       .order("updated_at", { ascending: false })
       .limit(4),
     supabase
       .from("events")
       .select("id, title, updated_at")
+      .is("deleted_at", null)
       .is("published_at", null)
       .order("updated_at", { ascending: false })
       .limit(4),

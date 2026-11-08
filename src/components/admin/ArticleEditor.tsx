@@ -63,11 +63,13 @@ const STATUS_LABEL: Record<ArticleStatus, string> = { draft: "Draft", scheduled:
 export function ArticleEditor({
   initial,
   operatorName,
+  operatorPhoto = "",
   categories,
   tags,
 }: {
   initial?: Article;
   operatorName: string;
+  operatorPhoto?: string;
   categories: string[];
   tags: string[];
 }) {
@@ -471,6 +473,14 @@ export function ArticleEditor({
               <Field label="Author">
                 <input className={inputClass} value={form.author_name} onChange={(e) => set("author_name", e.target.value)} />
               </Field>
+              {form.author_name.trim() === operatorName.trim() && operatorName.trim() ? (
+                <p className="flex items-center gap-2 text-xs text-muted">
+                  {publicMediaUrl(operatorPhoto) ? (
+                    <img src={publicMediaUrl(operatorPhoto) ?? ""} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  ) : null}
+                  Your profile photo is used on this article. Change it in Settings.
+                </p>
+              ) : null}
               <Field label="Audience">
                 <select className={inputClass} value={form.audience} onChange={(e) => set("audience", e.target.value)}>
                   <option value="general">General</option>

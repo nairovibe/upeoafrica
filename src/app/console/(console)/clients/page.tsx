@@ -1,13 +1,19 @@
-import Link from "next/link";
-import { Building2, Plus, Star } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { AdminBtn, AdminPage, AdminTable } from "@/components/admin/ui";
-import { Thumb } from "@/components/admin/studio/Thumb";
+import { AdminBtn, AdminPage, FilterTabs } from "@/components/admin/ui";
+import { ManageTable, type DeskItem } from "@/components/admin/ManageTable";
 import { billedTotal } from "@/components/admin/house/invoices";
+import { formatDay } from "@/components/admin/studio/format";
 import { getStaff } from "@/lib/cms";
-import { formatKes, publicMediaUrl } from "@/lib/constants";
+import { formatKes } from "@/lib/constants";
 
-export default async function ClientsListPage() {
+const TABS = [
+  { id: "all", label: "All" },
+  { id: "trash", label: "Trash" },
+] as const;
+
+export default async function ClientsListPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const { status = "all" } = await searchParams;
   const staff = await getStaff();
   const canEdit = staff?.role === "owner" || staff?.role === "editor";
   const supabase = await createClient();
@@ -15,13 +21,34 @@ export default async function ClientsListPage() {
     supabase.from("clients").select("*").order("sort_order").order("name"),
     supabase.from("invoices").select("client_id, status, total_kes").not("client_id", "is", null),
   ]);
-
   const byClient = new Map<string, { status: string; total_kes: number }[]>();
-  for (const inv of invoices ?? []) {
-    if (!inv.client_id || inv.status === "void") continue;
-    byClient.set(inv.client_id, [...(byClient.get(inv.client_id) ?? []), inv]);
+  for (const invoice of invoices ?? []) {
+    if (!invoice.client_id || invoice.status === "void") continue;
+    byClient.set(invoice.client_id, [...(byClient.get(invoice.client_id) ?? []), invoice]);
   }
-  const clients = data ?? [];
+  const all = data ?? [];
+  const activeRows = all.filter((row) => !row.deleted_at);
+  const trashed = all.filter((row) => row.deleted_at);
+  const active = status === "trash" ? "trash" : "all";
+  const pool = active === "trash" ? trashed : activeRows;
+  const items: DeskItem[] = pool.map((row) => {
+    const list = byClient.get(row.id) ?? [];
+    return {
+      id: row.id,
+      title: row.name,
+      path: row.slug,
+      editHref: `/console/clients/${row.id}`,
+      viewHref: null,
+      status: row.deleted_at ? "Trash" : "Active",
+      tone: row.deleted_at ? "warning" : "success",
+      updated: formatDay(row.deleted_at || row.updated_at),
+      deleted: Boolean(row.deleted_at),
+      details: [row.billing_email || "-", row.phone || "-", list.length ? `${list.length} · ${formatKes(billedTotal(list))}` : "-"],
+      quickName: row.name,
+      quickSlug: row.slug,
+      quickLive: false,
+    };
+  });
   const addBtn = canEdit ? (
     <AdminBtn href="/console/clients/new" icon={<Plus aria-hidden />}>
       Add client
@@ -30,31 +57,28 @@ export default async function ClientsListPage() {
 
   return (
     <AdminPage title="Clients" action={addBtn}>
-        <AdminTable
-          headers={["", "Name", "Billing email", "Phone", "On site", "Invoices", "Billed"]}
-          empty="No clients yet. Companies you bill and feature on the site will be listed here."
-          emptyAction={addBtn}
-          rows={clients.map((row) => {
-            const list = byClient.get(row.id) ?? [];
-            return [
-              <Thumb key="logo" src={publicMediaUrl(row.logo_path)} icon={Building2} fit="contain" className="h-9 w-9" />,
-              <Link key="name" href={`/console/clients/${row.id}`} className="font-medium text-ink-900 hover:text-brand-600">
-                {row.name}
-              </Link>,
-              <span key="email" className="text-body">{row.billing_email || "-"}</span>,
-              <span key="phone" className="whitespace-nowrap text-body">{row.phone || "-"}</span>,
-              row.featured ? (
-                <Star key="featured" className="h-4 w-4 fill-brand-500 text-brand-500" aria-label="Featured" />
-              ) : (
-                <span key="featured" className="text-muted">-</span>
-              ),
-              <span key="count" className="tabular-nums text-body">{list.length}</span>,
-              <span key="billed" className="whitespace-nowrap font-display tabular-nums text-ink-900">
-                {list.length ? formatKes(billedTotal(list)) : "-"}
-              </span>,
-            ];
-          })}
+      <div className="space-y-4">
+        <FilterTabs
+          active={active}
+          items={TABS.map((tab) => ({
+            id: tab.id,
+            label: tab.label,
+            href: tab.id === "all" ? "/console/clients" : "/console/clients?status=trash",
+            count: tab.id === "trash" ? trashed.length : activeRows.length,
+          }))}
         />
+        <ManageTable
+          resource="clients"
+          items={items}
+          canEdit={canEdit}
+          headers={["Billing email", "Phone", "Invoices"]}
+          hasSlug
+          hasLive={false}
+          nameLabel="Name"
+          trashView={active === "trash"}
+          empty={active === "trash" ? "Trash is empty." : "No clients yet. Companies you bill and feature on the site will be listed here."}
+        />
+      </div>
     </AdminPage>
   );
 }

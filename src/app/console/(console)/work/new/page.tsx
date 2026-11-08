@@ -10,7 +10,7 @@ export default async function NewWorkPage() {
   if (staff?.role === "sales") redirect("/console/work");
   const supabase = await createClient();
   const [{ data: clients }, { data: rows }] = await Promise.all([
-    supabase.from("clients").select("id, name").order("name"),
+    supabase.from("clients").select("id, name").is("deleted_at", null).order("name"),
     supabase.from("case_studies").select("industry"),
   ]);
   const industries = [...new Set((rows ?? []).map((r) => r.industry).filter((i): i is string => Boolean(i)))].sort();

@@ -31,6 +31,7 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
   const cover = publicMediaUrl(a.cover_path);
   const image = publicMediaUrl(a.og_image_path) || cover;
   const author = a.author_name || company.name;
+  const authorPhoto = publicMediaUrl(a.author_photo_path);
   const updated = a.published_at && new Date(a.updated_at).getTime() - new Date(a.published_at).getTime() > 86_400_000;
   const related = preview ? [] : await getRelatedArticles(a);
   const faq = extractFaq(html);
@@ -54,6 +55,7 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
         author: {
           "@type": a.author_name ? "Person" : "Organization",
           name: author,
+          image: authorPhoto || undefined,
           url: `${company.domain}/about`,
         },
         publisher: {
@@ -141,9 +143,13 @@ export async function ArticleView({ article: a, preview = false }: { article: Ta
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white" aria-hidden>
-                {initials || "U"}
-              </span>
+              {authorPhoto ? (
+                <Image src={authorPhoto} alt="" width={44} height={44} unoptimized className="h-11 w-11 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-semibold text-white" aria-hidden>
+                  {initials || "U"}
+                </span>
+              )}
               <div>
                 <p className="text-sm font-semibold text-ink-900">{author}</p>
                 <p className="text-xs text-muted">

@@ -17,7 +17,9 @@ export type Database = {
       articles: {
         Row: {
           audience: string
+          author_id: string | null
           author_name: string | null
+          author_photo_path: string | null
           body: string
           canonical_url: string | null
           category: string | null
@@ -46,7 +48,9 @@ export type Database = {
         }
         Insert: {
           audience?: string
+          author_id?: string | null
           author_name?: string | null
+          author_photo_path?: string | null
           body?: string
           canonical_url?: string | null
           category?: string | null
@@ -75,7 +79,9 @@ export type Database = {
         }
         Update: {
           audience?: string
+          author_id?: string | null
           author_name?: string | null
+          author_photo_path?: string | null
           body?: string
           canonical_url?: string | null
           category?: string | null
@@ -115,6 +121,7 @@ export type Database = {
       case_studies: {
         Row: {
           body: string
+          deleted_at: string | null
           client_id: string | null
           confidential: boolean
           cover_path: string | null
@@ -226,6 +233,7 @@ export type Database = {
       clients: {
         Row: {
           billing_email: string | null
+          deleted_at: string | null
           created_at: string
           created_by: string | null
           featured: boolean
@@ -343,6 +351,7 @@ export type Database = {
       events: {
         Row: {
           agenda: Json
+          deleted_at: string | null
           body: string
           capacity: number | null
           category: string | null
@@ -979,6 +988,7 @@ export type Database = {
       partners: {
         Row: {
           blurb: string
+          deleted_at: string | null
           created_at: string
           created_by: string | null
           featured: boolean
@@ -1083,6 +1093,7 @@ export type Database = {
       products: {
         Row: {
           changelog: string | null
+          deleted_at: string | null
           cover_path: string | null
           created_at: string
           created_by: string | null
@@ -1145,10 +1156,16 @@ export type Database = {
       experts: {
         Row: {
           bio: string
+          deleted_at: string | null
           created_at: string
           created_by: string | null
           discipline: string
+          email: string | null
+          facebook_url: string | null
+          github_url: string | null
           id: string
+          instagram_url: string | null
+          linkedin_url: string | null
           locale: string
           name: string
           photo_path: string | null
@@ -1157,13 +1174,19 @@ export type Database = {
           sort_order: number
           title: string
           updated_at: string
+          x_url: string | null
         }
         Insert: {
           bio?: string
           created_at?: string
           created_by?: string | null
           discipline?: string
+          email?: string | null
+          facebook_url?: string | null
+          github_url?: string | null
           id?: string
+          instagram_url?: string | null
+          linkedin_url?: string | null
           locale?: string
           name: string
           photo_path?: string | null
@@ -1172,13 +1195,19 @@ export type Database = {
           sort_order?: number
           title?: string
           updated_at?: string
+          x_url?: string | null
         }
         Update: {
           bio?: string
           created_at?: string
           created_by?: string | null
           discipline?: string
+          email?: string | null
+          facebook_url?: string | null
+          github_url?: string | null
           id?: string
+          instagram_url?: string | null
+          linkedin_url?: string | null
           locale?: string
           name?: string
           photo_path?: string | null
@@ -1187,6 +1216,7 @@ export type Database = {
           sort_order?: number
           title?: string
           updated_at?: string
+          x_url?: string | null
         }
         Relationships: [
           {
@@ -1200,6 +1230,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           created_at: string
           email: string
           full_name: string
@@ -1211,6 +1242,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          avatar_path?: string | null
           email: string
           full_name?: string
           id: string
@@ -1221,6 +1253,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          avatar_path?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -1389,6 +1422,7 @@ export type Database = {
       videos: {
         Row: {
           case_study_id: string | null
+          deleted_at: string | null
           created_at: string
           created_by: string | null
           id: string

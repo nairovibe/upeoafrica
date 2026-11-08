@@ -11,8 +11,9 @@ import { OpenInquiry } from "@/components/site/OpenInquiry";
 import { CTA } from "@/components/sections/CTA";
 import { company } from "@/lib/content";
 import { pageImages } from "@/lib/images";
+import { ExpertSocials } from "@/components/site/ExpertSocials";
 import { getExperts, getPublicSettings } from "@/lib/cms";
-import { EXPERT_DISCIPLINES, publicMediaUrl } from "@/lib/constants";
+import { publicMediaUrl } from "@/lib/constants";
 
 const ABOUT_DESCRIPTION =
   "Upeo Africa Technologies builds enterprise-grade software, custom web applications, and digital platforms for businesses, SMEs, and founders scaling across Africa.";
@@ -179,25 +180,37 @@ export default async function AboutPage() {
             <ul className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {experts.map((person) => {
                 const photo = publicMediaUrl(person.photo_path);
-                const practice = EXPERT_DISCIPLINES.find((item) => item.value === person.discipline)?.label;
                 return (
-                  <li key={person.id} className="border border-line bg-white">
-                    <div className="relative aspect-[4/3] bg-ink-950">
-                      {photo ? (
-                        <Image src={photo} alt="" fill sizes="(max-width: 1024px) 100vw, 30vw" className="object-cover" />
-                      ) : (
-                        <span className="absolute inset-0 flex items-center justify-center font-display text-4xl font-semibold text-white/80">
-                          {person.name.slice(0, 1)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      {practice ? (
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">{practice}</p>
-                      ) : null}
-                      <h3 className="mt-2 font-display text-xl font-semibold text-ink-900">{person.name}</h3>
-                      <p className="mt-1 text-sm font-medium text-ink-700">{person.title}</p>
-                      {person.bio ? <p className="mt-3 text-[15px] leading-relaxed text-body">{person.bio}</p> : null}
+                  <li key={person.id} className="flex h-full flex-col rounded-[5px] border border-line bg-white">
+                    <Link
+                      href={`/experts/${person.slug}`}
+                      className="group block rounded-[5px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                    >
+                      <div className="relative aspect-square overflow-hidden rounded-t-[5px] bg-surface-2">
+                        {photo ? (
+                          <Image
+                            src={photo}
+                            alt=""
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-contain object-center"
+                            unoptimized
+                          />
+                        ) : (
+                          <span className="absolute inset-0 flex items-center justify-center font-display text-4xl font-semibold text-ink-900/30">
+                            {person.name.slice(0, 1)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="px-5 pt-5">
+                        <h3 className="font-display text-xl font-semibold text-ink-900 transition-colors duration-200 group-hover:text-brand-600">
+                          {person.name}
+                        </h3>
+                        <p className="mt-1 text-sm font-medium text-body">{person.title}</p>
+                      </div>
+                    </Link>
+                    <div className="px-4 pt-3 pb-4">
+                      <ExpertSocials person={person} />
                     </div>
                   </li>
                 );

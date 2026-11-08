@@ -11,7 +11,7 @@ export default async function EditWorkPage({ params }: { params: Promise<{ id: s
   const supabase = await createClient();
   const [{ data: row }, { data: clients }, { data: rows }] = await Promise.all([
     supabase.from("case_studies").select("*").eq("id", id).maybeSingle(),
-    supabase.from("clients").select("id, name").order("name"),
+    supabase.from("clients").select("id, name").is("deleted_at", null).order("name"),
     supabase.from("case_studies").select("industry"),
   ]);
   if (!row) notFound();

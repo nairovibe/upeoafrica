@@ -138,6 +138,7 @@ export async function sendCampaign(input: {
       .from("events")
       .select("title, slug, summary")
       .eq("id", input.refId)
+      .is("deleted_at", null)
       .not("published_at", "is", null)
       .maybeSingle();
     if (!data) return { ok: false as const, error: "That event is not live." };

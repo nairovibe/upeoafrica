@@ -63,6 +63,9 @@ export async function saveArticle(id: string | null, input: ArticleInput): Promi
     hasCover: Boolean(input.cover_path.trim()),
   });
 
+  const typedName = blank(input.author_name);
+  const ownName = staff.full_name.trim();
+  const usesProfile = !typedName || typedName === ownName;
   const row = {
     title,
     slug,
@@ -71,7 +74,9 @@ export async function saveArticle(id: string | null, input: ArticleInput): Promi
     category: blank(input.category),
     tags: input.tags,
     audience: input.audience === "founders" ? "founders" : "general",
-    author_name: blank(input.author_name),
+    author_name: usesProfile ? ownName || null : typedName,
+    author_id: usesProfile ? staff.id : null,
+    author_photo_path: usesProfile ? staff.avatar_path : null,
     cover_path: blank(input.cover_path),
     og_image_path: blank(input.og_image_path),
     gallery: input.gallery,

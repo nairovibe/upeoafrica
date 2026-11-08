@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { company, services } from "@/lib/content";
-import { getPublishedWork, getPublishedProducts, getPublishedEvents } from "@/lib/cms";
+import { getPublishedWork, getPublishedProducts, getPublishedEvents, getExperts } from "@/lib/cms";
 import { getSitemapArticles } from "@/lib/blog";
 import { publicMediaUrl } from "@/lib/constants";
 
@@ -30,11 +30,12 @@ function imageOf(path: string | null | undefined) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [work, articles, products, events] = await Promise.all([
+  const [work, articles, products, events, experts] = await Promise.all([
     getPublishedWork(),
     getSitemapArticles(),
     getPublishedProducts(),
     getPublishedEvents(),
+    getExperts(),
   ]);
   const latestArticle = articles[0] ? new Date(articles[0].updated_at) : undefined;
 
@@ -70,6 +71,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.7,
       images: imageOf(product.cover_path),
+    })),
+    ...experts.map((person) => ({
+      url: `${base}/experts/${person.slug}`,
+      lastModified: new Date(person.updated_at),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+      images: imageOf(person.photo_path),
     })),
     ...events.map((event) => ({
       url: `${base}/events/${event.slug}`,

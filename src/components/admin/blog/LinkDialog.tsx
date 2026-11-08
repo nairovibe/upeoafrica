@@ -61,9 +61,9 @@ export function LinkDialog({
       const now = new Date().toISOString();
       const [a, w, p, e] = await Promise.all([
         supabase.from("articles").select("title, slug").is("deleted_at", null).not("published_at", "is", null).lte("published_at", now).ilike("title", like).order("published_at", { ascending: false }).limit(8),
-        supabase.from("case_studies").select("title, slug").not("published_at", "is", null).ilike("title", like).limit(6),
-        supabase.from("products").select("title, slug").eq("published", true).ilike("title", like).limit(6),
-        supabase.from("events").select("title, slug").not("published_at", "is", null).ilike("title", like).order("starts_at", { ascending: false }).limit(6),
+        supabase.from("case_studies").select("title, slug").is("deleted_at", null).not("published_at", "is", null).ilike("title", like).limit(6),
+        supabase.from("products").select("title, slug").eq("published", true).is("deleted_at", null).ilike("title", like).limit(6),
+        supabase.from("events").select("title, slug").is("deleted_at", null).not("published_at", "is", null).ilike("title", like).order("starts_at", { ascending: false }).limit(6),
       ]);
       if (cancelled) return;
       fetchedTerm.current = term;

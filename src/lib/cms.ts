@@ -45,6 +45,7 @@ async function _getPublishedWork(limit?: number) {
   let q = supabase
     .from("case_studies")
     .select(WORK_CARD_COLUMNS)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .order("featured", { ascending: false })
     .order("sort_order", { ascending: true })
@@ -65,6 +66,7 @@ async function _getWorkBySlug(slug: string) {
       "id, slug, title, summary, body, cover_path, gallery, video_url, industry, services, outcomes, tech_stack, confidential, role, project_year, project_url, testimonial_quote, testimonial_author, testimonial_title, meta_title, meta_description, published_at, updated_at, client:clients(name, logo_path, url)",
     )
     .eq("slug", slug)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .maybeSingle();
   return data;
@@ -100,7 +102,7 @@ async function _getArticleBySlug(slug: string) {
 
 async function _getPartners() {
   const supabase = createPublicClient();
-  const { data } = await supabase.from("partners").select("*").order("sort_order").order("name");
+  const { data } = await supabase.from("partners").select("*").is("deleted_at", null).order("sort_order").order("name");
   return data ?? [];
 }
 
@@ -109,6 +111,7 @@ async function _getFeaturedClients() {
   const { data } = await supabase
     .from("clients")
     .select("*")
+    .is("deleted_at", null)
     .eq("featured", true)
     .order("sort_order")
     .order("name");
@@ -121,6 +124,7 @@ async function _getPublishedProducts() {
     .from("products")
     .select("*")
     .eq("published", true)
+    .is("deleted_at", null)
     .order("title");
   return data ?? [];
 }
@@ -132,6 +136,7 @@ async function _getProductBySlug(slug: string) {
     .select("*")
     .eq("slug", slug)
     .eq("published", true)
+    .is("deleted_at", null)
     .maybeSingle();
   return data;
 }
@@ -141,6 +146,7 @@ async function _getPublishedEvents() {
   const { data } = await supabase
     .from("events")
     .select("*")
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .order("starts_at", { ascending: true });
   return data ?? [];
@@ -152,6 +158,7 @@ async function _getEventBySlug(slug: string) {
     .from("events")
     .select("*")
     .eq("slug", slug)
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .maybeSingle();
   return data;
@@ -196,6 +203,7 @@ async function _getPublishedEventSlugs() {
   const { data } = await supabase
     .from("events")
     .select("slug, updated_at, starts_at")
+    .is("deleted_at", null)
     .not("published_at", "is", null)
     .order("starts_at", { ascending: false });
   return data ?? [];
@@ -221,11 +229,11 @@ export async function getTicketHolds(eventIds: string[]): Promise<TicketHolds | 
   return holds;
 }
 
-export const getPublishedWork = publicRead("cms:getPublishedWork:v2", _getPublishedWork);
-export const getWorkBySlug = publicRead("cms:getWorkBySlug:v2", _getWorkBySlug);
+export const getPublishedWork = publicRead("cms:getPublishedWork:v3", _getPublishedWork);
+export const getWorkBySlug = publicRead("cms:getWorkBySlug:v3", _getWorkBySlug);
 export const getPublishedArticles = publicRead("cms:getPublishedArticles", _getPublishedArticles);
 export const getArticleBySlug = publicRead("cms:getArticleBySlug", _getArticleBySlug);
-export const getPartners = publicRead("cms:getPartners", _getPartners);
+export const getPartners = publicRead("cms:getPartners:v2", _getPartners);
 
 async function _getExperts() {
   const supabase = createPublicClient();
@@ -233,17 +241,25 @@ async function _getExperts() {
     .from("experts")
     .select("*")
     .eq("published", true)
+    .is("deleted_at", null)
     .order("sort_order")
     .order("name");
   return data ?? [];
 }
 
-export const getExperts = publicRead("cms:getExperts", _getExperts);
-export const getFeaturedClients = publicRead("cms:getFeaturedClients", _getFeaturedClients);
-export const getPublishedProducts = publicRead("cms:getPublishedProducts", _getPublishedProducts);
-export const getProductBySlug = publicRead("cms:getProductBySlug", _getProductBySlug);
-export const getPublishedEvents = publicRead("cms:getPublishedEvents", _getPublishedEvents);
-export const getEventBySlug = publicRead("cms:getEventBySlug", _getEventBySlug);
+async function _getExpertBySlug(slug: string) {
+  const supabase = createPublicClient();
+  const { data } = await supabase.from("experts").select("*").eq("slug", slug).eq("published", true).is("deleted_at", null).maybeSingle();
+  return data;
+}
+
+export const getExperts = publicRead("cms:getExperts:v3", _getExperts);
+export const getExpertBySlug = publicRead("cms:getExpertBySlug:v2", _getExpertBySlug);
+export const getFeaturedClients = publicRead("cms:getFeaturedClients:v2", _getFeaturedClients);
+export const getPublishedProducts = publicRead("cms:getPublishedProducts:v2", _getPublishedProducts);
+export const getProductBySlug = publicRead("cms:getProductBySlug:v2", _getProductBySlug);
+export const getPublishedEvents = publicRead("cms:getPublishedEvents:v2", _getPublishedEvents);
+export const getEventBySlug = publicRead("cms:getEventBySlug:v2", _getEventBySlug);
 export const getTicketTypes = publicRead("cms:getTicketTypes", _getTicketTypes);
 export const getTicketTypesForEvents = publicRead("cms:getTicketTypesForEvents", _getTicketTypesForEvents);
-export const getPublishedEventSlugs = publicRead("cms:getPublishedEventSlugs", _getPublishedEventSlugs);
+export const getPublishedEventSlugs = publicRead("cms:getPublishedEventSlugs:v2", _getPublishedEventSlugs);

@@ -1,5 +1,5 @@
 import { company, nav, legalNav, services } from "@/lib/content";
-import { getPublishedEvents, getPublishedProducts, getPublishedWork } from "@/lib/cms";
+import { getExperts, getPublishedEvents, getPublishedProducts, getPublishedWork } from "@/lib/cms";
 import { getSitemapArticles } from "@/lib/blog";
 
 const base = company.domain;
@@ -19,11 +19,12 @@ function line(path: string, label: string, note: string) {
 
 /** A short map for assistants. Titles and links only, never page bodies. */
 export async function llmsDocument() {
-  const [articles, work, products, events] = await Promise.all([
+  const [articles, work, products, events, experts] = await Promise.all([
     getSitemapArticles(),
     getPublishedWork(),
     getPublishedProducts(),
     getPublishedEvents(),
+    getExperts(),
   ]);
 
   const pages = [
@@ -66,6 +67,11 @@ export async function llmsDocument() {
     "## Products",
     ...(products.length
       ? products.map((item) => line(`/products/${item.slug}`, item.title, item.description.slice(0, 140)))
+      : ["- None published yet."]),
+    "",
+    "## Team",
+    ...(experts.length
+      ? experts.map((person) => line(`/experts/${person.slug}`, person.name, person.title || "Team member."))
       : ["- None published yet."]),
     "",
     "## Events",

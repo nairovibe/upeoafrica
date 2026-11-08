@@ -21,7 +21,7 @@ export default async function EditInsightPage({ params }: { params: Promise<{ id
           This article is in the trash. Restore it from the blog list before it can go live again.
         </p>
       ) : null}
-      <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
+      <ArticleEditor key={data.id} initial={data} operatorName={staff?.full_name ?? ""} operatorPhoto={staff?.avatar_path ?? ""} categories={taxonomy.categories} tags={taxonomy.tags} />
     </AdminPage>
   );
 }

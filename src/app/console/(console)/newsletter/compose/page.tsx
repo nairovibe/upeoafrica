@@ -20,6 +20,7 @@ export default async function ComposePage() {
     supabase
       .from("events")
       .select("id, title, summary, starts_at")
+      .is("deleted_at", null)
       .not("published_at", "is", null)
       .order("starts_at", { ascending: false })
       .limit(20),

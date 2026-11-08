@@ -32,11 +32,11 @@ export async function GET(request: Request) {
       .or(`number.ilike.${like},bill_name.ilike.${like}`)
       .order("created_at", { ascending: false })
       .limit(4),
-    supabase.from("clients").select("id, name").ilike("name", like).limit(3),
-    supabase.from("products").select("id, title").ilike("title", like).limit(3),
-    supabase.from("events").select("id, title").ilike("title", like).limit(3),
+    supabase.from("clients").select("id, name").is("deleted_at", null).ilike("name", like).limit(3),
+    supabase.from("products").select("id, title").is("deleted_at", null).ilike("title", like).limit(3),
+    supabase.from("events").select("id, title").is("deleted_at", null).ilike("title", like).limit(3),
     supabase.from("articles").select("id, title").is("deleted_at", null).ilike("title", like).limit(3),
-    supabase.from("case_studies").select("id, title").ilike("title", like).limit(3),
+    supabase.from("case_studies").select("id, title").is("deleted_at", null).ilike("title", like).limit(3),
   ]);
 
   const groups: Hit[][] = [

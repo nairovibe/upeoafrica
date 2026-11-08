@@ -14,7 +14,7 @@ export default async function NewInvoicePage({
     leadId
       ? supabase.from("leads").select("id, name, email, phone, company").eq("id", leadId).maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from("clients").select("id, name, billing_email, phone, kra_pin").order("name"),
+    supabase.from("clients").select("id, name, billing_email, phone, kra_pin").is("deleted_at", null).order("name"),
   ]);
   return <InvoiceEditor settings={settings} lead={lead} clients={clients ?? []} defaultClientId={clientId} />;
 }

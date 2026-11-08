@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Globe, MailCheck, ReceiptText, Search, type LucideIcon } from "lucide-react";
+import { Building2, Globe, MailCheck, ReceiptText, Search, UserRound, type LucideIcon } from "lucide-react";
+import { ProfileSettings } from "@/components/admin/ProfileSettings";
+import type { LoginSession } from "@/lib/sessions";
 import { AdminBtn, Field, Panel, Pill, inputClass } from "@/components/admin/ui";
 import { FileField } from "@/components/admin/FileField";
 import { Notice, Toggle } from "@/components/admin/studio/controls";
@@ -15,7 +17,7 @@ import { metaContent, VERIFY } from "@/lib/search-presence";
 
 type Form = ReturnType<typeof toForm>;
 type Key = keyof Form;
-type SectionId = "company" | "invoicing" | "autoresponder" | "website" | "search";
+type SectionId = "profile" | "company" | "invoicing" | "autoresponder" | "website" | "search";
 
 const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; keys: Key[] }[] = [
   {
@@ -167,22 +169,26 @@ export function SettingsForm({
   payments,
   canEdit = true,
   initialSection,
+  profile,
+  sessions,
 }: {
   initial: SiteSettings;
   payments: { live: boolean; keys: boolean; webhook: boolean };
   canEdit?: boolean;
   initialSection?: string;
+  profile: { name: string; email: string; role: string; avatarPath: string };
+  sessions: LoginSession[];
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(() => toForm(initial));
   const [form, setForm] = useState(saved);
   const [section, setSection] = useState<SectionId>(
-    SECTIONS.some((s) => s.id === initialSection) ? (initialSection as SectionId) : "company",
+    initialSection === "profile" || SECTIONS.some((s) => s.id === initialSection) ? (initialSection as SectionId) : "company",
   );
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
-  const current = SECTIONS.find((s) => s.id === section)!;
+  const current = SECTIONS.find((s) => s.id === section);
   const dirty = (keys: Key[]) => keys.some((k) => form[k] !== saved[k]);
   const ro = !canEdit;
 
@@ -198,6 +204,7 @@ export function SettingsForm({
   }
 
   async function save() {
+    if (!current) return;
     const problem = validate(form, current.keys);
     if (problem) return setMsg({ tone: "error", text: problem });
     setBusy(true);
@@ -228,7 +235,7 @@ export function SettingsForm({
   const year = new Date().getFullYear();
   const nextNumber = `${(form.invoice_prefix.trim() || "UAT").toUpperCase()}-${year}-${String(Number(form.invoice_next_number) || 1).padStart(4, "0")}`;
 
-  const footer = canEdit ? (
+  const footer = canEdit && current ? (
     <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
       <AdminBtn onClick={save} disabled={busy || !dirty(current.keys)}>
         {busy ? "Saving…" : "Save"}
@@ -250,6 +257,20 @@ export function SettingsForm({
     <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
       <nav aria-label="Settings sections" className="lg:sticky lg:top-20 lg:self-start">
         <ul className="flex gap-1 overflow-x-auto lg:flex-col">
+          <li className="shrink-0">
+            <button
+              type="button"
+              onClick={() => go("profile")}
+              aria-current={section === "profile" ? "page" : undefined}
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-[5px] px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                section === "profile" ? "bg-brand-50 text-brand-700" : "text-body hover:bg-surface-3 hover:text-ink-900",
+              )}
+            >
+              <UserRound className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              <span className="whitespace-nowrap">Your profile</span>
+            </button>
+          </li>
           {SECTIONS.map((s) => {
             const Icon = s.icon;
             const on = s.id === section;
@@ -275,9 +296,19 @@ export function SettingsForm({
       </nav>
 
       <div className="min-w-0 space-y-5">
-        {ro ? (
+        {section === "profile" ? (
+          <ProfileSettings
+            name={profile.name}
+            email={profile.email}
+            role={profile.role}
+            avatarPath={profile.avatarPath}
+            sessions={sessions}
+          />
+        ) : null}
+
+        {ro && section !== "profile" ? (
           <p className="rounded-[5px] border border-line bg-surface-2 px-4 py-2.5 text-[13px] text-body">
-            Only owners can change settings.
+            Only owners can change company settings. Your profile is yours to edit.
           </p>
         ) : null}
 

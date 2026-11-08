@@ -11,7 +11,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const [settings, { data: items }, { data: clients }, { data: payments }] = await Promise.all([
     getSettings(),
     supabase.from("invoice_items").select("*").eq("invoice_id", id).order("sort_order"),
-    supabase.from("clients").select("id, name, billing_email, phone, kra_pin").order("name"),
+    supabase.from("clients").select("id, name, billing_email, phone, kra_pin").is("deleted_at", null).order("name"),
     supabase
       .from("payments")
       .select("id, result, created_at")

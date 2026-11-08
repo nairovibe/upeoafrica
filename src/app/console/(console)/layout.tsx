@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaff } from "@/lib/cms";
 import { getDeskBadges } from "@/lib/desk";
+import { rememberThisDevice } from "@/lib/sessions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default async function AdminConsoleLayout({
 }) {
   const profile = await getStaff();
   if (!profile) redirect("/console/login");
+  await rememberThisDevice(profile.id);
   const badges = await getDeskBadges();
   return (
     <AdminShell profile={profile} badges={badges}>
